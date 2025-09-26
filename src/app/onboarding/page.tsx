@@ -9,6 +9,8 @@ import {
   ShieldCheck,
   Sparkles,
   BookText,
+  Target,
+  Rocket,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,7 +26,8 @@ import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { TagInput } from "@/components/tag-input"
 
-type Step = 0 | 1 | 2 | 3
+// 4 steps: Welcome → Keywords → Subreddits → Competitors
+type Step = 0 | 1 | 2 | 3 | 4
 
 export default function OnboardingPage(): ReactElement {
   const [step, setStep] = useState<Step>(0)
@@ -36,7 +39,7 @@ export default function OnboardingPage(): ReactElement {
   const [subredditResults, setSubredditResults] = useState<string[]>([])
   const [searching, setSearching] = useState(false)
 
-  const percent = useMemo(() => ((step + 1) / 4) * 100, [step])
+  const percent = useMemo(() => (step / 4) * 100, [step])
   const addSubreddit = (name: string) => {
     const tag = name.trim()
     if (!tag) return
@@ -117,16 +120,30 @@ export default function OnboardingPage(): ReactElement {
   }, [step, subredditQuery])
 
   const canContinue = useMemo(() => {
-    if (step === 0) return keywords.length > 0
-    if (step === 1) return subreddits.length > 0
-    if (step === 2) return competitors.length > 0
+    if (step === 0) return true // Welcome step
+    if (step === 1) return keywords.length > 0
+    if (step === 2) return subreddits.length > 0
+    if (step === 3) return competitors.length > 0
+    if (step === 4) return true // Tips step, no gating
     return true
   }, [step, keywords, subreddits, competitors])
 
   return (
     <main className="min-h-dvh grid place-items-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="mx-auto flex flex-col min-h-[50dvh]">
+      <div className="w-full max-w-xl">
+        {/* Top progress header */}
+        <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
+          <div>Step {step} of 4</div>
+          <div>{Math.round(percent)}% Complete</div>
+        </div>
+        <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full bg-primary transition-all"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+
+        <Card className="mx-auto flex flex-col min-h-[50dvh] shadow-xl">
           <CardHeader>
             <CardTitle>Get set up</CardTitle>
             <CardDescription>
@@ -135,14 +152,69 @@ export default function OnboardingPage(): ReactElement {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1">
-            <div className="mb-4">
-              <Progress value={percent} />
-              <div className="mt-2 text-xs text-muted-foreground">
-                Step {step + 1} of 4
-              </div>
-            </div>
-
             {step === 0 && (
+              <section className="space-y-3">
+                <div className="text-center space-y-4">
+                  <h2 className="text-2xl font-semibold text-primary">
+                    Welcome to Lead Radar
+                  </h2>
+                  <div className="text-sm text-muted-foreground max-w-xl mx-auto">
+                    Let's set up your personalized Reddit monitoring dashboard.
+                    Track discussions, analyze trends, and stay ahead of the
+                    conversation.
+                  </div>
+                  <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs bg-secondary/40">
+                    <span className="text-rose-500">🚀</span> Get started in
+                    under 2 minutes
+                  </div>
+                </div>
+
+                <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Target className="size-4" />
+                    </div>
+                    <div className="font-medium">Track Keywords</div>
+                    <p className="text-xs text-muted-foreground">
+                      Monitor specific terms and phrases across Reddit.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <Sparkles className="size-4" />
+                    </div>
+                    <div className="font-medium">Follow Subreddits</div>
+                    <p className="text-xs text-muted-foreground">
+                      Stay updated with your target communities.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <ShieldCheck className="size-4" />
+                    </div>
+                    <div className="font-medium">Competitor Analysis</div>
+                    <p className="text-xs text-muted-foreground">
+                      Track what your competitors are discussing.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                      <BookText className="size-4" />
+                    </div>
+                    <div className="font-medium">Best Practices</div>
+                    <p className="text-xs text-muted-foreground">
+                      Learn how to optimize your Reddit presence.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-6 text-center text-xs text-muted-foreground">
+                  Ready to dive in? Let's configure your tracking preferences.
+                </p>
+              </section>
+            )}
+
+            {step === 1 && (
               <section className="space-y-3">
                 <Label>Which keywords should we track?</Label>
                 <TagInput
@@ -164,7 +236,7 @@ export default function OnboardingPage(): ReactElement {
               </section>
             )}
 
-            {step === 1 && (
+            {step === 2 && (
               <section className="space-y-3">
                 <Label>Which subreddits matter to you?</Label>
                 <div className="relative">
@@ -246,7 +318,7 @@ export default function OnboardingPage(): ReactElement {
               </section>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <section className="space-y-3">
                 <Label>Who are your competitors?</Label>
                 <TagInput
@@ -269,7 +341,7 @@ export default function OnboardingPage(): ReactElement {
               </section>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <section className="space-y-4">
                 <div className="rounded-lg border p-4">
                   <h4 className="font-medium flex items-center gap-2">
@@ -311,10 +383,28 @@ export default function OnboardingPage(): ReactElement {
               <ChevronLeft className="size-4" /> Back
             </Button>
 
-            {step < 3 ? (
+            {/* Step dots */}
+            <div className="flex items-center justify-center gap-2">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <button
+                  key={i}
+                  aria-label={`Go to step ${i + 1}`}
+                  aria-current={step === i}
+                  className={
+                    "size-2.5 rounded-full transition-colors " +
+                    (step === i ? "bg-primary" : "bg-muted")
+                  }
+                  onClick={() => {
+                    if (i <= step) setStep(i as Step)
+                  }}
+                />
+              ))}
+            </div>
+
+            {step < 4 ? (
               <Button
                 onClick={() =>
-                  setStep((s) => (s + 1 > 3 ? 3 : ((s + 1) as Step)))
+                  setStep((s) => (s + 1 > 4 ? 4 : ((s + 1) as Step)))
                 }
                 disabled={!canContinue}
                 className="min-w-32"
