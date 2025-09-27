@@ -25,6 +25,7 @@ import {
   Clock,
   ListChecks,
 } from "lucide-react"
+import * as Popover from "@radix-ui/react-popover"
 import type { DateRange } from "react-day-picker"
 
 type Sentiment = "Positive" | "Neutral" | "Negative"
@@ -193,9 +194,42 @@ export default function Home(): ReactElement {
             <Button variant="outline" size="sm">
               <Settings className="size-4" />
             </Button>
-            <Button variant="secondary" size="sm">
-              <User className="size-4" />
-            </Button>
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  aria-label="Open profile menu"
+                >
+                  <User className="size-4" />
+                </Button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  side="bottom"
+                  align="end"
+                  className="z-50 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-md outline-none data-[state=open]:animate-in data-[state=closed]:animate-out"
+                >
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Account
+                  </div>
+                  <a
+                    href="/onboarding"
+                    className="flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Settings
+                  </a>
+                  <form action="/auth/signout" method="post">
+                    <button
+                      type="submit"
+                      className="w-full flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-left text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                    >
+                      Logout
+                    </button>
+                  </form>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
           </div>
         </div>
       </header>
