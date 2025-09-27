@@ -1,6 +1,6 @@
-# Reddit Platform
+# Reddit Tracker Platform
 
-A clone of the Reddit platform built with modern web technologies.
+A Reddit post and comments tracker platform built with modern web technologies.
 
 ## Tech Stack
 
