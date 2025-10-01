@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+
+The mutation of objects should always have an optimistic outcame and in case it endsup failing it should take care of it.
+Every time you make changes to the type code make sure to run the linter

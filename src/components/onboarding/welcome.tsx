@@ -7,14 +7,7 @@ import { Target, Sparkles, ShieldCheck, BookText } from "lucide-react"
 export default function WelcomeStep(): ReactElement {
   return (
     <section className="space-y-3">
-      <div className="text-center space-y-4">
-        <h2 className="text-2xl font-semibold text-primary">
-          Welcome to Lead Radar
-        </h2>
-        <div className="text-sm text-muted-foreground max-w-xl mx-auto">
-          Let's set up your personalized Reddit monitoring dashboard. Track
-          discussions, analyze trends, and stay ahead of the conversation.
-        </div>
+      <div className="text-center">
         <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs bg-secondary/40">
           <span className="text-rose-500">🚀</span> Get started in under 2
           minutes

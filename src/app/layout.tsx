@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { ReactQueryProvider } from "../providers/react-query-provider"
 
 export const metadata: Metadata = {
-  title: "Lead Radar",
+  title: "Prompted",
   description:
     "Track keywords and subreddits to find leads and rank higher in LLM's searches.",
 }
