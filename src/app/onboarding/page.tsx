@@ -9,6 +9,7 @@ import SubredditsStep from "@/components/onboarding/subreddits"
 import WorkspaceStep from "@/components/onboarding/workspace"
 import KeywordsStep from "@/components/onboarding/keywords"
 import WelcomeStep from "@/components/onboarding/welcome"
+import LoadingShapes from "@/components/loading-shapes"
 import TipsStep from "@/components/onboarding/tips"
 import { Button } from "@/components/ui/button"
 import {
@@ -237,12 +238,9 @@ export default function OnboardingPage(): ReactElement {
   // Show loading state while checking onboarding status
   if (loading) {
     return (
-      <main className="min-h-dvh flex justify-center items-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
-      </main>
+      <div className="flex items-center justify-center h-dvh">
+        <LoadingShapes className="size-10" />
+      </div>
     )
   }
 
