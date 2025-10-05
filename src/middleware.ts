@@ -46,9 +46,12 @@ export async function middleware(request: NextRequest) {
   // For all other unauthenticated routes, redirect to login except allowlist
   const isAllowlistedForGuests =
     pathname.startsWith("/login") ||
+    pathname.startsWith("/error") ||
+    pathname.startsWith("/login-email") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/auth/confirm") ||
-    pathname.startsWith("/error")
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password")
 
   if (!user && !isAllowlistedForGuests) {
     const url = request.nextUrl.clone()

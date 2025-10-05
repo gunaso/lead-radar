@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "./colors.css";
+@import "./theme.css";
 
 @layer base {
   * {
@@ -8,4 +8,47 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.background-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--color-background) 0%,
+    oklch(0.975 0.015 35) 25%,
+    var(--color-background) 50%,
+    oklch(0.975 0.015 35) 75%,
+    var(--color-background) 100%
+  );
+}
+
+.radix {
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+}
+
+.baseui {
+  transform-origin: var(--transform-origin);
+}
+
+.tooltip {
+  transition: transform 0.125s ease-out, opacity 0.125s ease-out;
+  transform-origin: var(--transform-origin);
+
+  &[data-starting-style],
+  &[data-ending-style] {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  /** This takes care of disabling subsequent animations */
+  &[data-instant] {
+    transition-duration: 0ms;
+  }
+}
+
+button:active {
+  scale: 0.97;
+}
+
+button:hover {
+  cursor: pointer;
 }

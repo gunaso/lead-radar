@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 
 import { Toaster } from "@/components/ui/sonner"
 
+import { MotionConfigProvider } from "@/providers/motion-config-provider"
 import { ReactQueryProvider } from "@/providers/react-query-provider"
 
 import "@/assets/css/styles.css"
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          <MotionConfigProvider>{children}</MotionConfigProvider>
+        </ReactQueryProvider>
         <Toaster richColors />
       </body>
     </html>

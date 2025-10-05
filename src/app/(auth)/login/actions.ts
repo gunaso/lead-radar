@@ -8,14 +8,13 @@ import { createClient } from "@/lib/supabase/server"
 type FieldErrors = {
   email?: string[]
   password?: string[]
+  confirmPassword?: string[]
 }
 
 export type AuthFormState = {
   errors?: FieldErrors
   message?: string | null
 }
-
-const emptyState: AuthFormState = { errors: {}, message: null }
 
 export async function login(
   _prevState: AuthFormState,
@@ -67,12 +66,17 @@ export async function signup(
   const data = {
     email: (formData.get("email") as string) || "",
     password: (formData.get("password") as string) || "",
+    confirmPassword: (formData.get("confirmPassword") as string) || "",
   }
 
   const errors: FieldErrors = {}
   if (!data.email) errors.email = ["Email is required"]
   if (!data.password) errors.password = ["Password is required"]
-  if (errors.email || errors.password) {
+  if (!data.confirmPassword) errors.confirmPassword = ["Please confirm your password"]
+  if (data.password && data.confirmPassword && data.password !== data.confirmPassword) {
+    errors.confirmPassword = ["Passwords do not match"]
+  }
+  if (errors.email || errors.password || errors.confirmPassword) {
     return { errors, message: "Please fix the errors below." }
   }
 

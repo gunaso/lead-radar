@@ -9,9 +9,14 @@ type ButtonProps = ComponentProps<typeof Button>
 
 interface SubmitButtonProps extends ButtonProps {
   children: ReactNode
+  loadingText?: string
 }
 
-export function SubmitButton({ children, ...props }: SubmitButtonProps) {
+export function SubmitButton({
+  children,
+  loadingText,
+  ...props
+}: SubmitButtonProps) {
   const { pending } = useFormStatus()
 
   return (
@@ -38,7 +43,7 @@ export function SubmitButton({ children, ...props }: SubmitButtonProps) {
               d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
             />
           </svg>
-          <span>Logging in...</span>
+          <span>{loadingText || "Loading..."}</span>
         </>
       ) : (
         children
