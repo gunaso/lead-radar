@@ -1,5 +1,5 @@
-import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -65,10 +65,10 @@ export const config = {
      * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * - favicon.* (favicon files - all formats)
+     * - *.webp, *.png, *.jpg, *.jpeg, *.svg, *.ico (static assets)
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon\\..*|.*\\.(?:webp|png|jpg|jpeg|svg|ico|gif)).*)",
   ],
 }
 
