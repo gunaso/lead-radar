@@ -88,6 +88,7 @@ export function EmailLoginForm({
           error={state?.errors?.password?.[0]}
           required
           labelClassName="text-muted-foreground"
+          autoFocus
           extraContent={
             <button
               type="button"

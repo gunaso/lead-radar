@@ -14,6 +14,7 @@ interface FormFieldProps {
   required?: boolean
   labelClassName?: string
   extraContent?: React.ReactNode
+  autoFocus?: boolean
 }
 
 /**
@@ -33,6 +34,7 @@ export function FormField({
   required = false,
   labelClassName,
   extraContent,
+  autoFocus = false,
 }: FormFieldProps) {
   return (
     <div className="grid gap-2">
@@ -51,6 +53,7 @@ export function FormField({
         onChange={onChange}
         onKeyDown={onKeyDown}
         required={required}
+        autoFocus={autoFocus}
       />
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
     </div>
