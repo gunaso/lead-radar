@@ -6,10 +6,7 @@ import { motion } from "framer-motion"
 import { Check, ChevronLeft, ChevronRight } from "lucide-react"
 
 import WebsiteLoading from "@/components/onboarding/website-loading"
-import CompetitorsStep from "@/components/onboarding/competitors"
-import SubredditsStep from "@/components/onboarding/subreddits"
 import WorkspaceStep from "@/components/onboarding/workspace"
-import KeywordsStep from "@/components/onboarding/keywords"
 import PersonalStep from "@/components/onboarding/personal"
 import WelcomeStep from "@/components/onboarding/welcome"
 import LoadingShapes from "@/components/loading-shapes"
@@ -36,14 +33,15 @@ import {
   useUpsertWorkspace,
   useUpdateWorkspaceEntities,
 } from "@/queries/workspace"
+import TrackingTabs, { type TrackingTabValue } from "@/components/onboarding/tracking-tabs"
 
 const STEP_TITLES: Record<Step, string> = {
   0: "Welcome to Prompted",
   1: "Tell us about your company",
   2: "Tell us about yourself",
-  3: "Add keywords",
-  4: "Choose subreddits",
-  5: "Add competitors",
+  3: "Choose what to track",
+  4: "Choose what to track",
+  5: "Choose what to track",
   6: "Tips",
 }
 
@@ -51,9 +49,9 @@ const STEP_DESCRIPTIONS: Record<Step, string> = {
   0: "Let's set up your personalized Reddit monitoring dashboard. Track discussions, analyze trends, and stay ahead of the conversation.",
   1: "Create a workspace for your company, to help us personalize suggestions and allowing you to invite your team to collaborate.",
   2: "Help us understand your role so we can tailor your experience.",
-  3: "Add keywords to track discussions.",
-  4: "Choose subreddits to monitor.",
-  5: "Add competitors to track discussions.",
+  3: "Add keywords, subreddits, and competitors. Use the tabs below.",
+  4: "Add keywords, subreddits, and competitors. Use the tabs below.",
+  5: "Add keywords, subreddits, and competitors. Use the tabs below.",
   6: "Tips to help you get started.",
 }
 
@@ -124,7 +122,7 @@ export default function OnboardingPage(): ReactElement {
       // Update onboarding step in profile (optimistically in background)
       updateStep.mutate({ step: nextStep })
     }
-  }, [showLoadingScreen, scrapingComplete, isScrapingWebsite])
+  }, [showLoadingScreen, scrapingComplete, isScrapingWebsite, updateStep])
 
   // Hydrate state from profile query
   useEffect(() => {
@@ -157,25 +155,17 @@ export default function OnboardingPage(): ReactElement {
           setKeywords(workspaceData.keywords as string[])
         }
         // Hydrate previously selected subreddits into tags
-        if (Array.isArray((workspaceData as any).subreddits)) {
-          const subs = (
-            (workspaceData as any).subreddits as Array<{ name: string }>
-          )
+        const subsRaw = workspaceData.subreddits ?? []
+        if (Array.isArray(subsRaw)) {
+          const subs = subsRaw
             .map((s) => (s?.name ? `r/${s.name}` : ""))
             .filter((s) => s.length > 0)
           if (subs.length > 0) setSubreddits(subs)
         }
         // Hydrate competitors if present
-        if (
-          Array.isArray((workspaceData as any).competitors) &&
-          (workspaceData as any).competitors.length > 0
-        ) {
-          const list = (
-            (workspaceData as any).competitors as Array<{
-              name?: string | null
-              website?: string | null
-            }>
-          )
+        const competitorsRaw = workspaceData.competitors ?? []
+        if (Array.isArray(competitorsRaw) && competitorsRaw.length > 0) {
+          const list = competitorsRaw
             .map((c) => ({
               name: (c?.name || "").trim(),
               website: (c?.website || "").trim() || null,
@@ -209,6 +199,21 @@ export default function OnboardingPage(): ReactElement {
   const MAX_STEP = 6 as Step
   const TOTAL_STEPS = MAX_STEP + 1
   const percent = useMemo(() => (step / MAX_STEP) * 100, [step, MAX_STEP])
+  const currentTrackingTab: TrackingTabValue | null =
+    step === 3 ? "keywords" : step === 4 ? "subreddits" : step === 5 ? "competitors" : null
+
+  const setTrackingTab = (tab: TrackingTabValue): void => {
+    const map: Record<TrackingTabValue, Step> = {
+      keywords: 3,
+      subreddits: 4,
+      competitors: 5,
+    }
+    const next = map[tab]
+    if (next !== step) {
+      setStep(next)
+      updateStep.mutate({ step: next })
+    }
+  }
   const addSubreddit = (name: string) => {
     const raw = name.trim()
     if (!raw) return
@@ -271,12 +276,10 @@ export default function OnboardingPage(): ReactElement {
       // Personal info must be valid
       return personalValidation.nameValid && personalValidation.roleValid
     }
+    // For combined tracking step, allow continue at each mini-step if its own content is valid
     if (step === 3) return keywords.length > 0
     if (step === 4) return subreddits.length > 0
-    if (step === 5)
-      return (
-        competitors.length > 0 && competitors.every((c) => !!c.name?.trim())
-      )
+    if (step === 5) return competitors.length > 0 && competitors.every((c) => !!c.name?.trim())
     if (step === 6) return true
     return true
   }, [
@@ -364,11 +367,11 @@ export default function OnboardingPage(): ReactElement {
         console.error("Error updating profile:", error)
       }
     } else {
-      // For other steps, persist data as needed before moving forward
-      try {
-        if (workspaceId) {
+      // For other steps (3–5), save optimistically in background then advance immediately
+      if (workspaceId) {
+        try {
           if (step === 3) {
-            await updateWorkspaceEntities.mutateAsync({ workspaceId, keywords })
+            updateWorkspaceEntities.mutate({ workspaceId, keywords })
           } else if (step === 4) {
             // Normalize subreddit names and send any cached details; avoid refetching
             const normalized = subreddits
@@ -385,20 +388,20 @@ export default function OnboardingPage(): ReactElement {
                 created_utc: d.created_utc ?? null,
                 total_members: d.total_members ?? null,
               }))
-            await updateWorkspaceEntities.mutateAsync({
+            updateWorkspaceEntities.mutate({
               workspaceId,
               subreddits: normalized,
               subredditsDetails,
             })
           } else if (step === 5) {
-            await updateWorkspaceEntities.mutateAsync({
+            updateWorkspaceEntities.mutate({
               workspaceId,
               competitors,
             })
           }
+        } catch (error) {
+          console.error("Error saving step data:", error)
         }
-      } catch (error) {
-        console.error("Error saving step data:", error)
       }
 
       setStep(nextStep)
@@ -529,14 +532,12 @@ export default function OnboardingPage(): ReactElement {
                         onValidationChange={setPersonalValidation}
                       />
                     )}
-                    {step === 3 && (
-                      <KeywordsStep
+                    {step >= 3 && step <= 5 && currentTrackingTab && (
+                      <TrackingTabs
+                        value={currentTrackingTab}
+                        onValueChange={setTrackingTab}
                         keywords={keywords}
                         setKeywords={setKeywords}
-                      />
-                    )}
-                    {step === 4 && (
-                      <SubredditsStep
                         query={subredditSearch.query}
                         setQuery={subredditSearch.setQuery}
                         results={subredditSearch.results}
@@ -544,14 +545,15 @@ export default function OnboardingPage(): ReactElement {
                         subreddits={subreddits}
                         setSubreddits={setSubreddits}
                         addSubreddit={addSubreddit}
-                        // collect details from search results and manual adds
                         upsertDetails={upsertSubredditDetails}
-                      />
-                    )}
-                    {step === 5 && (
-                      <CompetitorsStep
                         competitors={competitors}
                         setCompetitors={setCompetitors}
+                        isKeywordsDone={keywords.length > 0}
+                        isSubredditsDone={subreddits.length > 0}
+                        isCompetitorsDone={
+                          competitors.length > 0 &&
+                          competitors.every((c) => !!c.name?.trim())
+                        }
                       />
                     )}
                     {step === MAX_STEP && <TipsStep />}
@@ -566,24 +568,22 @@ export default function OnboardingPage(): ReactElement {
                     <ChevronLeft className="size-4" /> Back
                   </Button>
 
-                  {/* Step dots */}
+                  {/* Step dots - keep but prevent skipping ahead beyond current */}
                   <div className="flex items-center justify-center gap-2">
-                    {Array.from({ length: TOTAL_STEPS }, (_, i) => i).map(
-                      (i) => (
-                        <button
-                          key={i}
-                          aria-label={`Go to step ${i + 1}`}
-                          aria-current={step === i}
-                          className={
-                            "size-2.5 rounded-full transition-colors " +
-                            (step === i ? "bg-primary" : "bg-muted")
-                          }
-                          onClick={() => {
-                            if (i <= step) setStep(i as Step)
-                          }}
-                        />
-                      )
-                    )}
+                    {Array.from({ length: TOTAL_STEPS }, (_, i) => i).map((i) => (
+                      <button
+                        key={i}
+                        aria-label={`Go to step ${i + 1}`}
+                        aria-current={step === i}
+                        className={
+                          "size-2.5 rounded-full transition-colors " +
+                          (step === i ? "bg-primary" : "bg-muted")
+                        }
+                        onClick={() => {
+                          if (i <= step) setStep(i as Step)
+                        }}
+                      />
+                    ))}
                   </div>
 
                   {step < MAX_STEP ? (
