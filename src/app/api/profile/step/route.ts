@@ -1,8 +1,9 @@
 import { type NextRequest } from "next/server"
 
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
+import { profileStepSchema } from "@/lib/validations/profile"
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -11,18 +12,16 @@ export async function PATCH(request: NextRequest) {
       return authResult.response
     }
 
-    // Parse request body
-    const body = await request.json()
-    const { step } = body
-
-    // Validate step
-    if (typeof step !== "number" || step < 0 || step > 5) {
-      return errorResponse("Invalid step value", 400)
+    // Parse and validate request body
+    const parsed = profileStepSchema.safeParse(await request.json())
+    if (!parsed.success) {
+      return errorResponse(parsed.error.issues[0]?.message ?? "Invalid input", 400)
     }
+    const { step } = parsed.data
 
     // Update profile's onboarding step
-    const adminClient = createAdminClient()
-    const { error: updateError } = await adminClient
+    const supabase = await createClient()
+    const { error: updateError } = await supabase
       .from("profiles")
       .update({ onboarding: step })
       .eq("user_id", authResult.userId)

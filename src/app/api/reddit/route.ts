@@ -9,17 +9,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
+    const controller = new AbortController();
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) {
       return NextResponse.json(
-        { error: `Error fetching from Reddit: ${response.statusText}` },
-        { status: response.status },
+        { error: `Error fetching from Reddit: ${res.statusText}` },
+        { status: res.status },
       );
     }
-    const data = await response.text();
+    const data = await res.text();
     return new NextResponse(data, {
       headers: {
-        "Content-Type": response.headers.get("Content-Type") || "text/html",
+        "Content-Type": res.headers.get("Content-Type") || "text/html",
       },
     });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { promises as dns } from "dns"
+import { fetchJson } from "@/lib/http/server"
 
 // Validate website format, DNS, and reachability
 export async function GET(request: NextRequest) {
@@ -40,24 +41,8 @@ export async function GET(request: NextRequest) {
 
     // Step 3: HTTP Request - verify website is reachable
     try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 3000) // 5 second timeout
-
-      const response = await fetch(normalizedWebsite, {
-        method: "HEAD",
-        signal: controller.signal,
-        redirect: "follow",
-      })
-
-      clearTimeout(timeoutId)
-
-      // Check if response is successful (2xx or 3xx status codes)
-      if (!response.ok && response.status >= 400) {
-        return NextResponse.json(
-          { ok: false, message: "Website is not reachable or returned an error" },
-          { status: 400 }
-        )
-      }
+      // Use GET to allow CORS redirect/content-type detection; keep low timeout
+      await fetchJson<string>(normalizedWebsite, { method: "GET", timeoutMs: 3000, redirect: "follow" })
     } catch (error: any) {
       if (error.name === "AbortError") {
         return NextResponse.json(
@@ -68,23 +53,7 @@ export async function GET(request: NextRequest) {
 
       // Try with GET request as fallback (some servers don't support HEAD)
       try {
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000)
-
-        const response = await fetch(normalizedWebsite, {
-          method: "GET",
-          signal: controller.signal,
-          redirect: "follow",
-        })
-
-        clearTimeout(timeoutId)
-
-        if (!response.ok && response.status >= 400) {
-          return NextResponse.json(
-            { ok: false, message: "Website is not reachable or returned an error" },
-            { status: 400 }
-          )
-        }
+        await fetchJson<string>(normalizedWebsite, { method: "GET", timeoutMs: 5000, redirect: "follow" })
       } catch {
         return NextResponse.json(
           { ok: false, message: "Website is not reachable" },

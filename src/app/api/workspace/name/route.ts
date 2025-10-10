@@ -1,6 +1,5 @@
 import { type NextRequest } from "next/server"
 
-import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { validateWorkspaceNameFormat } from "@/lib/validations/workspace"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
@@ -27,12 +26,10 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    const adminClient = createAdminClient()
-
     // Get user's current workspace if authenticated
     let userWorkspaceId: number | null = null
     if (user) {
-      const { data: profile } = await adminClient
+      const { data: profile } = await supabase
         .from("profiles")
         .select("workspace")
         .eq("user_id", user.id)
@@ -42,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if name is taken by another workspace (excluding user's own)
-    let query = adminClient
+    let query = supabase
       .from("workspaces")
       .select("id", { count: "exact", head: true })
       .ilike("name", name)

@@ -9,15 +9,25 @@ type UseSubredditSearchOptions = {
 export type UseSubredditSearchResult = {
   query: string
   setQuery: (value: string) => void
-  results: string[]
+  results: SubredditResult[]
   searching: boolean
+}
+
+export type SubredditResult = {
+  name: string
+  iconUrl: string | null
+  members: number
+  title?: string | null
+  description?: string | null
+  description_reddit?: string | null
+  created_utc?: number | null
 }
 
 export function useSubredditSearch({
   active,
 }: UseSubredditSearchOptions): UseSubredditSearchResult {
   const [query, setQuery] = useState<string>("")
-  const [results, setResults] = useState<string[]>([])
+  const [results, setResults] = useState<SubredditResult[]>([])
   const [searching, setSearching] = useState<boolean>(false)
 
   useEffect(() => {
@@ -28,66 +38,71 @@ export function useSubredditSearch({
       return
     }
 
+    // Show loading immediately on input
     setSearching(true)
     setResults([])
 
-    const all = [
-      "r/sales",
-      "r/CustomerSuccess",
-      "r/martech",
-      "r/marketing",
-      "r/AskMarketing",
-      "r/CRM",
-      "r/SaaS",
-      "r/startups",
-      "r/SmallBusiness",
-      "r/salesforce",
-      "r/HubSpot",
-      "r/zoho",
-    ]
+    let cancelled = false
+    const controller = new AbortController()
 
-    const filtered = all.filter((s) =>
-      s.toLowerCase().includes(query.toLowerCase())
-    )
+    const timeoutId = setTimeout(async () => {
+      try {
+        // Use Reddit's public JSON autocomplete endpoint (supports CORS)
+        const encodedQuery = encodeURIComponent(query)
+        const redditUrl = `https://www.reddit.com/api/subreddit_autocomplete_v2.json?query=${encodedQuery}&include_over_18=off&include_profiles=false&limit=10`
 
-    const q = query.toLowerCase().replace(/[^a-z0-9]/g, "")
-    const suffixes = [
-      "crm",
-      "prospecting",
-      "revops",
-      "automation",
-      "playbooks",
-      "pipeline",
-      "stack",
-      "leaders",
-      "ops",
-    ]
-    const prefixes = ["sales", "crm", "revops", "marketingops", "growth", "cs"]
-    const randoms: string[] = []
-    for (let i = 0; i < 8; i++) {
-      const suffix = suffixes[Math.floor(Math.random() * suffixes.length)]
-      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)]
-      const pattern = Math.random() > 0.5 ? `r/${q}${suffix}` : `r/${prefix}${q}`
-      if (q && !randoms.includes(pattern)) randoms.push(pattern)
-    }
-
-    const combined = Array.from(new Set([...filtered, ...randoms])).slice(0, 12)
-    let i = 0
-    const interval = setInterval(() => {
-      setResults((prev) => {
-        if (i >= combined.length) {
-          clearInterval(interval)
-          setSearching(false)
-          return prev
+        const res = await fetch(redditUrl, {
+          signal: controller.signal,
+          mode: "cors",
+          credentials: "omit",
+          headers: { Accept: "application/json" },
+        })
+        if (!res.ok) {
+          throw new Error(`Reddit search failed: ${res.status} ${res.statusText}`)
         }
-        const next = [...prev, combined[i]]
-        i += 1
-        return next
-      })
-    }, 160)
+        const json = await res.json()
+        // For now just log the output
+        console.log("Reddit communities search response:", json)
+
+        // Extract first 5 subreddit entries
+        const children: any[] = Array.isArray(json?.data?.children)
+          ? json.data.children
+          : []
+        const mapped: SubredditResult[] = children.map((c: any) => {
+          const d = c?.data ?? {}
+          const iconRaw: string | null =
+            d.community_icon || d.icon_img || d.header_img || null
+          const iconUrl = typeof iconRaw === "string" ? iconRaw.split("?")[0] : null
+          const name: string =
+            d.display_name_prefixed || (d.display_name ? `r/${d.display_name}` : "")
+          const members: number =
+            typeof d.subscribers === "number"
+              ? d.subscribers
+              : typeof d.subscriber_count === "number"
+              ? d.subscriber_count
+              : 0
+          const title: string | null = typeof d.title === "string" ? d.title : null
+          const description: string | null =
+            typeof d.public_description === "string" ? d.public_description : null
+          const description_reddit: string | null =
+            typeof d.description === "string" ? d.description : null
+          const created_utc: number | null =
+            typeof d.created_utc === "number" ? d.created_utc : null
+          return { name, iconUrl, members, title, description, description_reddit, created_utc }
+        })
+        if (!cancelled) setResults(mapped)
+      } catch (error) {
+        if ((error as any)?.name === "AbortError") return
+        console.error("Error fetching Reddit communities:", error)
+      } finally {
+        if (!cancelled) setSearching(false)
+      }
+    }, 400)
 
     return () => {
-      clearInterval(interval)
+      cancelled = true
+      controller.abort()
+      clearTimeout(timeoutId)
       setSearching(false)
     }
   }, [active, query])

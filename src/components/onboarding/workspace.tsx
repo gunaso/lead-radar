@@ -10,6 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { request } from "@/lib/api/client"
+import {
+  useWorkspaceCompanyValidation,
+  useWorkspaceNameValidation,
+  useWorkspaceWebsiteValidation,
+} from "@/queries/workspace"
 
 type WorkspaceStepProps = {
   value: {
@@ -60,6 +66,10 @@ export default function WorkspaceStep({
   const [nameValid, setNameValid] = useState(skipValidation)
   const [companyName, setCompanyName] = useState(value.companyName)
 
+  const companyValidation = useWorkspaceCompanyValidation()
+  const workspaceNameValidation = useWorkspaceNameValidation()
+  const websiteValidation = useWorkspaceWebsiteValidation()
+
   // Bubble up state
   useEffect(() => {
     onChange({ companyName, workspaceName, website, employees })
@@ -86,16 +96,9 @@ export default function WorkspaceStep({
             valueState={[companyName, setCompanyName]}
             setValid={setNameValid}
             skipValidation={skipValidation}
-            validate={async (val, signal) => {
-              const params = new URLSearchParams({ companyName: val })
-              return fetch(
-                `/api/workspace/company?${params.toString()}` as string,
-                {
-                  method: "GET",
-                  signal,
-                }
-              )
-            }}
+            validate={async (val, signal) =>
+              companyValidation.mutateAsync({ name: val, signal })
+            }
           />
         </div>
       </div>
@@ -109,16 +112,9 @@ export default function WorkspaceStep({
             valueState={[workspaceName, setWorkspaceName]}
             setValid={setWorkspaceValid}
             skipValidation={skipValidation}
-            validate={async (val, signal) => {
-              const params = new URLSearchParams({ name: val })
-              return fetch(
-                `/api/workspace/name?${params.toString()}` as string,
-                {
-                  method: "GET",
-                  signal,
-                }
-              )
-            }}
+            validate={async (val, signal) =>
+              workspaceNameValidation.mutateAsync({ name: val, signal })
+            }
           />
         </div>
       </div>
@@ -135,14 +131,7 @@ export default function WorkspaceStep({
             validate={async (val, signal) => {
               const trimmed = val.trim()
               if (!trimmed) return { ok: true }
-              const params = new URLSearchParams({ website: trimmed })
-              return fetch(
-                `/api/workspace/website?${params.toString()}` as string,
-                {
-                  method: "GET",
-                  signal,
-                }
-              )
+              return websiteValidation.mutateAsync({ website: trimmed, signal })
             }}
           />
         </div>

@@ -1,13 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server"
+import type { Database } from "@/lib/db.types"
 
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
 import { 
   linkEntitiesToWorkspace, 
-  linkCompetitorsToWorkspace 
+  linkCompetitorsToWorkspace,
+  linkSubredditsToWorkspace,
+  type SubredditDetailsInput,
 } from "@/lib/api/workspace-entities"
 import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
+import { createWorkspaceSchema, updateWorkspaceSchema } from "@/lib/validations/workspace"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -19,10 +23,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = createAdminClient()
+    const supabase = await createClient()
     // Count workspaces whose name matches case-insensitively
     const { count, error } = await supabase
-      .from("workspaces")
+      .from("workspaces" as const)
       .select("id", { count: "exact", head: true })
       .ilike("name", name)
 
@@ -50,24 +54,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-type CreateWorkspacePayload = {
-  companyName: string
-  workspaceName: string
-  website?: string | null
-  employees: string
-}
-
-type UpdateWorkspacePayload = {
-  workspaceId: number
-  companyName?: string
-  workspaceName?: string
-  website?: string | null
-  employees?: string
-  keywords?: string[]
-  subreddits?: string[]
-  competitors?: string[]
-  onboardingComplete?: boolean
-}
+// Removed legacy payload types in favor of Zod schemas
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -76,9 +63,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return authResult.response
     }
 
-    // Parse request body
-    const body: CreateWorkspacePayload = await request.json()
-    const { companyName, workspaceName, website, employees } = body
+    // Parse and validate request body
+    const parsed = createWorkspaceSchema.safeParse(await request.json())
+    if (!parsed.success) {
+      return errorResponse(parsed.error.issues[0]?.message ?? "Invalid input", 400)
+    }
+    const { companyName, workspaceName, website, employees } = parsed.data
 
     // Validate required fields
     if (!companyName?.trim() || !workspaceName?.trim() || !employees) {
@@ -88,14 +78,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    const adminClient = createAdminClient()
+    const supabase = await createClient()
 
     // Check if user already has a workspace
-    const { data: profile } = await adminClient
-      .from("profiles")
+    const { data: profile } = await supabase
+      .from("profiles" as const)
       .select("workspace")
       .eq("user_id", authResult.userId)
-      .single()
+      .single<{ workspace: number | null }>()
 
     const existingWorkspaceId = profile?.workspace
 
@@ -103,9 +93,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (existingWorkspaceId) {
       // User already has a workspace - update it instead of creating a new one
-      const { data: updatedWorkspace, error: updateError } = await adminClient
-        .from("workspaces")
-        .update({
+      const { data: updatedWorkspace, error: updateError } = await supabase
+        .from("workspaces" as const)
+        .update<Database['public']['Tables']['workspaces']['Update']>({
           company: companyName.trim(),
           name: workspaceName.trim(),
           website: website?.trim() || null,
@@ -113,7 +103,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         })
         .eq("id", existingWorkspaceId)
         .select()
-        .single()
+        .single<Database['public']['Tables']['workspaces']['Row']>()
 
       if (updateError || !updatedWorkspace) {
         console.error("Error updating existing workspace:", updateError)
@@ -123,9 +113,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       workspace = updatedWorkspace
     } else {
       // User doesn't have a workspace - create a new one
-      const { data: newWorkspace, error: workspaceError } = await adminClient
-        .from("workspaces")
-        .insert({
+      const { data: newWorkspace, error: workspaceError } = await supabase
+        .from("workspaces" as const)
+        .insert<Database['public']['Tables']['workspaces']['Insert']>({
           owner: authResult.userId,
           company: companyName.trim(),
           name: workspaceName.trim(),
@@ -133,7 +123,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           employees: employees.trim() || null,
         })
         .select()
-        .single()
+        .single<Database['public']['Tables']['workspaces']['Row']>()
 
       if (workspaceError || !newWorkspace) {
         console.error("Error creating workspace:", workspaceError)
@@ -143,9 +133,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       workspace = newWorkspace
 
       // Link workspace to user profile
-      const { error: profileError } = await adminClient
-        .from("profiles")
-        .update({
+      const { error: profileError } = await supabase
+        .from("profiles" as const)
+        .update<Database['public']['Tables']['profiles']['Update']>({
           workspace: workspace.id,
           onboarding: 1,
         })
@@ -175,8 +165,11 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       return authResult.response
     }
 
-    // Parse request body
-    const body: UpdateWorkspacePayload = await request.json()
+    // Parse and validate request body
+    const parsed = updateWorkspaceSchema.safeParse(await request.json())
+    if (!parsed.success) {
+      return errorResponse(parsed.error.issues[0]?.message ?? "Invalid input", 400)
+    }
     const {
       workspaceId,
       companyName,
@@ -185,22 +178,23 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       employees,
       keywords,
       subreddits,
+      subredditsDetails,
       competitors,
       onboardingComplete,
-    } = body
+    } = parsed.data
 
     if (!workspaceId) {
       return errorResponse("Workspace ID is required", 400)
     }
 
-    const adminClient = createAdminClient()
+    const supabase = await createClient()
 
     // Verify workspace belongs to user
-    const { data: workspace, error: fetchError } = await adminClient
-      .from("workspaces")
+    const { data: workspace, error: fetchError } = await supabase
+      .from("workspaces" as const)
       .select("id, owner")
       .eq("id", workspaceId)
-      .single()
+      .single<{ id: number; owner: string }>()
 
     if (fetchError || !workspace || workspace.owner !== authResult.userId) {
       return errorResponse("Workspace not found or access denied", 404)
@@ -208,15 +202,15 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     // Update workspace basic fields if provided
     if (companyName || workspaceName || website !== undefined || employees !== undefined) {
-      const updates: Record<string, unknown> = {}
-      updates.company = companyName?.trim() || null
-      updates.name = workspaceName?.trim() || null
-      updates.website = website?.trim() || null
-      updates.employees = employees?.trim() || null
+      const updates: Database['public']['Tables']['workspaces']['Update'] = {}
+      if (companyName !== undefined) updates.company = companyName.trim()
+      if (workspaceName !== undefined) updates.name = workspaceName.trim()
+      if (website !== undefined) updates.website = website?.trim() || null
+      if (employees !== undefined) updates.employees = employees?.trim() || null
 
-      const { error: updateError } = await adminClient
-        .from("workspaces")
-        .update(updates)
+      const { error: updateError } = await supabase
+        .from("workspaces" as const)
+        .update<Database['public']['Tables']['workspaces']['Update']>(updates)
         .eq("id", workspaceId)
 
       if (updateError) {
@@ -224,16 +218,30 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       }
     }
 
-    // Link keywords, subreddits, and competitors using helper functions
-    await linkEntitiesToWorkspace('keywords', workspaceId, keywords || [], authResult.userId)
-    await linkEntitiesToWorkspace('subreddits', workspaceId, subreddits || [], authResult.userId)
-    await linkCompetitorsToWorkspace(workspaceId, competitors || [], authResult.userId)
+    // Only update each entity type if the corresponding payload was provided
+    if (Array.isArray(keywords)) {
+      await linkEntitiesToWorkspace('keywords', workspaceId, keywords, authResult.userId, supabase)
+    }
+
+    if (Array.isArray(subreddits)) {
+      await linkSubredditsToWorkspace(
+        workspaceId,
+        subreddits,
+        (subredditsDetails || []) as SubredditDetailsInput[],
+        authResult.userId,
+        supabase
+      )
+    }
+
+    if (Array.isArray(competitors)) {
+      await linkCompetitorsToWorkspace(workspaceId, competitors, authResult.userId, supabase)
+    }
 
     // Mark onboarding as complete if requested
     if (onboardingComplete === true) {
-      const { error: profileError } = await adminClient
-        .from("profiles")
-        .update({ onboarding: -1 })
+      const { error: profileError } = await supabase
+        .from("profiles" as const)
+        .update<Database['public']['Tables']['profiles']['Update']>({ onboarding: -1 })
         .eq("user_id", authResult.userId)
 
       if (profileError) {

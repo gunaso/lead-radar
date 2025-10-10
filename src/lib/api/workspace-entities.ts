@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
 type EntityConfig = {
   entityTable: string
@@ -30,35 +30,52 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
  * @param workspaceId - ID of the workspace
  * @param items - Array of entity names to link
  * @param userId - ID of the user creating the links
+ * @param supabase - Authenticated Supabase client
  */
 export async function linkEntitiesToWorkspace(
   entityType: 'keywords' | 'subreddits',
   workspaceId: number,
   items: string[],
-  userId: string
+  userId: string,
+  supabase: SupabaseClient
 ): Promise<void> {
-  if (!items || items.length === 0) return
-
   const config = ENTITY_CONFIGS[entityType]
-  const adminClient = createAdminClient()
 
-  // Clear existing links for this workspace
-  await adminClient
+  // Always clear existing links for this workspace first
+  await supabase
     .from(config.linkTable)
     .delete()
     .eq("workspace", workspaceId)
 
+  // If no items provided, we're done (removes associations without deleting entities)
+  if (!items || items.length === 0) return
+
   // Process each item
   for (const itemName of items) {
-    const trimmedName = itemName.trim()
+    let trimmedName = itemName.trim()
+    // Normalize subreddits by stripping the r/ prefix for canonical storage
+    if (entityType === 'subreddits') {
+      trimmedName = trimmedName.replace(/^r\//i, '')
+    }
     if (!trimmedName) continue
 
-    // Check if entity exists
-    const { data: existingEntity } = await adminClient
-      .from(config.entityTable)
-      .select("id")
-      .eq("name", trimmedName)
-      .single()
+    // Check if entity exists (case-insensitive for subreddits)
+    let existingEntity: { id: number } | null = null
+    if (entityType === 'subreddits') {
+      const { data } = await supabase
+        .from(config.entityTable)
+        .select("id")
+        .ilike("name", trimmedName)
+        .single()
+      existingEntity = data as any
+    } else {
+      const { data } = await supabase
+        .from(config.entityTable)
+        .select("id")
+        .eq("name", trimmedName)
+        .single()
+      existingEntity = data as any
+    }
 
     let entityId: number
 
@@ -66,9 +83,36 @@ export async function linkEntitiesToWorkspace(
       entityId = existingEntity.id
     } else {
       // Create new entity
-      const { data: newEntity, error: entityError } = await adminClient
+      const insertPayload: Record<string, unknown> = { name: trimmedName }
+      if (entityType === 'keywords') {
+        insertPayload.value = trimmedName.toLowerCase()
+      } else if (entityType === 'subreddits') {
+        // Attempt to fetch subreddit metadata from Reddit and map fields
+        try {
+          const res = await fetch(`https://www.reddit.com/r/${encodeURIComponent(trimmedName)}/about.json`, {
+            mode: "cors",
+            // Node runtime ignores mode, included for consistency
+          })
+          if (res.ok) {
+            const json = await res.json()
+            const d = json?.data ?? {}
+            // Field mappings
+            // name -> display_name (we already set name to trimmedName)
+            if (typeof d.title === 'string') insertPayload.title = d.title
+            if (typeof d.public_description === 'string') insertPayload.description = d.public_description
+            if (typeof d.description === 'string') insertPayload.description_reddit = d.description
+            if (typeof d.created_utc === 'number') insertPayload.created_at = new Date(d.created_utc * 1000).toISOString()
+            if (typeof d.subscribers === 'number') insertPayload.total_members = d.subscribers
+          }
+        } catch (e) {
+          // Ignore fetch errors and proceed with minimal insert
+          // Intentionally left blank
+        }
+      }
+
+      const { data: newEntity, error: entityError } = await supabase
         .from(config.entityTable)
-        .insert({ name: trimmedName })
+        .insert(insertPayload)
         .select("id")
         .single()
 
@@ -80,7 +124,7 @@ export async function linkEntitiesToWorkspace(
     }
 
     // Link entity to workspace
-    await adminClient.from(config.linkTable).insert({
+    await supabase.from(config.linkTable).insert({
       workspace: workspaceId,
       [config.entityColumn]: entityId,
       created_by: userId,
@@ -88,37 +132,131 @@ export async function linkEntitiesToWorkspace(
   }
 }
 
+export type SubredditDetailsInput = {
+  name: string
+  title?: string | null
+  description?: string | null
+  description_reddit?: string | null
+  created_utc?: number | null // unix seconds; will be converted to date (YYYY-MM-DD)
+  total_members?: number | null
+}
+
+/**
+ * Specialized helper to upsert subreddits with metadata and link to a workspace.
+ */
+export async function linkSubredditsToWorkspace(
+  workspaceId: number,
+  names: string[],
+  details: SubredditDetailsInput[] | undefined,
+  userId: string,
+  supabase: SupabaseClient
+): Promise<void> {
+  // Clear existing links
+  await supabase.from("workspaces_subreddits").delete().eq("workspace", workspaceId)
+
+  if (!names || names.length === 0) return
+
+  const detailsByName = new Map<string, SubredditDetailsInput>()
+  for (const d of details || []) {
+    const key = (d?.name || "").replace(/^r\//i, "").trim().toLowerCase()
+    if (key) detailsByName.set(key, d)
+  }
+
+  for (const raw of names) {
+    const canonical = raw.replace(/^r\//i, "").trim()
+    if (!canonical) continue
+    const key = canonical.toLowerCase()
+    const meta = detailsByName.get(key)
+
+    // Check if subreddit exists (case-insensitive)
+    let entityId: number | null = null
+    const { data: existing } = await supabase
+      .from("subreddits")
+      .select("id")
+      .ilike("name", canonical)
+      .single()
+    if (existing?.id) {
+      entityId = existing.id
+      // Optionally update metadata if provided
+      const updatePayload: Record<string, unknown> = {}
+      if (meta) {
+        if (typeof meta.title === 'string') updatePayload.title = meta.title
+        if (typeof meta.description === 'string') updatePayload.description = meta.description
+        if (typeof meta.description_reddit === 'string') updatePayload.description_reddit = meta.description_reddit
+        if (typeof meta.total_members === 'number') updatePayload.total_members = meta.total_members
+        if (typeof meta.created_utc === 'number') {
+          const date = new Date(meta.created_utc * 1000)
+          // Store only date component for date column
+          const dateOnly = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+          updatePayload.created_at = dateOnly.toISOString().slice(0, 10)
+        }
+      }
+      if (Object.keys(updatePayload).length > 0) {
+        await supabase.from("subreddits").update(updatePayload).eq("id", entityId)
+      }
+    } else {
+      // Insert new with metadata
+      const insertPayload: Record<string, unknown> = { name: canonical }
+      if (meta) {
+        if (typeof meta.title === 'string') insertPayload.title = meta.title
+        if (typeof meta.description === 'string') insertPayload.description = meta.description
+        if (typeof meta.description_reddit === 'string') insertPayload.description_reddit = meta.description_reddit
+        if (typeof meta.total_members === 'number') insertPayload.total_members = meta.total_members
+        if (typeof meta.created_utc === 'number') {
+          const date = new Date(meta.created_utc * 1000)
+          const dateOnly = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+          insertPayload.created_at = dateOnly.toISOString().slice(0, 10)
+        }
+      }
+      const { data: newRow, error } = await supabase
+        .from("subreddits")
+        .insert(insertPayload)
+        .select("id")
+        .single()
+      if (error || !newRow) continue
+      entityId = newRow.id
+    }
+
+    if (!entityId) continue
+    await supabase.from("workspaces_subreddits").insert({
+      workspace: workspaceId,
+      subreddit: entityId,
+      created_by: userId,
+    })
+  }
+}
+
+export type CompetitorInput = {
+  name: string
+  website?: string | null
+}
+
 /**
  * Links competitors to a workspace.
- * Competitors don't have a separate entity table, so they're handled differently.
- * 
- * @param workspaceId - ID of the workspace
- * @param competitors - Array of competitor names
- * @param userId - ID of the user creating the competitors
+ * Clears existing competitors and inserts the provided list.
  */
 export async function linkCompetitorsToWorkspace(
   workspaceId: number,
-  competitors: string[],
-  userId: string
+  competitors: Array<CompetitorInput | string>,
+  userId: string,
+  supabase: SupabaseClient
 ): Promise<void> {
+  // Always clear existing competitors for this workspace
+  await supabase.from("competitors").delete().eq("workspace", workspaceId)
+
   if (!competitors || competitors.length === 0) return
 
-  const adminClient = createAdminClient()
+  for (const item of competitors) {
+    const name = (typeof item === "string" ? item : item?.name)?.trim() || ""
+    if (!name) continue
 
-  // Clear existing competitors for this workspace
-  await adminClient
-    .from("competitors")
-    .delete()
-    .eq("workspace", workspaceId)
+    const websiteRaw = typeof item === "string" ? undefined : item?.website
+    const website = (websiteRaw || "").trim()
 
-  // Insert new competitors
-  for (const competitorName of competitors) {
-    const trimmedCompetitor = competitorName.trim()
-    if (!trimmedCompetitor) continue
-
-    await adminClient.from("competitors").insert({
+    await supabase.from("competitors").insert({
       workspace: workspaceId,
-      name: trimmedCompetitor,
+      name,
+      website: website || null,
       created_by: userId,
     })
   }

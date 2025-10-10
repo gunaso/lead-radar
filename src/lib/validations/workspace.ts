@@ -1,3 +1,4 @@
+import { z } from "zod"
 /**
  * Validates if a company name meets format requirements
  * @param name - The company name to validate
@@ -101,4 +102,51 @@ export function validateWorkspaceNameFormat(
 
   return { ok: true }
 }
+
+// Zod schemas for API inputs
+export const createWorkspaceSchema = z.object({
+  companyName: z.string().min(1, { message: "Company name is required" }).max(100),
+  workspaceName: z.string().min(2, { message: "Workspace name must be at least 2 characters" }).max(50),
+  website: z.string().url().nullable().optional().or(z.literal("")),
+  employees: z.string().min(1),
+})
+
+export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>
+
+export const updateWorkspaceSchema = z.object({
+  workspaceId: z.number().int(),
+  companyName: z.string().min(1).max(100).optional(),
+  workspaceName: z.string().min(2).max(50).optional(),
+  website: z.string().url().nullable().optional(),
+  employees: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  subreddits: z.array(z.string()).optional(),
+  subredditsDetails: z
+    .array(
+      z.object({
+        name: z.string(),
+        title: z.string().nullable().optional(),
+        description: z.string().nullable().optional(),
+        description_reddit: z.string().nullable().optional(),
+        // Accept created_utc (unix seconds) from client; server maps to date
+        created_utc: z.number().nullable().optional(),
+        total_members: z.number().nullable().optional(),
+      })
+    )
+    .optional(),
+  competitors: z
+    .array(
+      z.union([
+        z.string(),
+        z.object({
+          name: z.string().min(1),
+          website: z.string().url().nullable().optional(),
+        }),
+      ])
+    )
+    .optional(),
+  onboardingComplete: z.boolean().optional(),
+})
+
+export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>
 

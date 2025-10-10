@@ -126,9 +126,20 @@ export default function AsyncInput({
             setValue(nextValue)
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         if (!(e instanceof DOMException && e.name === "AbortError")) {
-          setError("Network error")
+          const message =
+            (e && typeof e.message === "string" && e.message) || "Network error"
+          setError(message)
+          // Try to surface server-provided detail if available
+          const maybeData = e?.data as unknown
+          if (
+            maybeData &&
+            typeof maybeData === "object" &&
+            typeof (maybeData as any).detail === "string"
+          ) {
+            setErrorDescription((maybeData as any).detail as string)
+          }
         }
       } finally {
         setLoading(false)

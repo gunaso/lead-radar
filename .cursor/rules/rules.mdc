@@ -4,3 +4,5 @@ alwaysApply: true
 
 The mutation of objects should always have an optimistic outcame and in case it endsup failing it should take care of it.
 Every time you make changes to the type code make sure to run the linter
+Make sure to use the src/lib/db.types.ts to check for how the DB tables are defined, if needed you can you use the supabase MCP to find out more.
+Every time that you need to make queries to supabase you should use the user client with the authenticated used information and only use the admin client when strictly needed.

@@ -1,6 +1,6 @@
 import type { ReactElement } from "react"
 import { useCallback, useMemo, useState } from "react"
-import { X, Plus } from "lucide-react"
+import { X, Plus, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +11,10 @@ export type TagInputProps = {
   value: string[]
   onChange: (next: string[]) => void
   suggestions?: string[]
+  maxSuggestions?: number
   className?: string
+  onAdd?: (tag: string) => void
+  pendingTags?: string[]
 }
 
 export function TagInput({
@@ -19,7 +22,10 @@ export function TagInput({
   value,
   onChange,
   suggestions = [],
+  maxSuggestions = 6,
   className,
+  onAdd,
+  pendingTags = [],
 }: TagInputProps): ReactElement {
   const [draft, setDraft] = useState("")
 
@@ -35,8 +41,9 @@ export function TagInput({
       if (value.includes(t)) return
       onChange([...value, t])
       setDraft("")
+      if (onAdd) onAdd(t)
     },
-    [onChange, value]
+    [onAdd, onChange, value]
   )
 
   const remove = useCallback(
@@ -55,6 +62,9 @@ export function TagInput({
             className="gap-1 bg-primary/10 text-primary border-primary/20"
           >
             {tag}
+            {pendingTags.includes(tag) && (
+              <Loader2 className="size-3 animate-spin ml-1" />
+            )}
             <button
               aria-label={`remove ${tag}`}
               className="ml-1 rounded-full p-0.5 hover:bg-primary/20"
@@ -89,7 +99,7 @@ export function TagInput({
       </div>
       {normalizedSuggestions.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
-          {normalizedSuggestions.slice(0, 6).map((s) => (
+          {normalizedSuggestions.slice(0, maxSuggestions).map((s) => (
             <button
               key={s}
               className="rounded-full border px-2.5 py-1 text-xs text-muted-foreground hover:bg-accent"
