@@ -418,10 +418,12 @@ export type Database = {
           company: string
           created_at: string
           employees: string | null
+          goal: string[] | null
           id: number
           keywords_suggested: string[] | null
           name: string
           owner: string
+          source: string | null
           updated_at: string
           website: string | null
           website_ai: string | null
@@ -431,10 +433,12 @@ export type Database = {
           company: string
           created_at?: string
           employees?: string | null
+          goal?: string[] | null
           id?: number
           keywords_suggested?: string[] | null
           name: string
           owner?: string
+          source?: string | null
           updated_at?: string
           website?: string | null
           website_ai?: string | null
@@ -444,10 +448,12 @@ export type Database = {
           company?: string
           created_at?: string
           employees?: string | null
+          goal?: string[] | null
           id?: number
           keywords_suggested?: string[] | null
           name?: string
           owner?: string
+          source?: string | null
           updated_at?: string
           website?: string | null
           website_ai?: string | null

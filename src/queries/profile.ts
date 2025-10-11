@@ -11,6 +11,8 @@ export type ProfileWorkspace = {
   company: string | null
   website: string | null
   employees: string | null
+  source?: string | null
+  goal?: string[] | null
   keywords_suggested?: string[] | null
   keywords?: string[] | null
   subreddits?: Array<{
@@ -29,6 +31,7 @@ export type ProfileWorkspace = {
 
 export type ProfileData = {
   onboarding: number
+  onboarded?: boolean
   workspace: ProfileWorkspace | null
   name: string
   role: string

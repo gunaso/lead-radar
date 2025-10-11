@@ -1,17 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server"
-import type { Database } from "@/lib/db.types"
 
+import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
+import { createWorkspaceSchema, updateWorkspaceSchema } from "@/lib/validations/workspace"
+import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { authenticateRequest } from "@/lib/api/auth"
-import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
 import { 
-  linkEntitiesToWorkspace, 
   linkCompetitorsToWorkspace,
-  linkSubredditsToWorkspace,
   type SubredditDetailsInput,
+  linkSubredditsToWorkspace,
+  linkEntitiesToWorkspace,
 } from "@/lib/api/workspace-entities"
-import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
-import { createWorkspaceSchema, updateWorkspaceSchema } from "@/lib/validations/workspace"
+import type { Database } from "@/lib/db.types"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -23,9 +24,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = await createClient()
-    // Count workspaces whose name matches case-insensitively
-    const { count, error } = await supabase
+    // Use admin client for global name availability check (RLS restricts user visibility)
+    const admin = createAdminClient()
+    const { count, error } = await admin
       .from("workspaces" as const)
       .select("id", { count: "exact", head: true })
       .ilike("name", name)
@@ -53,8 +54,6 @@ export async function GET(request: NextRequest) {
     return handleUnexpectedError(error, "GET /api/workspace")
   }
 }
-
-// Removed legacy payload types in favor of Zod schemas
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -92,15 +91,35 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     let workspace: { id: number; name: string; company: string }
 
     if (existingWorkspaceId) {
+      // Fetch current website to detect changes
+      const { data: currentWs } = await supabase
+        .from("workspaces" as const)
+        .select("website")
+        .eq("id", existingWorkspaceId)
+        .single<{ website: string | null }>()
+
+      const incomingWebsite = (website?.trim() || null) as string | null
+      const normalizedIncoming = incomingWebsite ? normalizeWebsiteUrl(incomingWebsite) : null
+      const normalizedCurrent = currentWs?.website ? normalizeWebsiteUrl(currentWs.website) : null
+      const websiteChanged = website !== undefined && (normalizedCurrent ?? null) !== (normalizedIncoming ?? null)
+
+      // Build updates object; reset derived fields if website changed
+      const updates: Database['public']['Tables']['workspaces']['Update'] = {
+        company: companyName.trim(),
+        name: workspaceName.trim(),
+        website: normalizedIncoming,
+        employees: employees.trim() || null,
+      }
+      if (websiteChanged) {
+        updates.website_md = null
+        updates.website_ai = null
+        updates.keywords_suggested = null
+      }
+
       // User already has a workspace - update it instead of creating a new one
       const { data: updatedWorkspace, error: updateError } = await supabase
         .from("workspaces" as const)
-        .update<Database['public']['Tables']['workspaces']['Update']>({
-          company: companyName.trim(),
-          name: workspaceName.trim(),
-          website: website?.trim() || null,
-          employees: employees.trim() || null,
-        })
+        .update<Database['public']['Tables']['workspaces']['Update']>(updates)
         .eq("id", existingWorkspaceId)
         .select()
         .single<Database['public']['Tables']['workspaces']['Row']>()
@@ -119,7 +138,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           owner: authResult.userId,
           company: companyName.trim(),
           name: workspaceName.trim(),
-          website: website?.trim() || null,
+          website: (website ? normalizeWebsiteUrl(website.trim()) : null) || null,
           employees: employees.trim() || null,
         })
         .select()
@@ -176,6 +195,8 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       workspaceName,
       website,
       employees,
+      source,
+      goal,
       keywords,
       subreddits,
       subredditsDetails,
@@ -192,21 +213,35 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     // Verify workspace belongs to user
     const { data: workspace, error: fetchError } = await supabase
       .from("workspaces" as const)
-      .select("id, owner")
+      .select("id, owner, website")
       .eq("id", workspaceId)
-      .single<{ id: number; owner: string }>()
+      .single<{ id: number; owner: string; website: string | null }>()
 
     if (fetchError || !workspace || workspace.owner !== authResult.userId) {
       return errorResponse("Workspace not found or access denied", 404)
     }
 
     // Update workspace basic fields if provided
-    if (companyName || workspaceName || website !== undefined || employees !== undefined) {
+    if (companyName || workspaceName || website !== undefined || employees !== undefined || source !== undefined || goal !== undefined) {
       const updates: Database['public']['Tables']['workspaces']['Update'] = {}
       if (companyName !== undefined) updates.company = companyName.trim()
       if (workspaceName !== undefined) updates.name = workspaceName.trim()
-      if (website !== undefined) updates.website = website?.trim() || null
+      if (website !== undefined) {
+        const incomingWebsite = website?.trim() || null
+        const normalizedIncoming = incomingWebsite ? normalizeWebsiteUrl(incomingWebsite) : null
+        const normalizedCurrent = workspace.website ? normalizeWebsiteUrl(workspace.website) : null
+        updates.website = normalizedIncoming
+        // Reset derived fields if website changed
+        const websiteChanged = (normalizedCurrent ?? null) !== (normalizedIncoming ?? null)
+        if (websiteChanged) {
+          updates.website_md = null
+          updates.website_ai = null
+          updates.keywords_suggested = null
+        }
+      }
       if (employees !== undefined) updates.employees = employees?.trim() || null
+      if (source !== undefined) updates.source = source ?? null
+      if (goal !== undefined) updates.goal = goal ?? null
 
       const { error: updateError } = await supabase
         .from("workspaces" as const)
@@ -241,7 +276,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     if (onboardingComplete === true) {
       const { error: profileError } = await supabase
         .from("profiles" as const)
-        .update<Database['public']['Tables']['profiles']['Update']>({ onboarding: -1 })
+        .update<Database['public']['Tables']['profiles']['Update']>({ onboarding: -1, onboarded: true })
         .eq("user_id", authResult.userId)
 
       if (profileError) {

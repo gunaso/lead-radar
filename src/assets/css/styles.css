@@ -45,7 +45,7 @@
   }
 }
 
-button:active {
+button:not([role="combobox"]):active {
   scale: 0.97;
 }
 

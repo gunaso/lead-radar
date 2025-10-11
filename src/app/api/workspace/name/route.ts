@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { validateWorkspaceNameFormat } from "@/lib/validations/workspace"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
 
@@ -39,8 +40,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if name is taken by another workspace (excluding user's own)
-    let query = supabase
-      .from("workspaces")
+    const admin = createAdminClient()
+    let query = admin
+      .from("workspaces" as const)
       .select("id", { count: "exact", head: true })
       .ilike("name", name)
 

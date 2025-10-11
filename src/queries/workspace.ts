@@ -2,8 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { request } from "@/lib/api/client"
 import type { CompetitorInput } from "@/types/onboarding"
+import { request } from "@/lib/api/client"
 import { qk } from "@/lib/api/query-keys"
 
 export type WorkspaceUpsertPayload = {
@@ -103,6 +103,13 @@ export function useUpdateWorkspaceEntities() {
         total_members?: number | null
       }>
       competitors?: Array<CompetitorInput | string>
+      source?: "Youtube" | "Reddit" | "Twitter / X" | "Google Search" | "LLM Recommendation" | "A friend or colleague" | "Newsletter / Blog" | "Other"
+      goal?: Array<
+        | "Find new leads"
+        | "Improve AI visibility"
+        | "Monitor my industry / competitors"
+        | "Understand audience pain points"
+      >
       onboardingComplete?: boolean
     }) => request<{ ok: boolean }>("/api/workspace", {
       method: "PATCH",
