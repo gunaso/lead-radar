@@ -1,12 +1,24 @@
 "use client"
+import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 
-import LoginForm from "@/components/auth/login-form"
+import { ProvidersView } from "@/components/auth/providers-view"
+import { useAuthNavigation } from "@/components/auth/auth-container"
 
 export default function LoginPage() {
   const searchParams = useSearchParams()
-  const email = searchParams.get("email") || ""
-  const view = searchParams.get("view") as "providers" | "email" | null
+  const initialEmail = searchParams.get("email") || ""
+  const [email, setEmail] = useState(initialEmail)
+  const { navigateWithAnimation } = useAuthNavigation()
 
-  return <LoginForm initialEmail={email} initialView={view || "providers"} />
+  return (
+    <ProvidersView
+      email={email}
+      onEmailChange={setEmail}
+      onContinue={() => {
+        const params = email ? `?email=${encodeURIComponent(email)}` : ""
+        navigateWithAnimation(`/login-email${params}`)
+      }}
+    />
+  )
 }

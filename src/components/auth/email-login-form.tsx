@@ -1,6 +1,5 @@
 "use client"
 import { useActionState, useState } from "react"
-import { motion } from "framer-motion"
 import { ArrowLeft } from "lucide-react"
 
 import { useAuthNavigation } from "@/components/auth/auth-container"
@@ -10,24 +9,18 @@ import { AuthHeader } from "@/components/auth/auth-header"
 import { FormField } from "@/components/auth/form-field"
 import { Button } from "@/components/ui/button"
 
-import { login, type AuthFormState } from "@/app/(auth)/login/actions"
+import { login, type AuthFormState } from "../../app/(auth)/login-email/actions"
 import { validateEmailFormat } from "@/lib/validations/email"
-import { slideNavigationVariants } from "@/lib/motion-config"
 
 interface EmailLoginFormProps {
   email: string
   onBack: () => void
-  direction: "forward" | "backward"
 }
 
 /**
  * Email and password login form with validation
  */
-export function EmailLoginForm({
-  email,
-  onBack,
-  direction,
-}: EmailLoginFormProps) {
+export function EmailLoginForm({ email, onBack }: EmailLoginFormProps) {
   const initialState: AuthFormState = { errors: {}, message: null }
   const [state, formAction] = useActionState(login, initialState)
   const { navigateWithAnimation } = useAuthNavigation()
@@ -39,18 +32,7 @@ export function EmailLoginForm({
     validateEmailFormat(emailValue) && passwordValue.length > 0
 
   return (
-    <motion.form
-      action={formAction}
-      custom={direction}
-      initial={
-        direction === "forward"
-          ? slideNavigationVariants.enterFromRight
-          : slideNavigationVariants.center
-      }
-      animate={slideNavigationVariants.center}
-      exit={slideNavigationVariants.exitToRight}
-      className="p-6 md:p-8"
-    >
+    <form action={formAction} className="p-6 md:p-8">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center text-center relative">
           <Button
@@ -120,6 +102,6 @@ export function EmailLoginForm({
           emailValue={emailValue}
         />
       </div>
-    </motion.form>
+    </form>
   )
 }

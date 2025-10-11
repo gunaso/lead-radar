@@ -89,3 +89,15 @@ export const slideNavigationVariants = {
   exitToRight: { x: 300, opacity: 0 },
 } as const
 
+/**
+ * Slide navigation variants without fade (opacity locked to 1)
+ * Used for intra-auth route transitions to avoid double-fade effects
+ */
+export const slideNavigationVariantsNoFade = {
+  enterFromRight: { x: 300, opacity: 1 },
+  enterFromLeft: { x: -300, opacity: 1 },
+  center: { x: 0, opacity: 1 },
+  exitToLeft: { x: -300, opacity: 1 },
+  exitToRight: { x: 300, opacity: 1 },
+} as const
+

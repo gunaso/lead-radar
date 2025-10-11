@@ -34,8 +34,8 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // If authenticated, prevent access to login/signup
-  if (user && (pathname.startsWith("/login") || pathname.startsWith("/signup"))) {
+  // If authenticated, prevent access to login/signup (exact paths only)
+  if (user && (pathname === "/login" || pathname === "/signup")) {
     const url = request.nextUrl.clone()
     url.pathname = "/"
     return NextResponse.redirect(url)

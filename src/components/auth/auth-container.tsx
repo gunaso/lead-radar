@@ -7,7 +7,10 @@ import Link from "next/link"
 
 import { Card, CardContent } from "@/components/ui/card"
 
-import { slideNavigationVariants } from "@/lib/motion-config"
+import {
+  slideNavigationVariants,
+  slideNavigationVariantsNoFade,
+} from "@/lib/motion-config"
 import { cn } from "@/lib/utils"
 
 import PromptedLogo from "@/assets/img/logo-name.webp"
@@ -36,7 +39,13 @@ export function useAuthNavigation() {
 }
 
 // Auth pages that share the same container
-const AUTH_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password"]
+const AUTH_PAGES = [
+  "/login",
+  "/login-email",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+]
 
 export function AuthContainer({ children, className }: AuthContainerProps) {
   const pathname = usePathname()
@@ -103,14 +112,14 @@ export function AuthContainer({ children, className }: AuthContainerProps) {
                     <div className="relative flex flex-col min-h-full overflow-hidden">
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.div
-                          key={isNavigating ? `${pathname}-exiting` : pathname}
-                          initial={slideNavigationVariants.enterFromRight}
-                          animate={
-                            isNavigating
-                              ? slideNavigationVariants.exitToLeft
-                              : slideNavigationVariants.center
+                          key={pathname}
+                          initial={
+                            shouldAnimateContainer
+                              ? slideNavigationVariants.enterFromRight
+                              : slideNavigationVariantsNoFade.enterFromRight
                           }
-                          exit={slideNavigationVariants.exitToLeft}
+                          animate={slideNavigationVariantsNoFade.center}
+                          exit={slideNavigationVariantsNoFade.exitToLeft}
                           className="absolute inset-0 w-full"
                         >
                           {children}
