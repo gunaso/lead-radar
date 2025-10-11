@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("onboarding, workspace, name, role")
+      .select("onboarding, onboarded, workspace, name, role")
       .eq("user_id", authResult.userId)
       .single()
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (profile.workspace) {
       const { data: workspace } = await supabase
         .from("workspaces")
-        .select("id, name, company, website, employees, keywords_suggested")
+        .select("id, name, company, website, employees, keywords_suggested, source, goal")
         .eq("id", profile.workspace)
         .single()
 
@@ -122,6 +122,7 @@ export async function GET(request: NextRequest) {
     return successResponse({
       profile: {
         onboarding: profile.onboarding ?? 0,
+        onboarded: Boolean(profile.onboarded),
         workspace: workspaceData,
         name: profile.name || "",
         role: profile.role || "",

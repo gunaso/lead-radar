@@ -2,60 +2,65 @@
 
 import type { ReactElement } from "react"
 
-import { Target, Sparkles, ShieldCheck, BookText } from "lucide-react"
+import {
+  type LucideIcon,
+  ChartColumn,
+  Handshake,
+  Megaphone,
+  Sparkles,
+} from "lucide-react"
 
 export default function WelcomeStep(): ReactElement {
   return (
-    <section className="space-y-3">
-      <div className="text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs bg-secondary/40">
-          <span className="text-rose-500">🚀</span> Get started in under 2
-          minutes
-        </div>
+    <section className="flex flex-col gap-2 mt-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <FeatureCard
+          Icon={Handshake}
+          title="Get Leads Authentically"
+          description="Instead of cold outreach, join discussions already full of your target audience. Offer helpful answers and subtly showcase your expertise."
+        />
+        <FeatureCard
+          Icon={ChartColumn}
+          title="Understand the Market"
+          description="See what people love, hate, and ask about products like yours. Learn the real pain points your audience discusses daily."
+        />
+        <FeatureCard
+          Icon={Megaphone}
+          title="Build Visibility"
+          description="Contribute to Reddit discussions in ways that get noticed — both by people and AI models that power modern search."
+        />
+        <FeatureCard
+          Icon={Sparkles}
+          title="Get Found by AI"
+          description="LLMs pull from Reddit to shape their answers. Prompted helps you appear in the conversations that influence AI search rankings."
+        />
       </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border p-4">
-          <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Target className="size-4" />
-          </div>
-          <div className="font-medium">Track Keywords</div>
-          <p className="text-xs text-muted-foreground">
-            Monitor specific terms and phrases across Reddit.
-          </p>
-        </div>
-        <div className="rounded-lg border p-4">
-          <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <Sparkles className="size-4" />
-          </div>
-          <div className="font-medium">Follow Subreddits</div>
-          <p className="text-xs text-muted-foreground">
-            Stay updated with your target communities.
-          </p>
-        </div>
-        <div className="rounded-lg border p-4">
-          <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <ShieldCheck className="size-4" />
-          </div>
-          <div className="font-medium">Competitor Analysis</div>
-          <p className="text-xs text-muted-foreground">
-            Track what your competitors are discussing.
-          </p>
-        </div>
-        <div className="rounded-lg border p-4">
-          <div className="mb-2 inline-flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <BookText className="size-4" />
-          </div>
-          <div className="font-medium">Best Practices</div>
-          <p className="text-xs text-muted-foreground">
-            Learn how to optimize your Reddit presence.
-          </p>
-        </div>
-      </div>
-
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        Ready to dive in? Let's configure your tracking preferences.
+      <p className="text-center text-xs text-muted-foreground px-5">
+        Ready to see where your brand fits in? Let’s set up your tracking to
+        find the best conversations for you.
       </p>
     </section>
+  )
+}
+
+function FeatureCard({
+  Icon,
+  title,
+  description,
+}: {
+  Icon: LucideIcon
+  title: string
+  description: string
+}) {
+  return (
+    <div className="flex flex-col rounded-lg border p-4 gap-2">
+      <div className="flex items-center gap-2">
+        <div className="flex size-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <Icon className="size-4" />
+        </div>
+        <div className="font-semibold text-muted-foreground">{title}</div>
+      </div>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </div>
   )
 }

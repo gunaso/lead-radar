@@ -4,3 +4,7 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function generateInputId(label: string) {
+  return label.toLowerCase().replace(/\s+/g, "-")
+}

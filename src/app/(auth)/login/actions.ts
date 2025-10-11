@@ -53,6 +53,31 @@ export async function login(
     return { message }
   }
 
+  // Determine onboarding status and redirect accordingly without extra client fetch
+  try {
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser()
+
+    if (currentUser) {
+      const { data: profile } = await supabase
+        .from("profiles" as const)
+        .select("onboarding")
+        .eq("user_id", currentUser.id)
+        .single<{ onboarding: number | null }>()
+
+      const isOnboarded = (profile?.onboarding ?? 0) === -1
+      const destination = isOnboarded ? "/" : "/onboarding"
+      revalidatePath("/", "layout")
+      redirect(destination)
+    }
+  } catch (_e) {
+    // Fallback to home if any issue occurs determining onboarding state
+    revalidatePath("/", "layout")
+    redirect("/")
+  }
+
+  // Safety fallback
   revalidatePath("/", "layout")
   redirect("/")
 }

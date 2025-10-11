@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState, type ReactElement } from "react"
+import { useEffect, useState, type ReactElement } from "react"
 
-import { Label } from "@/components/ui/label"
 import { TagInput } from "@/components/tag-input"
+
 import { useProfileQuery } from "@/queries/profile"
 
 type KeywordsStepProps = {
@@ -16,11 +16,9 @@ export default function KeywordsStep({
   setKeywords,
 }: KeywordsStepProps): ReactElement {
   const [suggestions, setSuggestions] = useState<string[]>([])
-  const fetchedRef = useRef(false)
   const { data } = useProfileQuery()
 
   useEffect(() => {
-    if (fetchedRef.current) return
     if (!data) return
     const list: string[] = Array.isArray(
       data.profile?.workspace?.keywords_suggested
@@ -28,12 +26,13 @@ export default function KeywordsStep({
       ? (data.profile.workspace?.keywords_suggested as string[])
       : []
     setSuggestions(list)
-    fetchedRef.current = true
   }, [data])
 
   return (
     <section className="space-y-3">
-      <Label>Which keywords should we track?</Label>
+      <span className="flex text-md font-semibold text-muted-foreground">
+        Which keywords should we track?
+      </span>
       <TagInput
         placeholder="Add keyword and press Enter"
         value={keywords}
@@ -41,7 +40,7 @@ export default function KeywordsStep({
         suggestions={suggestions}
       />
       <p className="text-xs text-muted-foreground">
-        We'll monitor new posts and comments containing these phrases.
+        We'll monitor new posts and comments containing these keywords.
       </p>
     </section>
   )

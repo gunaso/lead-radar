@@ -29,6 +29,11 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  // Allow API routes to pass through without redirects
+  if (pathname.startsWith("/api/")) {
+    return supabaseResponse
+  }
+
   // If authenticated, prevent access to login/signup
   if (user && (pathname.startsWith("/login") || pathname.startsWith("/signup"))) {
     const url = request.nextUrl.clone()
@@ -57,6 +62,35 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
+  }
+
+  // If authenticated but not fully onboarded, force redirect to onboarding for all non-auth routes
+  if (user) {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding")
+        .eq("user_id", user.id)
+        .single<{ onboarding: number | null }>()
+
+      const isOnboarded = (profile?.onboarding ?? 0) === -1
+      const isAuthRoute =
+        pathname.startsWith("/login") ||
+        pathname.startsWith("/signup") ||
+        pathname.startsWith("/auth/") ||
+        pathname.startsWith("/forgot-password") ||
+        pathname.startsWith("/reset-password")
+
+      const isOnboardingRoute = pathname.startsWith("/onboarding")
+
+      if (!isOnboarded && !isOnboardingRoute && !isAuthRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = "/onboarding"
+        return NextResponse.redirect(url)
+      }
+    } catch (_e) {
+      // Ignore and fall through
+    }
   }
 
   return supabaseResponse

@@ -6,7 +6,9 @@ import { AlertCircleIcon, Check, Loader2, X } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input, type InputProps } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { Label } from "@/components/ui/label"
+
+import { cn, generateInputId } from "@/lib/utils"
 
 type AsyncValidationObjectResult = {
   ok: boolean
@@ -16,6 +18,7 @@ type AsyncValidationObjectResult = {
 }
 
 type AsyncInputProps = Omit<InputProps, "onChange"> & {
+  label: string
   valueState: [string, (value: string) => void]
   setValid: (valid: boolean) => void
   validate: (
@@ -24,25 +27,30 @@ type AsyncInputProps = Omit<InputProps, "onChange"> & {
   ) => Promise<Response | AsyncValidationObjectResult>
   debounceMs?: number
   skipValidation?: boolean
+  helperText?: string
 }
 
 export default function AsyncInput({
+  label,
   valueState,
   setValid,
   validate,
   debounceMs = 300,
   skipValidation = false,
+  helperText,
   ...inputProps
 }: AsyncInputProps) {
   const [errorDescription, setErrorDescription] = useState<string | null>(null)
+  const [inputId, setInputId] = useState<string>(generateInputId(label))
   const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(skipValidation)
-  const [value, setValue] = valueState
   const [shouldSkipValidation, setShouldSkipValidation] =
     useState(skipValidation)
-  const initialValueRef = useRef<string>(value)
+  const [loading, setLoading] = useState(false)
   const hasInitializedRef = useRef(false)
+  const [value, setValue] = valueState
+
+  const initialValueRef = useRef<string>(value)
 
   useEffect(() => {
     setValid(success)
@@ -68,8 +76,24 @@ export default function AsyncInput({
     latestValidateRef.current = validate
   }, [validate])
 
+  // When the server returns a normalized value (e.g., adds https://) we update the input value.
+  // That local update would normally trigger a second validation call immediately.
+  // Use this flag to suppress the very next validation pass since we already know it's valid.
+  const suppressNextValidationRef = useRef<boolean>(false)
+
   useEffect(() => {
     if (shouldSkipValidation) return
+
+    // If last change came from server-side normalization on a successful validation,
+    // skip this immediate validation cycle to avoid a duplicate request.
+    if (suppressNextValidationRef.current) {
+      suppressNextValidationRef.current = false
+      setLoading(false)
+      setSuccess(true)
+      setError(null)
+      setErrorDescription(null)
+      return
+    }
 
     setError(null)
     setSuccess(false)
@@ -78,6 +102,7 @@ export default function AsyncInput({
       setSuccess(false)
       return
     }
+    setLoading(true)
     const controller = new AbortController()
     const t = setTimeout(async () => {
       try {
@@ -123,6 +148,7 @@ export default function AsyncInput({
             }
           }
           if (nextValue && nextValue !== latestValueRef.current) {
+            suppressNextValidationRef.current = true
             setValue(nextValue)
           }
         }
@@ -164,45 +190,56 @@ export default function AsyncInput({
     }
   }
 
+  useEffect(() => {
+    setInputId(generateInputId(label))
+  }, [label])
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="relative">
-        {(() => {
-          const { className, ...restInputProps } = inputProps
-          return (
-            <Input
-              {...restInputProps}
-              value={value}
-              onChange={inputOnChange}
-              aria-invalid={!!error && !success}
-              className={cn(
-                "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:ring-destructive/40",
-                className
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={inputId}>{label}</Label>
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            {(() => {
+              const { className, ...restInputProps } = inputProps
+              return (
+                <Input
+                  id={inputId}
+                  {...restInputProps}
+                  value={value}
+                  onChange={inputOnChange}
+                  aria-invalid={!!error && !success}
+                  className={cn(
+                    "aria-[invalid=true]:border-destructive aria-[invalid=true]:focus-visible:border-destructive aria-[invalid=true]:focus-visible:ring-destructive/40",
+                    className
+                  )}
+                />
+              )
+            })()}
+            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
+              {loading && (
+                <Loader2 className="size-4 animate-spin" strokeWidth={3} />
               )}
-            />
-          )
-        })()}
-        <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
-          {loading && (
-            <Loader2 className="size-4 animate-spin" strokeWidth={3} />
-          )}
-          {value && !loading && success && (
-            <Check className="size-4 text-green-600" strokeWidth={3} />
-          )}
-          {error && !loading && !success && (
-            <X className="size-4 text-destructive" strokeWidth={3} />
+              {value && !loading && success && (
+                <Check className="size-4 text-green-600" strokeWidth={3} />
+              )}
+              {error && !loading && !success && (
+                <X className="size-4 text-destructive" strokeWidth={3} />
+              )}
+            </div>
+          </div>
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircleIcon className="size-4" />
+              <AlertTitle>{error}</AlertTitle>
+              {errorDescription && (
+                <AlertDescription>{errorDescription}</AlertDescription>
+              )}
+            </Alert>
           )}
         </div>
       </div>
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircleIcon className="size-4" />
-          <AlertTitle>{error}</AlertTitle>
-          {errorDescription && (
-            <AlertDescription>{errorDescription}</AlertDescription>
-          )}
-        </Alert>
-      )}
+      <span className="text-xs text-muted-foreground pl-1">{helperText}</span>
     </div>
   )
 }

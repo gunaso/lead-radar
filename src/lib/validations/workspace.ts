@@ -119,6 +119,34 @@ export const updateWorkspaceSchema = z.object({
   workspaceName: z.string().min(2).max(50).optional(),
   website: z.string().url().nullable().optional(),
   employees: z.string().optional(),
+  // How did you hear about Prompted?
+  source: z
+    .union([
+      z.enum([
+        "Youtube",
+        "Reddit",
+        "Twitter / X",
+        "Google Search",
+        "LLM Recommendation",
+        "A friend or colleague",
+        "Newsletter / Blog",
+        "Other",
+      ]),
+      // Allow a custom free-text value (e.g., when selecting Other and specifying)
+      z.string().min(1).max(100),
+    ])
+    .optional(),
+  // What do you want to achieve with Prompted? (multi-select)
+  goal: z
+    .array(
+      z.enum([
+        "Find new leads",
+        "Improve AI visibility",
+        "Monitor my industry / competitors",
+        "Understand audience pain points",
+      ])
+    )
+    .optional(),
   keywords: z.array(z.string()).optional(),
   subreddits: z.array(z.string()).optional(),
   subredditsDetails: z

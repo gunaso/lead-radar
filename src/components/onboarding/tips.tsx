@@ -1,38 +1,68 @@
 "use client"
-import type { ReactElement } from "react"
+import { type ReactElement, useState } from "react"
 
-import { ShieldCheck, Sparkles, BookText } from "lucide-react"
+import {
+  MessageCircleHeart,
+  ShieldCheck,
+  TextSearch,
+  InfoIcon,
+} from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 export default function TipsStep(): ReactElement {
   return (
-    <section className="space-y-4">
-      <div className="rounded-lg border p-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <ShieldCheck className="size-4" /> Follow community rules
-        </h4>
-        <p className="text-sm text-muted-foreground mt-1">
-          Understand each subreddit's posting and self-promo rules to avoid
-          bans.
-        </p>
+    <section className="space-y-2">
+      <div className="flex flex-col gap-3">
+        <TipCard
+          icon={<ShieldCheck className="size-5" />}
+          title="Follow the Culture, Not Just the Rules"
+          description="Every subreddit has its own tone and taboos. Read the room before you post — authenticity earns more trust than self-promotion ever will."
+        />
+        <TipCard
+          icon={<MessageCircleHeart className="size-5" />}
+          title="Comment Like a Human, Not a Marketer"
+          description="Share experiences, give honest help, and drop insights that make people think “this person knows their stuff“. Great comments naturally attract leads — no sales pitch needed."
+        />
+        <TipCard
+          icon={<TextSearch className="size-5" />}
+          title="How to Rank in AI Search"
+          description="LLMs notice Reddit posts with substance. Answers that include examples, clear reasoning, and consistent engagement are the ones that surface in AI-generated results."
+        />
       </div>
-      <div className="rounded-lg border p-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <Sparkles className="size-4" /> Best practices for comments
-        </h4>
-        <p className="text-sm text-muted-foreground mt-1">
-          Be specific, cite experience, and add value before linking your
-          product.
-        </p>
-      </div>
-      <div className="rounded-lg border p-4">
-        <h4 className="font-medium flex items-center gap-2">
-          <BookText className="size-4" /> What ranks higher in LLM search
-        </h4>
-        <p className="text-sm text-muted-foreground mt-1">
-          High-signal answers with examples, sources, and consistent engagement
-          get surfaced.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground text-center">
+        Keep these in mind when you start exploring your feed —{" "}
+        <span className="text-primary font-semibold">Prompted</span> will guide
+        you to the right threads and help you craft replies that stand out.
+      </p>
     </section>
+  )
+}
+
+function TipCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode
+  title: string
+  description: string
+}): ReactElement {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div className="rounded-lg border p-4">
+      <h4 className="font-medium flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {icon} {title}
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
+          <InfoIcon className="size-4" />
+        </Button>
+      </h4>
+      {isOpen && (
+        <p className="text-sm text-muted-foreground mt-1">{description}</p>
+      )}
+    </div>
   )
 }

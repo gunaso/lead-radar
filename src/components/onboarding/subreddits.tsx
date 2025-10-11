@@ -14,7 +14,6 @@ import { Loader2, Check, CircleAlert } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { TagInput } from "@/components/tag-input"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 
 import type { SubredditResult } from "@/hooks/use-subreddit-search"
@@ -49,10 +48,10 @@ export default function SubredditsStep({
   addSubreddit,
   upsertDetails,
 }: SubredditsStepProps): ReactElement {
-  const [open, setOpen] = useState<boolean>(false)
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [pendingTags, setPendingTags] = useState<string[]>([])
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [pendingTags, setPendingTags] = useState<string[]>([])
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [open, setOpen] = useState<boolean>(false)
 
   // Close on outside click
   useEffect(() => {
@@ -69,27 +68,15 @@ export default function SubredditsStep({
   const onAdd = useCallback(
     async (tag: string) => {
       setValidationError(null)
-      // Normalize display tag to always include "r/" prefix for UX consistency
-      const normalizedName = tag.replace(/^r\//i, "").trim()
-      const displayTag = normalizedName ? `r/${normalizedName}` : tag.trim()
+
+      const { normalizedName, displayTag } = normalizeSubredditTag(tag)
       setPendingTags((prev) =>
         prev.includes(displayTag) ? prev : [...prev, displayTag]
       )
-      // Canonicalize the just-added tag and ensure no case-insensitive duplicates
-      setSubreddits((prev) => {
-        // Replace raw tag with normalized display tag if needed
-        let next = prev.map((t) => (t === tag ? displayTag : t))
-        // Keep only the first case-insensitive occurrence
-        const target = displayTag.toLowerCase()
-        const firstIdx = next.findIndex((t) => t.toLowerCase() === target)
-        if (firstIdx === -1) {
-          next = [...next, displayTag]
-        }
-        next = next.filter(
-          (t, idx) => t.toLowerCase() !== target || idx === firstIdx
-        )
-        return next
-      })
+
+      // Optimistically add to the list while we validate and canonicalize
+      setSubreddits((prev) => insertDisplayTagDedup(prev, tag, displayTag))
+
       try {
         const res = await fetch(
           `https://www.reddit.com/r/${encodeURIComponent(
@@ -97,66 +84,22 @@ export default function SubredditsStep({
           )}/about.json`,
           { mode: "cors", credentials: "omit" }
         )
-        const ok = res.ok
-        if (!ok) {
-          throw new Error("Not found")
-        }
+        if (!res.ok) throw new Error("Not found")
         const json = await res.json()
-        if (!json?.data?.display_name) {
-          throw new Error("Invalid subreddit")
-        }
-        // Use Reddit's canonical prefixed name for display (e.g., r/Startups)
-        const canonical: string =
-          typeof json?.data?.display_name_prefixed === "string"
-            ? json.data.display_name_prefixed
-            : displayTag
+        if (!json?.data?.display_name) throw new Error("Invalid subreddit")
 
-        // Replace the temporary displayTag with the canonical one and dedupe (case-insensitive)
-        setSubreddits((prev) => {
-          const targetLower = displayTag.toLowerCase()
-          const canonicalLower = canonical.toLowerCase()
+        const { canonicalName, details } =
+          extractAboutDetailsFromRedditResponse(json, displayTag)
 
-          // Replace the first occurrence of the temp tag with canonical
-          let replaced = false
-          let next = prev.map((t) => {
-            if (!replaced && t.toLowerCase() === targetLower) {
-              replaced = true
-              return canonical
-            }
-            return t
-          })
-
-          // Ensure only one canonical instance remains
-          const seen = new Set<string>()
-          next = next.filter((t) => {
-            const k = t.toLowerCase()
-            if (k === canonicalLower) {
-              if (seen.has(k)) return false
-              seen.add(k)
-              return true
-            }
-            return true
-          })
-
-          return next
-        })
+        // Replace temporary tag with canonical and dedupe
+        setSubreddits((prev) =>
+          replaceTempWithCanonical(prev, displayTag, canonicalName)
+        )
 
         // Store metadata so we don't need to refetch later
-        const d = json?.data ?? {}
-        upsertDetails({
-          name: canonical,
-          title: typeof d.title === "string" ? d.title : null,
-          description:
-            typeof d.public_description === "string"
-              ? d.public_description
-              : null,
-          description_reddit:
-            typeof d.description === "string" ? d.description : null,
-          created_utc: typeof d.created_utc === "number" ? d.created_utc : null,
-          total_members:
-            typeof d.subscribers === "number" ? d.subscribers : null,
-        })
+        upsertDetails(details)
       } catch (e) {
+        // Rollback optimistic insert on failure
         setSubreddits((prev) => prev.filter((t) => t !== displayTag))
         setValidationError(`Subreddit ${displayTag} doesn't exist.`)
       } finally {
@@ -170,7 +113,9 @@ export default function SubredditsStep({
 
   return (
     <section className="space-y-3">
-      <Label>Which subreddits matter to you?</Label>
+      <span className="flex text-md font-semibold text-muted-foreground">
+        Which subreddits matter to you?
+      </span>
       <div className="relative" ref={containerRef}>
         <Input
           value={query}
@@ -194,33 +139,14 @@ export default function SubredditsStep({
           aria-haspopup="listbox"
         />
         {open && query && (
-          <div
-            id="subreddit-results"
-            role="listbox"
-            className="absolute z-50 mt-2 w-full p-1 overflow-hidden rounded-md border bg-background shadow-md"
-          >
-            <ul className="flex flex-col gap-1 max-h-45 overflow-auto text-sm">
-              {results.map((s) => (
-                <Subreddit
-                  key={s.name}
-                  addSubreddit={addSubreddit}
-                  subreddits={subreddits}
-                  setOpen={setOpen}
-                  subreddit={s}
-                  upsertDetails={upsertDetails}
-                />
-              ))}
-              {searching && results.length === 0 && (
-                <li className="px-3 py-2 text-muted-foreground inline-flex items-center gap-2">
-                  <Loader2 className="size-3 animate-spin" /> Searching
-                  subreddits…
-                </li>
-              )}
-              {!searching && results.length === 0 && (
-                <li className="px-3 py-2 text-muted-foreground">No results</li>
-              )}
-            </ul>
-          </div>
+          <SubredditResultsDropdown
+            results={results}
+            searching={searching}
+            subreddits={subreddits}
+            addSubreddit={addSubreddit}
+            upsertDetails={upsertDetails}
+            setOpen={setOpen}
+          />
         )}
       </div>
       <TagInput
@@ -237,6 +163,60 @@ export default function SubredditsStep({
         </span>
       )}
     </section>
+  )
+}
+
+function SubredditResultsDropdown({
+  results,
+  searching,
+  subreddits,
+  addSubreddit,
+  upsertDetails,
+  setOpen,
+}: {
+  results: SubredditResult[]
+  searching: boolean
+  subreddits: string[]
+  addSubreddit: (name: string) => void
+  upsertDetails: (
+    input: Partial<{
+      name: string
+      title?: string | null
+      description?: string | null
+      description_reddit?: string | null
+      created_utc?: number | null
+      total_members?: number | null
+    }>
+  ) => void
+  setOpen: (open: boolean) => void
+}) {
+  return (
+    <div
+      id="subreddit-results"
+      role="listbox"
+      className="absolute z-50 mt-2 w-full p-1 overflow-hidden rounded-md border bg-background shadow-md"
+    >
+      <ul className="flex flex-col gap-1 max-h-45 overflow-auto text-sm">
+        {results.map((s) => (
+          <Subreddit
+            key={s.name}
+            addSubreddit={addSubreddit}
+            subreddits={subreddits}
+            setOpen={setOpen}
+            subreddit={s}
+            upsertDetails={upsertDetails}
+          />
+        ))}
+        {searching && results.length === 0 && (
+          <li className="px-3 py-2 text-muted-foreground inline-flex items-center gap-2">
+            <Loader2 className="size-3 animate-spin" /> Searching subreddits…
+          </li>
+        )}
+        {!searching && results.length === 0 && (
+          <li className="px-3 py-2 text-muted-foreground">No results</li>
+        )}
+      </ul>
+    </div>
   )
 }
 
@@ -298,13 +278,111 @@ function Subreddit({
           <Check className="size-4 text-green-600" />
         ) : (
           <span className="text-muted-foreground text-sm opacity-50 italic">
-            {subreddit.members >= 1000
-              ? `${Math.round(subreddit.members / 1000)}k`
-              : subreddit.members}{" "}
-            members
+            {formatMembersCount(subreddit.members)} members
           </span>
         )}
       </button>
     </li>
   )
+}
+
+function normalizeSubredditTag(tag: string): {
+  normalizedName: string
+  displayTag: string
+} {
+  const normalizedName = tag.replace(/^r\//i, "").trim()
+  const displayTag = normalizedName ? `r/${normalizedName}` : tag.trim()
+  return { normalizedName, displayTag }
+}
+
+function insertDisplayTagDedup(
+  previousTags: string[],
+  originalTag: string,
+  displayTag: string
+): string[] {
+  // Replace raw tag with normalized display tag if needed
+  let next = previousTags.map((tag) => (tag === originalTag ? displayTag : tag))
+  // Keep only the first case-insensitive occurrence
+  const targetLower = displayTag.toLowerCase()
+  const firstIdx = next.findIndex((tag) => tag.toLowerCase() === targetLower)
+  if (firstIdx === -1) {
+    next = [...next, displayTag]
+  }
+  next = next.filter(
+    (tag, idx) => tag.toLowerCase() !== targetLower || idx === firstIdx
+  )
+  return next
+}
+
+function replaceTempWithCanonical(
+  previousTags: string[],
+  tempDisplayTag: string,
+  canonicalDisplayTag: string
+): string[] {
+  const tempLower = tempDisplayTag.toLowerCase()
+  const canonicalLower = canonicalDisplayTag.toLowerCase()
+
+  // Replace the first occurrence of the temp tag with canonical
+  let replaced = false
+  let next = previousTags.map((tag) => {
+    if (!replaced && tag.toLowerCase() === tempLower) {
+      replaced = true
+      return canonicalDisplayTag
+    }
+    return tag
+  })
+
+  // Ensure only one canonical instance remains
+  const seen = new Set<string>()
+  next = next.filter((tag) => {
+    const key = tag.toLowerCase()
+    if (key === canonicalLower) {
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    }
+    return true
+  })
+
+  return next
+}
+
+type SubredditAboutDetails = {
+  name: string
+  title: string | null
+  description: string | null
+  description_reddit: string | null
+  created_utc: number | null
+  total_members: number | null
+}
+
+function extractAboutDetailsFromRedditResponse(
+  json: unknown,
+  fallbackName: string
+): { canonicalName: string; details: SubredditAboutDetails } {
+  const data = (json as any)?.data ?? {}
+  const canonicalName: string =
+    typeof data?.display_name_prefixed === "string"
+      ? data.display_name_prefixed
+      : fallbackName
+  const details: SubredditAboutDetails = {
+    name: canonicalName,
+    title: typeof data.title === "string" ? data.title : null,
+    description:
+      typeof data.public_description === "string"
+        ? data.public_description
+        : null,
+    description_reddit:
+      typeof data.description === "string" ? data.description : null,
+    created_utc: typeof data.created_utc === "number" ? data.created_utc : null,
+    total_members:
+      typeof data.subscribers === "number" ? data.subscribers : null,
+  }
+  return { canonicalName, details }
+}
+
+function formatMembersCount(members?: number | null): string {
+  if (!members || members <= 0) return "0"
+  if (members >= 1000) return `${Math.round(members / 1000)}k`
+  return String(members)
 }

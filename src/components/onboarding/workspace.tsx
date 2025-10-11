@@ -1,20 +1,15 @@
 "use client"
+
 import { useEffect, useState, type ReactElement } from "react"
 
+import LabeledSelect from "@/components/ui/labeled-select"
 import AsyncInput from "@/components/input-async"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { request } from "@/lib/api/client"
+
+import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
 import {
   useWorkspaceCompanyValidation,
-  useWorkspaceNameValidation,
   useWorkspaceWebsiteValidation,
+  useWorkspaceNameValidation,
 } from "@/queries/workspace"
 
 type WorkspaceStepProps = {
@@ -55,24 +50,30 @@ export default function WorkspaceStep({
   onValidationChange,
   skipValidation = false,
 }: WorkspaceStepProps): ReactElement {
-  const [employees, setEmployees] = useState(value.employees)
+  const [workspaceName, setWorkspaceName] = useState(value.workspaceName)
   const [workspaceValid, setWorkspaceValid] = useState(skipValidation)
   const [employeesValid, setEmployeesValid] = useState(skipValidation)
-  const [workspaceName, setWorkspaceName] = useState(value.workspaceName)
+  const [companyName, setCompanyName] = useState(value.companyName)
+  const [employees, setEmployees] = useState(value.employees)
+  const [nameValid, setNameValid] = useState(skipValidation)
+  const [website, setWebsite] = useState(value.website)
   const [websiteValid, setWebsiteValid] = useState(
     skipValidation || !value.website
   )
-  const [website, setWebsite] = useState(value.website)
-  const [nameValid, setNameValid] = useState(skipValidation)
-  const [companyName, setCompanyName] = useState(value.companyName)
 
-  const companyValidation = useWorkspaceCompanyValidation()
   const workspaceNameValidation = useWorkspaceNameValidation()
+  const companyValidation = useWorkspaceCompanyValidation()
   const websiteValidation = useWorkspaceWebsiteValidation()
 
-  // Bubble up state
+  // Bubble up state (normalize website so equivalent protocol variants don't thrash state)
   useEffect(() => {
-    onChange({ companyName, workspaceName, website, employees })
+    const normalizedWebsite = normalizeWebsiteUrl(website.trim()) || website
+    onChange({
+      companyName,
+      workspaceName,
+      website: normalizedWebsite,
+      employees,
+    })
   }, [companyName, workspaceName, website, employees, onChange])
 
   // Bubble up validation state
@@ -87,78 +88,49 @@ export default function WorkspaceStep({
 
   return (
     <section className="space-y-4">
-      <div>
-        <Label htmlFor="company-name">Company name</Label>
-        <div className="relative mt-1">
-          <AsyncInput
-            id="company-name"
-            placeholder="e.g. Company Inc."
-            valueState={[companyName, setCompanyName]}
-            setValid={setNameValid}
-            skipValidation={skipValidation}
-            validate={async (val, signal) =>
-              companyValidation.mutateAsync({ name: val, signal })
-            }
-          />
-        </div>
-      </div>
+      <AsyncInput
+        label="Company name"
+        placeholder="e.g. Company Inc."
+        valueState={[companyName, setCompanyName]}
+        setValid={setNameValid}
+        skipValidation={skipValidation}
+        validate={async (val, signal) =>
+          companyValidation.mutateAsync({ name: val, signal })
+        }
+      />
 
-      <div>
-        <Label htmlFor="org-name">Workspace name</Label>
-        <div className="relative mt-1">
-          <AsyncInput
-            id="org-name"
-            placeholder="e.g. Company"
-            valueState={[workspaceName, setWorkspaceName]}
-            setValid={setWorkspaceValid}
-            skipValidation={skipValidation}
-            validate={async (val, signal) =>
-              workspaceNameValidation.mutateAsync({ name: val, signal })
-            }
-          />
-        </div>
-      </div>
+      <AsyncInput
+        label="Workspace name"
+        placeholder="e.g. Company"
+        valueState={[workspaceName, setWorkspaceName]}
+        setValid={setWorkspaceValid}
+        skipValidation={skipValidation}
+        validate={async (val, signal) =>
+          workspaceNameValidation.mutateAsync({ name: val, signal })
+        }
+      />
 
-      <div>
-        <Label htmlFor="org-website">Website (optional)</Label>
-        <div className="relative mt-1">
-          <AsyncInput
-            id="org-website"
-            placeholder="e.g. company.com"
-            valueState={[website, setWebsite]}
-            setValid={setWebsiteValid}
-            skipValidation={skipValidation}
-            validate={async (val, signal) => {
-              const trimmed = val.trim()
-              if (!trimmed) return { ok: true }
-              return websiteValidation.mutateAsync({ website: trimmed, signal })
-            }}
-          />
-        </div>
-        <span className="text-xs text-muted-foreground pl-1">
-          With your website, we can personalize suggestions based on the
-          services you offer.
-        </span>
-      </div>
+      <AsyncInput
+        label="Website (optional)"
+        placeholder="e.g. company.com"
+        valueState={[website, setWebsite]}
+        setValid={setWebsiteValid}
+        skipValidation={skipValidation}
+        helperText="We’ll use this to suggest keywords, subs, and competitors — never to crawl private data."
+        validate={async (val, signal) => {
+          const trimmed = val.trim()
+          if (!trimmed) return { ok: true }
+          return websiteValidation.mutateAsync({ website: trimmed, signal })
+        }}
+      />
 
-      <div>
-        <Label htmlFor="org-employees">Number of employees</Label>
-        <Select value={employees} onValueChange={setEmployees}>
-          <SelectTrigger
-            id="org-employees"
-            className="mt-1 w-full border-1 border-border"
-          >
-            <SelectValue placeholder="Select number of employees" />
-          </SelectTrigger>
-          <SelectContent>
-            {EMPLOYEE_RANGES.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <LabeledSelect
+        label="Number of employees"
+        placeholder="Select number of employees"
+        value={employees}
+        onValueChange={setEmployees}
+        options={EMPLOYEE_RANGES.map((r) => ({ value: r }))}
+      />
     </section>
   )
 }
