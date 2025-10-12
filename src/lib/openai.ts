@@ -1,8 +1,10 @@
+import { wrapOpenAI } from "langsmith/wrappers"
+import { traceable } from "langsmith/traceable"
 import OpenAI from 'openai'
 
-const client = new OpenAI()
+const client = wrapOpenAI(new OpenAI())
 
-export async function sendMessage(message: string) {
+export const sendMessage = traceable(async (message: string) => {
   const response = await client.responses.create({
     prompt: {
       "id": "pmpt_68e47f5e870c8196b29f615d98aefa260129ab9c6777f2a0",
@@ -21,4 +23,4 @@ export async function sendMessage(message: string) {
     // If parsing fails, return invalid response
     return { valid: false };
   }
-}
+})
