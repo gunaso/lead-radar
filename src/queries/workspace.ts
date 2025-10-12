@@ -115,9 +115,91 @@ export function useUpdateWorkspaceEntities() {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
-    onMutate: async (_payload) => {
+    onMutate: async (payload) => {
       await qc.cancelQueries({ queryKey: qk.profile() })
-      const previous = qc.getQueryData(qk.profile())
+      const previous = qc.getQueryData<any>(qk.profile())
+      if (previous && previous.profile?.workspace?.id === payload.workspaceId) {
+        const next = { ...previous }
+        const ws = { ...next.profile.workspace }
+        if (Array.isArray(payload.keywords)) {
+          ws.keywords = [...payload.keywords]
+        }
+        if (Array.isArray(payload.subreddits)) {
+          const detailsByName = new Map(
+            (payload.subredditsDetails || []).map((d) => [
+              String((d?.name || '').replace(/^r\//i, '')).toLowerCase(),
+              d,
+            ])
+          )
+          ws.subreddits = payload.subreddits.map((n) => {
+            const canonical = String(n).replace(/^r\//i, '')
+            const d = detailsByName.get(canonical.toLowerCase())
+            return {
+              name: canonical.startsWith('r/') ? canonical : `r/${canonical}`,
+              title: d?.title ?? null,
+              description: d?.description ?? null,
+              description_reddit: d?.description_reddit ?? null,
+              // created_at here expects a date string; optimistic value omitted
+              created_at: null,
+              total_members: d?.total_members ?? null,
+            }
+          })
+        }
+        if (Array.isArray(payload.competitors)) {
+          ws.competitors = payload.competitors.map((c) =>
+            typeof c === 'string' ? { name: c, website: null } : { name: c.name, website: c.website ?? null }
+          )
+        }
+        if (payload.source !== undefined) {
+          ws.source = payload.source ?? null
+        }
+        if (payload.goal !== undefined) {
+          ws.goal = Array.isArray(payload.goal) ? [...payload.goal] : null
+        }
+        next.profile = { ...next.profile, workspace: ws }
+        qc.setQueryData(qk.profile(), next)
+      }
+      return { previous }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.previous) qc.setQueryData(qk.profile(), ctx.previous)
+    },
+    onSettled: async () => {
+      await qc.invalidateQueries({ queryKey: qk.profile() })
+    },
+  })
+}
+
+
+// Optimistic update for basic workspace fields used in settings dialog
+export function useUpdateWorkspaceBasics() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: {
+      workspaceId: number
+      companyName: string
+      website: string | null
+      employees: string
+    }) => request<{ ok: boolean }>("/api/workspace", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+    onMutate: async (payload) => {
+      await qc.cancelQueries({ queryKey: qk.profile() })
+      const previous = qc.getQueryData<any>(qk.profile())
+      if (previous && previous.profile?.workspace?.id === payload.workspaceId) {
+        const next = { ...previous }
+        next.profile = {
+          ...next.profile,
+          workspace: {
+            ...next.profile.workspace,
+            company: payload.companyName,
+            website: payload.website,
+            employees: payload.employees,
+          },
+        }
+        qc.setQueryData(qk.profile(), next)
+      }
       return { previous }
     },
     onError: (_e, _v, ctx) => {

@@ -1,5 +1,7 @@
 import { toast } from "sonner"
 
+import { normalizeSubreddits, buildSubredditDetails } from "@/lib/workspace-utils"
+import type { SubredditDetailsInput } from "@/lib/api/workspace-entities"
 import type { Step, GoalOption } from "@/types/onboarding"
 import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
 
@@ -153,18 +155,11 @@ export function useOnboardingCommands(deps: {
           }
         )
       } else if (currentStep === 4) {
-        const normalized = state.subreddits.map((s: string) => s.replace(/^r\//i, "").trim()).filter(Boolean)
-        const subredditsDetails = normalized
-          .map((n: string) => state.subredditDetailsByName[n.toLowerCase()])
-          .filter(Boolean)
-          .map((d: any) => ({
-            name: d.name,
-            title: d.title ?? null,
-            description: d.description ?? null,
-            description_reddit: d.description_reddit ?? null,
-            created_utc: d.created_utc ?? null,
-            total_members: d.total_members ?? null,
-          }))
+        const normalized = normalizeSubreddits(state.subreddits)
+        const subredditsDetails = buildSubredditDetails(
+          normalized,
+          state.subredditDetailsByName as Record<string, SubredditDetailsInput>
+        )
         updateWorkspaceEntities.mutate(
           { workspaceId: state.workspaceId, subreddits: normalized, subredditsDetails },
           {
@@ -196,18 +191,11 @@ export function useOnboardingCommands(deps: {
     window.location.href = "/"
     if (state.workspaceId) {
       try {
-        const normalized = state.subreddits.map((s: string) => s.replace(/^r\//i, "").trim()).filter(Boolean)
-        const subredditsDetails = normalized
-          .map((n: string) => state.subredditDetailsByName[n.toLowerCase()])
-          .filter(Boolean)
-          .map((d: any) => ({
-            name: d.name,
-            title: d.title ?? null,
-            description: d.description ?? null,
-            description_reddit: d.description_reddit ?? null,
-            created_utc: d.created_utc ?? null,
-            total_members: d.total_members ?? null,
-          }))
+        const normalized = normalizeSubreddits(state.subreddits)
+        const subredditsDetails = buildSubredditDetails(
+          normalized,
+          state.subredditDetailsByName as Record<string, SubredditDetailsInput>
+        )
 
         await updateWorkspaceEntities.mutateAsync({
           workspaceId: state.workspaceId,

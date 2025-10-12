@@ -117,5 +117,23 @@ export function useUpdateOnboardingStepMutation() {
   })
 }
 
+export function useChangePasswordMutation() {
+  return useMutation({
+    mutationFn: async (payload: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
+      return request<{ ok: boolean }>("/api/profile/password", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      })
+    },
+  })
+}
 
-
+export function useDeleteAccountMutation() {
+  return useMutation({
+    mutationFn: async () => {
+      return request<{ ok: boolean }>("/api/account", {
+        method: "DELETE",
+      })
+    },
+  })
+}

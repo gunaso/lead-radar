@@ -1,20 +1,35 @@
-import { createClient } from "@/lib/supabase/server"
-import { revalidatePath } from "next/cache"
-import { type NextRequest, NextResponse } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
 
-export async function POST(req: NextRequest) {
-  const supabase = await createClient()
+export async function POST() {
+  const cookieStore = await cookies()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // ignored
+          }
+        },
+      },
+    }
+  )
 
-  if (user) {
-    await supabase.auth.signOut()
-  }
+  // Clear refresh token globally and set cleared cookies
+  await supabase.auth.signOut({ scope: "global" })
 
-  revalidatePath("/", "layout")
-  return NextResponse.redirect(new URL("/login", req.url), { status: 302 })
+  return NextResponse.json({ ok: true })
 }
 
 

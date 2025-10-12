@@ -45,10 +45,24 @@
   }
 }
 
-button:not([role="combobox"]):active {
+button:not([role="button"]):not([role="combobox"]):active {
+  transition: transform var(--default-transition-duration)
+    var(--default-transition-timing-function);
   scale: 0.97;
 }
 
 button:hover {
   cursor: pointer;
+}
+
+@keyframes shine {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  to {
+    background-position: 0% 0%;
+  }
 }

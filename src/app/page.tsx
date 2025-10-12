@@ -1,14 +1,14 @@
 "use client"
-import type { ReactElement } from "react"
-import { useEffect, useMemo, useState } from "react"
-import type { DateRange } from "react-day-picker"
+import { type ReactElement, useMemo, useState } from "react"
 
-import { AppHeader } from "@/components/app-header"
-import { FiltersSidebar } from "@/components/filters-sidebar"
-import { CommentsList } from "@/components/comments"
-import { PostsList } from "@/components/posts"
-import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { FiltersSidebar } from "@/components/filters-sidebar"
+import { Card, CardContent } from "@/components/ui/card"
+import { CommentsList } from "@/components/comments"
+import { Header } from "@/components/header/header"
+import type { DateRange } from "react-day-picker"
+import { PostsList } from "@/components/posts"
+
 import type { Comment, Post, Sentiment } from "@/types/reddit"
 
 const MOCK_POSTS: Post[] = [
@@ -129,7 +129,7 @@ export default function Home(): ReactElement {
 
   return (
     <div className="min-h-dvh">
-      <AppHeader search={search} onSearchChange={setSearch} />
+      <Header search={search} onSearchChange={setSearch} />
 
       <main className="mx-auto max-w-6xl px-4 py-6 grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6">
         <FiltersSidebar

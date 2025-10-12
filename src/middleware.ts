@@ -28,6 +28,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
+  const searchParams = request.nextUrl.searchParams
 
   // Allow API routes to pass through without redirects
   if (pathname.startsWith("/api/")) {
@@ -35,7 +36,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // If authenticated, prevent access to login/signup (exact paths only)
-  if (user && (pathname === "/login" || pathname === "/signup")) {
+  // EXCEPT when logout=true query param is present (logout in progress)
+  const isLoggingOut = searchParams.get("logout") === "true"
+  if (user && (pathname === "/login" || pathname === "/signup") && !isLoggingOut) {
     const url = request.nextUrl.clone()
     url.pathname = "/"
     return NextResponse.redirect(url)

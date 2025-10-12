@@ -6,6 +6,7 @@ import LabeledSelect from "@/components/ui/labeled-select"
 import AsyncInput from "@/components/input-async"
 
 import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
+import { EMPLOYEE_RANGES } from "@/types/onboarding"
 import {
   useWorkspaceCompanyValidation,
   useWorkspaceWebsiteValidation,
@@ -33,16 +34,6 @@ type WorkspaceStepProps = {
   }) => void
   skipValidation?: boolean
 }
-
-const EMPLOYEE_RANGES = [
-  "1-10",
-  "11-50",
-  "51-200",
-  "201-500",
-  "501-1,000",
-  "1,001-5,000",
-  "5,001+",
-]
 
 export default function WorkspaceStep({
   value,

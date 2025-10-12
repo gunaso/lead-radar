@@ -7,7 +7,13 @@ import {
   useMemo,
 } from "react"
 
-import { CircleCheck } from "lucide-react"
+import {
+  type LucideIcon,
+  CircleCheck,
+  SearchCheck,
+  Swords,
+  Layers,
+} from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import CompetitorsStep from "@/components/onboarding/competitors"
@@ -16,6 +22,7 @@ import KeywordsStep from "@/components/onboarding/keywords"
 
 import type { SubredditResult } from "@/hooks/use-subreddit-search"
 import type { CompetitorInput } from "@/types/onboarding"
+import { cn } from "@/lib/utils"
 
 export type TrackingTabValue = "keywords" | "subreddits" | "competitors"
 
@@ -54,6 +61,8 @@ type TrackingTabsProps = {
   isKeywordsDone: boolean
   isSubredditsDone: boolean
   isCompetitorsDone: boolean
+
+  showIcons?: boolean
 }
 
 export default function TrackingTabs(props: TrackingTabsProps): ReactElement {
@@ -73,18 +82,25 @@ export default function TrackingTabs(props: TrackingTabsProps): ReactElement {
       className="w-full min-h-[300px]"
     >
       <TabsList className="mb-3 bg-transparent! max-w-[270px] w-full items-start h-auto! mx-auto pb-6">
-        <TabSelector step={1} title="Keywords" completed={completed.keywords} />
-        <TabConnector />
+        <TabSelector
+          step={1}
+          title="Keywords"
+          completed={completed.keywords}
+          ShowIcon={props.showIcons ? SearchCheck : null}
+        />
+        <TabConnector showingIcons={props.showIcons} />
         <TabSelector
           step={2}
           title="Subreddits"
           completed={completed.subreddits}
+          ShowIcon={props.showIcons ? Layers : null}
         />
-        <TabConnector />
+        <TabConnector showingIcons={props.showIcons} />
         <TabSelector
           step={3}
           title="Competitors"
           completed={completed.competitors}
+          ShowIcon={props.showIcons ? Swords : null}
         />
       </TabsList>
 
@@ -122,17 +138,23 @@ function TabSelector({
   step,
   title,
   completed,
+  ShowIcon = null,
 }: {
   step: number
   title: string
   completed: boolean
+  ShowIcon?: LucideIcon | null
 }) {
   return (
     <TabsTrigger
       value={title.toLowerCase()}
-      className="flex flex-col justify-centeritems-center gap-2 relative p-0 data-[state=active]:bg-transparent rounded-full active:scale-100! data-[state=active]:shadow-none group"
+      className="flex flex-col justify-centeritems-center gap-2 relative p-0 data-[state=active]:bg-transparent rounded-full active:scale-100! data-[state=active]:shadow-none group focus-visible:outline-none focus-visible:ring-0 focus-visible:border-none"
     >
-      {completed ? (
+      {ShowIcon ? (
+        <span className="flex items-center justify-center size-8 rounded-full border-2 border-muted-foreground/80 text-muted-foreground/80 group-data-[state=active]:shadow-sm">
+          <ShowIcon className="size-4" />
+        </span>
+      ) : completed ? (
         <CircleCheck className="text-green-600 size-6 group-data-[state=active]:[text-shadow:0_1px_0_rgba(0,0,0,0.10)]" />
       ) : (
         <span className="flex items-center justify-center size-6 rounded-full border-2 border-muted-foreground/80 text-muted-foreground/80 group-data-[state=active]:shadow-sm">
@@ -146,9 +168,14 @@ function TabSelector({
   )
 }
 
-function TabConnector() {
+function TabConnector({ showingIcons }: { showingIcons: boolean | undefined }) {
   return (
-    <div className="h-6 flex items-center justify-center w-full pt-px">
+    <div
+      className={cn(
+        "h-6 flex items-center justify-center w-full pt-px",
+        showingIcons ? "h-10" : ""
+      )}
+    >
       <span className="w-full h-[2px] bg-muted-foreground/80" />
     </div>
   )

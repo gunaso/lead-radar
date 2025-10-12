@@ -5,6 +5,7 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import type { VariantProps } from "class-variance-authority"
 
 function AlertDialog({
   ...props
@@ -46,11 +47,14 @@ function AlertDialogOverlay({
 
 function AlertDialogContent({
   className,
+  overlayProps,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
+  overlayProps?: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>
+}) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlay {...overlayProps} />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         className={cn(
@@ -120,11 +124,14 @@ function AlertDialogDescription({
 
 function AlertDialogAction({
   className,
+  variant,
+  size,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Action>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Action> &
+  VariantProps<typeof buttonVariants>) {
   return (
     <AlertDialogPrimitive.Action
-      className={cn(buttonVariants(), className)}
+      className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     />
   )
@@ -132,11 +139,15 @@ function AlertDialogAction({
 
 function AlertDialogCancel({
   className,
+  variant,
+  size,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel> &
+  VariantProps<typeof buttonVariants>) {
+  const finalVariant = variant ?? "outline"
   return (
     <AlertDialogPrimitive.Cancel
-      className={cn(buttonVariants({ variant: "outline" }), className)}
+      className={cn(buttonVariants({ variant: finalVariant, size }), className)}
       {...props}
     />
   )

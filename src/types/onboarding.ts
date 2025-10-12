@@ -34,6 +34,15 @@ export type CompanyRoleOption =
   | "Customer Success"
   | "Other"
 
+export type EmployeeRange =
+  | "1-10"
+  | "11-50"
+  | "51-200"
+  | "201-500"
+  | "501-1,000"
+  | "1,001-5,000"
+  | "5,001+"
+
 export const SOURCE_OPTIONS = [
   "Youtube",
   "Reddit",
@@ -66,3 +75,12 @@ export const COMPANY_ROLES = [
   "Other",
 ] as const satisfies readonly CompanyRoleOption[]
 
+export const EMPLOYEE_RANGES = [
+  "1-10",
+  "11-50",
+  "51-200",
+  "201-500",
+  "501-1,000",
+  "1,001-5,000",
+  "5,001+",
+] as const satisfies readonly EmployeeRange[]
