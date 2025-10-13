@@ -55,6 +55,10 @@ button:hover {
   cursor: default;
 }
 
+.page-padding-x {
+  @apply lg:pl-8 lg:pr-6 pl-4 pr-5;
+}
+
 @keyframes shine {
   0% {
     background-position: 0% 0%;

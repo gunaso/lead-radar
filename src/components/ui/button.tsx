@@ -1,6 +1,8 @@
-import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "@radix-ui/react-slot"
+import * as React from "react"
+
+import { PlusIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -24,7 +26,7 @@ const buttonVariants = cva(
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         sm: "h-6 rounded-md gap-1.5 pl-1.5 pr-2 text-xs",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
+        icon: "size-7",
         goBack: "size-6 p-1",
       },
     },
@@ -56,4 +58,13 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+function NewButton({ name }: { name: string }) {
+  return (
+    <Button variant="outline" size="sm">
+      <PlusIcon className="size-4" />
+      New {name}
+    </Button>
+  )
+}
+
+export { Button, NewButton, buttonVariants }

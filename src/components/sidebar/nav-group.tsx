@@ -1,5 +1,6 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { type ReactNode } from "react"
 import Link from "next/link"
 
@@ -29,10 +30,18 @@ type NavGroupProps = {
 }
 
 export default function NavGroup({ label, items }: NavGroupProps) {
+  const pathname = usePathname()
   return (
     <NavGroupContainer label={label}>
       {items.map((item) => (
-        <SidebarMenuButton key={item.title} asChild>
+        <SidebarMenuButton
+          key={item.title}
+          asChild
+          isActive={
+            item.url !== "#" &&
+            (pathname === item.url || pathname.startsWith(`${item.url}/`))
+          }
+        >
           <Link href={item.url}>
             <item.icon />
             <span>{item.title}</span>
