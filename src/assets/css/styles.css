@@ -52,7 +52,7 @@ button:not([role="button"]):not([role="combobox"]):active {
 }
 
 button:hover {
-  cursor: pointer;
+  cursor: default;
 }
 
 @keyframes shine {

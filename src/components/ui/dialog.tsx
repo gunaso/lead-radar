@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { motion, AnimatePresence } from "framer-motion"
 import { XIcon } from "lucide-react"
 
+import { dialogVariants, animationVariants } from "@/lib/motion-config"
 import { cn } from "@/lib/utils"
 
 const DialogContext = React.createContext<{
@@ -72,10 +73,10 @@ function DialogOverlay({
           {...props}
         >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={animationVariants.fade}
           />
         </DialogPrimitive.Overlay>
       )}
@@ -109,10 +110,10 @@ function DialogContent({
             {...props}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial="closed"
+              animate="open"
+              exit="closed"
+              variants={dialogVariants}
             >
               {children}
               {showCloseButton && (

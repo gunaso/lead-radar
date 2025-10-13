@@ -73,6 +73,63 @@ export const animationVariants = {
 } as const
 
 /**
+ * Collapse/expand animation variants
+ * Used for collapsible components, dropdowns, tooltips, etc.
+ */
+export const collapseVariants = {
+  open: {
+    height: "auto",
+    opacity: 1,
+    transition: {
+      height: { duration: 0.2, ease: "easeOut" },
+      opacity: { duration: 0.175, ease: "easeOut" },
+    },
+  },
+  closed: {
+    height: 0,
+    opacity: 0,
+    transition: {
+      height: { duration: 0.2, ease: "easeOut" },
+      opacity: { duration: 0.175, ease: "easeOut" },
+    },
+  },
+} as const
+
+/**
+ * Popover/dropdown animation variants with scale
+ * Used for dropdowns, popovers, context menus, etc.
+ */
+export const popoverVariants = {
+  open: {
+    scale: 1,
+    opacity: 1,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+  closed: {
+    scale: 0.93,
+    opacity: 0,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+} as const
+
+/**
+ * Dialog/modal animation variants with scale
+ * Used for dialogs, modals, and larger overlays
+ */
+export const dialogVariants = {
+  open: {
+    scale: 1,
+    opacity: 1,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+  closed: {
+    scale: 0.95,
+    opacity: 0,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+} as const
+
+/**
  * Slide navigation variants for page transitions
  * Used for multi-step forms and navigation flows
  */
