@@ -59,6 +59,10 @@ button:hover {
   @apply lg:pl-8 lg:pr-6 pl-4 pr-5;
 }
 
+.settings-section {
+  @apply flex flex-col gap-12 w-full;
+}
+
 @keyframes shine {
   0% {
     background-position: 0% 0%;
