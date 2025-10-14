@@ -1,5 +1,6 @@
 "use client"
 
+import { CommingSoon } from "@/components/ui/comming-soon"
 import {
   SidebarGroup,
   SidebarMenu,
@@ -12,9 +13,7 @@ export default function NavCompetitors() {
       <SidebarMenu>
         <SidebarGroupLabel className="gap-2">
           Competitors
-          <span className="text-2xs text-primary uppercase bg-primary/10 px-1.5 py-0.5 rounded-md">
-            Coming soon
-          </span>
+          <CommingSoon />
         </SidebarGroupLabel>
       </SidebarMenu>
     </SidebarGroup>

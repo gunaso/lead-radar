@@ -1,3 +1,6 @@
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+
 import {
   ArrowUpCircle,
   ChevronDown,
@@ -7,7 +10,7 @@ import {
   LogOut,
 } from "lucide-react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { WorkspaceAvatar } from "@/components/ui/avatar"
 import {
   DropdownMenuSeparator,
   DropdownMenuContent,
@@ -22,8 +25,6 @@ import {
   SidebarHeader,
   SidebarMenu,
 } from "@/components/ui/sidebar"
-
-import { getInitials } from "@/lib/utils"
 
 type Workspace = {
   company: string
@@ -44,7 +45,11 @@ export default function NavHeader() {
             <DropdownMenuTrigger asChild>
               <SidebarMenuButton asChild className="w-auto p-1">
                 <span className="flex items-center gap-1">
-                  <AvatarWithFallback workspace={workspace} />
+                  <WorkspaceAvatar
+                    logo={workspace.logo}
+                    company={workspace.company}
+                    className="size-5 text-2xs/1"
+                  />
                   <span className="text-xs font-semibold truncate">
                     {workspace.company}
                   </span>
@@ -66,22 +71,20 @@ export default function NavHeader() {
   )
 }
 
-function AvatarWithFallback({ workspace }: { workspace: Workspace }) {
-  return (
-    <Avatar className="size-5 rounded-sm">
-      <AvatarImage
-        className="rounded-sm"
-        src={workspace.logo ?? ""}
-        alt={workspace.company}
-      />
-      <AvatarFallback className="rounded-sm bg-gradient-to-t from-[color-mix(in_oklch,var(--accent),var(--primary)_40%)] to-[color-mix(in_oklch,var(--accent),var(--primary)_10%)] text-accent-foreground font-bold text-2xs/1">
-        {getInitials(workspace.company)}
-      </AvatarFallback>
-    </Avatar>
-  )
-}
-
 function WorkspaceDropdown() {
+  const router = useRouter()
+
+  const handleLogout = () => {
+    router.replace("/login?logout=true")
+
+    const url = "/auth/signout"
+    const blob = new Blob([], { type: "application/json" })
+
+    if (!navigator.sendBeacon(url, blob)) {
+      fetch(url, { method: "POST", keepalive: true }).catch(() => {})
+    }
+  }
+
   return (
     <DropdownMenuContent className="w-54" align="start">
       <DropdownMenuItem>
@@ -90,17 +93,19 @@ function WorkspaceDropdown() {
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
-        <DropdownMenuItem>
-          <Settings />
-          Settings
-        </DropdownMenuItem>
+        <Link href="/settings/profile">
+          <DropdownMenuItem>
+            <Settings />
+            Settings
+          </DropdownMenuItem>
+        </Link>
         <DropdownMenuItem>
           <CreditCard />
           Billing
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
-      <DropdownMenuItem>
+      <DropdownMenuItem onClick={handleLogout}>
         <LogOut />
         Log out
       </DropdownMenuItem>
