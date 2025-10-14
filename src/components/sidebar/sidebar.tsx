@@ -44,7 +44,7 @@ const navTracking = {
   items: [
     {
       title: "Keywords",
-      url: "#",
+      url: "/keywords",
       icon: SearchCheck,
     },
     {
