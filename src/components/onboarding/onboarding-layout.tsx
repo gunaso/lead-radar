@@ -129,6 +129,7 @@ export default function OnboardingLayout(
                 <CardFooter className="flex items-center justify-between">
                   <span className="w-[150px]">
                     <Button
+                      size="onboarding"
                       variant="ghost"
                       onClick={props.onBack}
                       disabled={props.showLoadingScreen}
@@ -164,6 +165,7 @@ export default function OnboardingLayout(
 
                   <span className="flex justify-end w-[150px]">
                     <Button
+                      size="onboarding"
                       onClick={props.onContinueOrFinish}
                       disabled={!props.canContinue || props.showLoadingScreen}
                       className="min-w-32"

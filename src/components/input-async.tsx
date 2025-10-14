@@ -207,6 +207,8 @@ export default function AsyncInput({
                   id={inputId}
                   {...restInputProps}
                   value={value}
+                  size="onboarding"
+                  variant="onboarding"
                   onChange={inputOnChange}
                   aria-invalid={!!error && !success}
                   className={cn(

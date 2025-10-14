@@ -23,8 +23,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
-        sm: "h-6 rounded-md gap-1.5 pl-1.5 pr-2 text-xs",
+        default: "h-8 px-3.5 has-[>svg]:px-2.5",
+        onboarding: "h-9 px-4 py-2 has-[>svg]:px-3",
+        loginSm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        sm: "h-6 rounded-sm gap-1.5 pl-1.5 pr-2 text-xs",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-7",
         goBack: "size-6 p-1",

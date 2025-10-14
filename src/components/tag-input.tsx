@@ -77,6 +77,8 @@ export function TagInput({
       </div>
       <div className="mt-2 flex items-center gap-2">
         <Input
+          size="onboarding"
+          variant="onboarding"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {

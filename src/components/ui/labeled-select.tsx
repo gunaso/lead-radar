@@ -49,15 +49,22 @@ export default function LabeledSelect({
       <Select value={value} onValueChange={onValueChange}>
         <SelectTrigger
           id={selectId}
-          className={cn("w-full border-1 border-border", triggerClassName)}
+          className={cn(
+            "shadow-xs focus-visible:ring-[3px] focus-visible:border-ring focus-visible:ring-ring/50 rounded-md h-9 px-3 py-1",
+            triggerClassName
+          )}
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="rounded-md shadow-md">
           {children
             ? children
             : options?.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
+                <SelectItem
+                  className="py-1.5"
+                  key={opt.value}
+                  value={opt.value}
+                >
                   {opt.label ?? opt.value}
                 </SelectItem>
               ))}

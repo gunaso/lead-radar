@@ -50,6 +50,8 @@ export function ProvidersView({
           id="email"
           name="email"
           type="email"
+          size="onboarding"
+          variant="onboarding"
           placeholder="you@example.com"
           value={email}
           onChange={(e) => onEmailChange(e.target.value)}
@@ -57,7 +59,7 @@ export function ProvidersView({
         />
         <Button
           className="w-full"
-          size="sm"
+          size="loginSm"
           disabled={!isEmailValid}
           onClick={onContinue}
         >

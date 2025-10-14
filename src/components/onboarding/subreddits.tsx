@@ -118,6 +118,8 @@ export default function SubredditsStep({
       </span>
       <div className="relative" ref={containerRef}>
         <Input
+          size="onboarding"
+          variant="onboarding"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)

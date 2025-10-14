@@ -137,6 +137,7 @@ export default function CompetitorsStep({
           <Button
             type="button"
             onClick={handleAdd}
+            size="onboarding"
             disabled={!canAdd || (Boolean(website.trim()) && !websiteValid)}
             className="inline-flex items-center gap-2"
           >
@@ -147,6 +148,7 @@ export default function CompetitorsStep({
             <Button
               type="button"
               variant="ghost"
+              size="onboarding"
               className="ml-2"
               onClick={resetForm}
             >

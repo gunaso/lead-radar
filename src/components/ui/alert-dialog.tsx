@@ -1,16 +1,43 @@
 "use client"
 
-import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
-
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 import type { VariantProps } from "class-variance-authority"
+import { motion, AnimatePresence } from "framer-motion"
+import * as React from "react"
+
+import { buttonVariants } from "@/components/ui/button"
+
+import { dialogVariants, animationVariants } from "@/lib/motion-config"
+import { cn } from "@/lib/utils"
+
+const AlertDialogContext = React.createContext<{
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}>({
+  open: false,
+  onOpenChange: () => {},
+})
 
 function AlertDialog({
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Root>) {
-  return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />
+  const [internalOpen, setInternalOpen] = React.useState(false)
+
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen
+  const onOpenChange = controlledOnOpenChange || setInternalOpen
+
+  return (
+    <AlertDialogContext.Provider value={{ open, onOpenChange }}>
+      <AlertDialogPrimitive.Root
+        data-slot="alert-dialog"
+        open={open}
+        onOpenChange={onOpenChange}
+        {...props}
+      />
+    </AlertDialogContext.Provider>
+  )
 }
 
 function AlertDialogTrigger({
@@ -33,37 +60,64 @@ function AlertDialogOverlay({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
+  const { open } = React.useContext(AlertDialogContext)
+
   return (
-    <AlertDialogPrimitive.Overlay
-      data-slot="alert-dialog-overlay"
-      className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
-        className
+    <AnimatePresence>
+      {open && (
+        <AlertDialogPrimitive.Overlay
+          data-slot="alert-dialog-overlay"
+          forceMount
+          asChild
+          className={cn("fixed inset-0 z-50 bg-black/50", className)}
+          {...props}
+        >
+          <motion.div
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={animationVariants.fade}
+          />
+        </AlertDialogPrimitive.Overlay>
       )}
-      {...props}
-    />
+    </AnimatePresence>
   )
 }
 
 function AlertDialogContent({
   className,
-  overlayProps,
+  children,
   ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content> & {
-  overlayProps?: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>
-}) {
+}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+  const { open } = React.useContext(AlertDialogContext)
+
   return (
-    <AlertDialogPortal>
-      <AlertDialogOverlay {...overlayProps} />
-      <AlertDialogPrimitive.Content
-        data-slot="alert-dialog-content"
-        className={cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
-          className
-        )}
-        {...props}
-      />
-    </AlertDialogPortal>
+    <AnimatePresence>
+      {open && (
+        <AlertDialogPrimitive.Portal forceMount>
+          <AlertDialogOverlay />
+          <AlertDialogPrimitive.Content
+            data-slot="alert-dialog-content"
+            forceMount
+            asChild
+            className={cn(
+              "bg-card fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] outline-none rounded-md border sm:max-w-lg",
+              className
+            )}
+            {...props}
+          >
+            <motion.div
+              initial="closed"
+              animate="open"
+              exit="closed"
+              variants={dialogVariants}
+            >
+              {children}
+            </motion.div>
+          </AlertDialogPrimitive.Content>
+        </AlertDialogPrimitive.Portal>
+      )}
+    </AnimatePresence>
   )
 }
 
@@ -74,7 +128,20 @@ function AlertDialogHeader({
   return (
     <div
       data-slot="alert-dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn(
+        "flex gap-0.5 text-left pl-8 pr-16 py-4 border-b",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function AlertDialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="alert-dialog-body"
+      className={cn("flex flex-col gap-2 py-6 px-8", className)}
       {...props}
     />
   )
@@ -88,7 +155,7 @@ function AlertDialogFooter({
     <div
       data-slot="alert-dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end px-8 pb-6",
         className
       )}
       {...props}
@@ -103,7 +170,7 @@ function AlertDialogTitle({
   return (
     <AlertDialogPrimitive.Title
       data-slot="alert-dialog-title"
-      className={cn("text-lg font-semibold", className)}
+      className={cn("text-base font-semibold", className)}
       {...props}
     />
   )
@@ -165,4 +232,5 @@ export {
   AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
+  AlertDialogBody,
 }
