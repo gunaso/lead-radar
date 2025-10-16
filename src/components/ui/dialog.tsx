@@ -7,6 +7,7 @@ import { XIcon } from "lucide-react"
 
 import { dialogVariants, animationVariants } from "@/lib/motion-config"
 import { cn } from "@/lib/utils"
+import { useSidebar } from "@/components/ui/sidebar"
 
 const DialogContext = React.createContext<{
   open: boolean
@@ -93,6 +94,7 @@ function DialogContent({
   showCloseButton?: boolean
 }) {
   const { open } = React.useContext(DialogContext)
+  const { state: sidebarState, isMobile } = useSidebar()
 
   return (
     <AnimatePresence>
@@ -104,7 +106,10 @@ function DialogContent({
             forceMount
             asChild
             className={cn(
-              "bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg",
+              "bg-background fixed top-[30%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-30%] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg",
+              !isMobile &&
+                sidebarState === "expanded" &&
+                "md:left-[calc(50%+var(--sidebar-width-2)/2)]",
               className
             )}
             {...props}

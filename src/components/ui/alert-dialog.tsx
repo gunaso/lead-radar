@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import * as React from "react"
 
 import { buttonVariants } from "@/components/ui/button"
+import { useSidebar } from "@/components/ui/sidebar"
 
 import { dialogVariants, animationVariants } from "@/lib/motion-config"
 import { cn } from "@/lib/utils"
@@ -90,6 +91,7 @@ function AlertDialogContent({
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
   const { open } = React.useContext(AlertDialogContext)
+  const { state: sidebarState, isMobile } = useSidebar()
 
   return (
     <AnimatePresence>
@@ -101,7 +103,10 @@ function AlertDialogContent({
             forceMount
             asChild
             className={cn(
-              "bg-card fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] outline-none rounded-md border sm:max-w-lg",
+              "bg-card fixed top-[30%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-30%] outline-none rounded-md border sm:max-w-lg",
+              !isMobile &&
+                sidebarState === "expanded" &&
+                "md:left-[calc(50%+var(--sidebar-width-2)/2)]",
               className
             )}
             {...props}
