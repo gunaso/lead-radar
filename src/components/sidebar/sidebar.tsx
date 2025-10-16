@@ -28,7 +28,7 @@ const navWorkspace = {
   items: [
     {
       title: "Posts",
-      url: "#",
+      url: "/posts",
       icon: Newspaper,
     },
     {
