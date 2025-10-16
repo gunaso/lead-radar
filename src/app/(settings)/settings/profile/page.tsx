@@ -16,8 +16,6 @@ import {
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
   AlertDialogTitle,
   AlertDialogBody,
   AlertDialog,
@@ -81,12 +79,7 @@ function DeleteDialog() {
           />
         </div>
       </AlertDialogBody>
-      <AlertDialogFooter>
-        <AlertDialogCancel>Cancel</AlertDialogCancel>
-        <AlertDialogAction variant="destructive">
-          Confirm delete
-        </AlertDialogAction>
-      </AlertDialogFooter>
+      <AlertDialogFooter />
     </AlertDialogContent>
   )
 }
