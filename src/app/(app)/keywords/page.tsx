@@ -26,10 +26,11 @@ type Owner = {
 
 const sizes = {
   name: "flex-1",
-  owner: "w-17 flex items-center justify-center",
-  posts: "w-16 text-center",
-  comments: "w-20 text-center",
-  createdAt: "w-24 text-center",
+  owner:
+    "w-17 flex items-center justify-center md:max-[55rem]:hidden max-sm:hidden max-[34rem]:hidden",
+  posts: "w-16 text-center max-[24rem]:hidden",
+  comments: "w-20 text-center max-[30rem]:hidden",
+  createdAt: "w-24 text-center max-[20rem]:hidden",
 }
 
 const keywords: Keyword[] = [
@@ -109,7 +110,7 @@ export default function KeywordsPage() {
             className: cn(sizes.name, "flex items-center gap-4"),
             render: ({ item }) => (
               <>
-                {(item as Keyword).name}
+                <span className="truncate">{(item as Keyword).name}</span>
                 <DeleteItem name={(item as Keyword).name} onClick={() => {}} />
               </>
             ),

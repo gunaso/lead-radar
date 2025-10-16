@@ -26,10 +26,11 @@ type Owner = {
 
 const sizes = {
   name: "flex-1",
-  owner: "w-17 flex items-center justify-center",
-  posts: "w-16 text-center",
-  comments: "w-20 text-center",
-  createdAt: "w-24 text-center",
+  owner:
+    "w-17 flex items-center justify-center md:max-[55rem]:hidden max-sm:hidden max-[34rem]:hidden",
+  posts: "w-16 text-center max-[30rem]:hidden",
+  comments: "w-20 text-center max-[34rem]:hidden",
+  createdAt: "w-24 text-center max-[26rem]:hidden",
 }
 
 const subreddits: Subreddit[] = [
@@ -146,7 +147,7 @@ export default function KeywordsPage() {
                   image={(item as Subreddit).image}
                   name={(item as Subreddit).name}
                 />
-                {(item as Subreddit).name}
+                <span className="truncate">{(item as Subreddit).name}</span>
                 <DeleteItem
                   name={(item as Subreddit).name}
                   onClick={() => {}}

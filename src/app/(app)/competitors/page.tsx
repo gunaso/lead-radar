@@ -40,9 +40,10 @@ type Owner = {
 
 const sizes = {
   name: "flex-1",
-  owner: "w-17 flex items-center justify-center",
-  website: "w-50 text-center truncate",
-  createdAt: "w-24 text-center",
+  owner:
+    "w-17 flex items-center justify-center md:max-[55rem]:hidden max-sm:hidden max-[34rem]:hidden",
+  website: "w-45 text-center truncate max-[32rem]:hidden",
+  createdAt: "w-24 text-center max-[22rem]:hidden",
 }
 
 const competitors: Competitor[] = [
@@ -127,7 +128,7 @@ export default function CompetitorsPage() {
                   company={(item as Competitor).name}
                   className="size-6"
                 />
-                {(item as Competitor).name}
+                <span className="truncate">{(item as Competitor).name}</span>
                 <EditCompetitor competitor={item as Competitor} />
                 <DeleteItem
                   name={(item as Competitor).name}
