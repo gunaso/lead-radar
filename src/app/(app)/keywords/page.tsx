@@ -25,7 +25,7 @@ type Owner = {
 }
 
 const sizes = {
-  name: "flex-1",
+  name: "flex-1 min-w-0",
   owner:
     "w-17 flex items-center justify-center md:max-[55rem]:hidden max-sm:hidden max-[34rem]:hidden",
   posts: "w-16 text-center max-[24rem]:hidden",
