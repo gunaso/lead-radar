@@ -11,7 +11,7 @@ import {
 import { X, Pencil, Plus } from "lucide-react"
 
 import LabeledInput from "@/components/ui/labeled-input"
-import AsyncInput from "@/components/input-async"
+import AsyncInput from "@/components/ui/input-async"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 

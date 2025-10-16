@@ -13,7 +13,7 @@ import {
 import { Loader2, Check, CircleAlert } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { TagInput } from "@/components/tag-input"
+import { TagInput } from "@/components/ui/tag-input"
 import { Input } from "@/components/ui/input"
 
 import type { SubredditResult } from "@/hooks/use-subreddit-search"

@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactElement } from "react"
 
 import LabeledSelect from "@/components/ui/labeled-select"
-import AsyncInput from "@/components/input-async"
+import AsyncInput from "@/components/ui/input-async"
 
 import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
 import { EMPLOYEE_RANGES } from "@/types/onboarding"

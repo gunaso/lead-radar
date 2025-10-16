@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Check, ChevronLeft, ChevronRight } from "lucide-react"
 
 import WebsiteLoading from "@/components/onboarding/website-loading"
-import LoadingShapes from "@/components/loading-shapes"
+import LoadingShapes from "@/components/ui/loading-shapes"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
