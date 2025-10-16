@@ -57,7 +57,7 @@ export function DataList<TItem>({
           const base = (
             <div
               className={cn(
-                "group flex items-center gap-1 page-padding-x h-12 text-sm hover:bg-muted",
+                "group flex items-center gap-2 page-padding-x h-12 text-sm hover:bg-muted",
                 getRowClassName?.(item, rowIndex)
               )}
             >

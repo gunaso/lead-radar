@@ -154,8 +154,11 @@ function AlertDialogBody({ className, ...props }: React.ComponentProps<"div">) {
 
 function AlertDialogFooter({
   className,
+  onClick,
   ...props
-}: React.ComponentProps<"div">) {
+}: Omit<React.ComponentProps<"div">, "onClick"> & {
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+}) {
   return (
     <div
       data-slot="alert-dialog-footer"
@@ -164,7 +167,12 @@ function AlertDialogFooter({
         className
       )}
       {...props}
-    />
+    >
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction variant="destructive" onClick={onClick}>
+        Confirm delete
+      </AlertDialogAction>
+    </div>
   )
 }
 

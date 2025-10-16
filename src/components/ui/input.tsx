@@ -14,10 +14,13 @@ const inputVariants = cva(
         default: "rounded-sm focus-visible:border-primary",
         onboarding:
           "rounded-md text-base md:text-sm shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+        creating:
+          "bg-transparent border-none text-base font-semibold placeholder:text-muted-foreground/70",
       },
       size: {
         default: "h-8 px-3 py-1.5",
         onboarding: "h-9 px-3 py-1",
+        creating: "h-7 px-0.5 py-1.5",
       },
     },
     defaultVariants: {

@@ -7,7 +7,7 @@ import { PlusIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:cursor-default",
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:cursor-default",
   {
     variants: {
       variant: {
@@ -23,7 +23,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-8 px-3.5 has-[>svg]:px-2.5",
+        default: "h-7 px-3.5 has-[>svg]:px-2.5",
         onboarding: "h-9 px-4 py-2 has-[>svg]:px-3",
         loginSm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         sm: "h-6 rounded-sm gap-1.5 pl-1.5 pr-2 text-xs",
@@ -60,13 +60,17 @@ function Button({
   )
 }
 
-function NewButton({ name }: { name: string }) {
+const NewButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button> & { name: string }
+>(({ name, ...props }, ref) => {
   return (
-    <Button variant="outline" size="sm">
+    <Button ref={ref} variant="outline" size="sm" {...props}>
       <PlusIcon className="size-4" />
       New {name}
     </Button>
   )
-}
+})
+NewButton.displayName = "NewButton"
 
 export { Button, NewButton, buttonVariants }
