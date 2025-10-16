@@ -49,12 +49,12 @@ const navTracking = {
     },
     {
       title: "Subreddits",
-      url: "#",
+      url: "/subreddits",
       icon: Layers,
     },
     {
       title: "Competitors",
-      url: "#",
+      url: "/competitors",
       icon: Swords,
     },
   ],
