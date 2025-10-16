@@ -1,13 +1,13 @@
 "use client"
 
+import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
 import Link from "next/link"
-import { motion, AnimatePresence } from "framer-motion"
 
 import { Ellipsis } from "lucide-react"
 
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { SidebarMenuButton } from "@/components/ui/sidebar"
+import { SubredditAvatar } from "@/components/ui/avatar"
 import { collapseVariants } from "@/lib/motion-config"
 import { NavGroupContainer } from "./nav-group"
 
@@ -37,15 +37,12 @@ export default function NavSubreddits({
           >
             <SidebarMenuButton asChild>
               <Link href={`/subreddits/${subreddit.name}`}>
-                <Avatar className="size-4 rounded-full">
-                  <AvatarImage
-                    src={subreddit.image || undefined}
-                    alt={subreddit.name}
-                  />
-                  <AvatarFallback className="text-2xs text-muted-foreground">
-                    r/
-                  </AvatarFallback>
-                </Avatar>
+                <SubredditAvatar
+                  classFallback="text-2xs font-medium"
+                  className="size-4"
+                  image={subreddit.image}
+                  name={subreddit.name}
+                />
                 <span>{subreddit.name}</span>
               </Link>
             </SidebarMenuButton>
