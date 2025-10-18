@@ -33,7 +33,7 @@ const navWorkspace = {
     },
     {
       title: "Comments",
-      url: "#",
+      url: "/comments",
       icon: MessageCircle,
     },
   ],
