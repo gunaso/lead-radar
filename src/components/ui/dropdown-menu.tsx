@@ -2,9 +2,12 @@
 
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { motion, AnimatePresence } from "framer-motion"
+import { useState } from "react"
 import * as React from "react"
 
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
+import { CheckIcon, ChevronRightIcon } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 import { popoverVariants } from "@/lib/motion-config"
 import { cn } from "@/lib/utils"
@@ -177,17 +180,17 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 h-7 rounded-sm px-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     >
-      <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
+      {children}
+      <span className="pointer-events-none absolute right-1 flex size-4 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CircleIcon className="size-2 fill-current" />
+          <CheckIcon className="size-4" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
-      {children}
     </DropdownMenuPrimitive.RadioItem>
   )
 }
@@ -302,6 +305,52 @@ function DropdownMenuSubContent({
   )
 }
 
+function GenericDropdown<T extends string>({
+  initialValue,
+  options,
+  onValueChange,
+  renderIcon,
+  contentClassName,
+}: {
+  initialValue: T
+  options: T[]
+  onValueChange?: (value: T) => void
+  renderIcon: (value: T) => React.ReactNode
+  contentClassName?: string
+}) {
+  const [selectedValue, setSelectedValue] = useState<T>(initialValue)
+
+  const handleChange = (value: T) => {
+    setSelectedValue(value)
+    onValueChange?.(value)
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="iconSm" className="shrink-0">
+          {renderIcon(selectedValue)}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className={contentClassName}>
+        <DropdownMenuRadioGroup
+          value={selectedValue}
+          onValueChange={handleChange as (value: string) => void}
+        >
+          {options.map((option) => (
+            <DropdownMenuRadioItem key={option} value={option}>
+              <span className="flex items-center gap-1.5">
+                {renderIcon(option)}
+                {option}
+              </span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export {
   DropdownMenu,
   DropdownMenuPortal,
@@ -318,4 +367,5 @@ export {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
+  GenericDropdown,
 }

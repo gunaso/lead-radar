@@ -1,21 +1,23 @@
 "use client"
-import * as React from "react"
-import { addDays, format } from "date-fns"
 import { motion, AnimatePresence } from "framer-motion"
-import { Calendar } from "@/components/ui/calendar"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { popoverVariants } from "@/lib/motion-config"
 import * as Popover from "@radix-ui/react-popover"
 import type { DateRange } from "react-day-picker"
+import { format } from "date-fns"
+import * as React from "react"
+
 import { CalendarIcon, X } from "lucide-react"
 
-export type DateRangePickerProps = {
+import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
+
+import { popoverVariants } from "@/lib/motion-config"
+
+type DateRangePickerProps = {
   value?: DateRange
   onChange?: (range: DateRange | undefined) => void
 }
 
-export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
+function DateRangePicker({ value, onChange }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false)
 
   const label = React.useMemo(() => {
@@ -127,4 +129,4 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
   )
 }
 
-export default DateRangePicker
+export { DateRangePicker, type DateRangePickerProps }

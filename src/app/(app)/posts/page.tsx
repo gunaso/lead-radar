@@ -1,12 +1,9 @@
 "use client"
 
-import type { DateRange } from "react-day-picker"
-import { useState } from "react"
-
-import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { HeaderConfig } from "@/components/header/header-context"
-import { Filter } from "@/components/ui/filter"
-import { Sort, SortValue } from "@/components/ui/sort"
+import { Post, type PostType } from "@/components/post"
+import { Filters } from "@/components/ui/filters"
+import { FiltersProvider } from "@/hooks/use-filters"
 
 const keywordsOptions = [
   {
@@ -58,98 +55,112 @@ const subredditsOptions = [
   },
 ]
 
-const sentimentOptions = [
+const posts = [
   {
-    value: "positive",
-    label: "Positive",
+    id: "1",
+    title: "Mini title",
+    summary:
+      "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
+    subreddit: {
+      name: "r/SEO",
+      image: null,
+    },
+    sentiment: "neutral",
+    status: "Engaged",
+    score: "Prime",
+    keywords: ["keyword1", "keyword2"],
+    postedAt: "2025-08-01",
   },
   {
-    value: "neutral",
-    label: "Neutral",
+    id: "2",
+    title:
+      "Google has not yet recognized a backlink from Fortune magazine. Help!",
+    summary:
+      "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
+    subreddit: {
+      name: "r/SEO",
+      image:
+        "https://styles.redditmedia.com/t5_2qhbx/styles/communityIcon_191l6xkqju6d1.png?width=128&frame=1&auto=webp&s=98d43911f4989d3efa12445a5b1508a4c5c2e61a",
+    },
+    sentiment: "positive",
+    status: "Engaging",
+    score: "High",
+    keywords: ["keyword1", "keyword2", "keyword3"],
+    postedAt: "2025-10-01",
   },
   {
-    value: "negative",
-    label: "Negative",
-  },
-]
-
-const scoreOptions = [
-  {
-    value: "prime",
-    label: "Prime",
-  },
-  {
-    value: "high",
-    label: "High",
-  },
-  {
-    value: "medium",
-    label: "Medium",
+    id: "3",
+    title:
+      "Google has not yet recognized a backlink from Fortune magazine. Help! aksjdnask djnaskdj naksjdna kjdnaskdj naskdj naskdjnak jdnaksj n",
+    summary:
+      "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
+    subreddit: {
+      name: "r/SEO",
+      image: null,
+    },
+    sentiment: "negative",
+    status: "Ready to Engage",
+    score: "Medium",
+    keywords: [],
+    postedAt: "2024-04-01",
   },
   {
-    value: "low",
-    label: "Low",
+    id: "4",
+    title:
+      "Google has not yet recognized a backlink from Fortune magazine. Help!",
+    summary:
+      "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
+    subreddit: {
+      name: "r/SEO",
+      image:
+        "https://styles.redditmedia.com/t5_2qhbx/styles/communityIcon_191l6xkqju6d1.png?width=128&frame=1&auto=webp&s=98d43911f4989d3efa12445a5b1508a4c5c2e61a",
+    },
+    sentiment: "neutral",
+    status: "Needs Review",
+    score: "Low",
+    keywords: ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+    postedAt: "2025-01-01",
+  },
+  {
+    id: "5",
+    title:
+      "Google has not yet recognized a backlink from Fortune magazine. Help!",
+    summary:
+      "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
+    subreddit: {
+      name: "r/SEO",
+      image:
+        "https://styles.redditmedia.com/t5_2qhbx/styles/communityIcon_191l6xkqju6d1.png?width=128&frame=1&auto=webp&s=98d43911f4989d3efa12445a5b1508a4c5c2e61a",
+    },
+    sentiment: "positive",
+    status: "Archived",
+    score: "Low",
+    keywords: ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+    postedAt: "2025-01-01",
   },
 ]
 
 export default function PostsPage() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined)
-  const [keywords, setKeywords] = useState<string[]>(
-    keywordsOptions.map((option) => option.value)
-  )
-  const [subreddits, setSubreddits] = useState<string[]>(
-    subredditsOptions.map((option) => option.value)
-  )
-  const [sentiment, setSentiment] = useState<string[]>(
-    sentimentOptions.map((option) => option.value)
-  )
-  const [score, setScore] = useState<string[]>(
-    scoreOptions.map((option) => option.value)
-  )
-  const [sort, setSort] = useState<SortValue>({
-    field: "score",
-    direction: "desc",
-  })
-
   return (
-    <section className="flex flex-col">
-      <HeaderConfig
-        config={{
-          title: "Posts",
-        }}
-      />
-      <div>
-        <div className="flex flex-row h-10 md:max-[60rem]:flex-col md:max-[60rem]:h-20 max-[45rem]:flex-col max-[45rem]:h-20 shrink-0 items-center justify-between border-b-1">
-          <div className="page-padding-x flex items-center gap-2 h-10 md:max-[60rem]:w-full md:max-[60rem]:border-b-1 max-[45rem]:w-full max-[45rem]:border-b-1">
-            <Filter
-              name="Keywords"
-              selectedState={[keywords, setKeywords]}
-              options={keywordsOptions}
-            />
-            <Filter
-              name="Subreddits"
-              selectedState={[subreddits, setSubreddits]}
-              options={subredditsOptions}
-            />
-            <Filter
-              name="Sentiment"
-              selectedState={[sentiment, setSentiment]}
-              options={sentimentOptions}
-              disableSearch
-            />
-            <Filter
-              name="Score"
-              selectedState={[score, setScore]}
-              options={scoreOptions}
-              disableSearch
-            />
-            <DateRangePicker value={dateRange} onChange={setDateRange} />
-          </div>
-          <div className="page-padding-x flex items-center justify-end h-10 md:max-[60rem]:w-full max-[45rem]:w-full">
-            <Sort value={sort} onChange={setSort} />
+    <FiltersProvider
+      keywordsOptions={keywordsOptions}
+      subredditsOptions={subredditsOptions}
+    >
+      <section className="flex flex-col">
+        <HeaderConfig
+          config={{
+            title: "Posts",
+          }}
+        />
+        <Filters />
+        <div className="flex flex-col">
+          <div className="flex flex-col">
+            {posts.map((post) => (
+              <Post key={post.id} post={post as PostType} />
+            ))}
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </FiltersProvider>
   )
 }

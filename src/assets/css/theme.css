@@ -15,6 +15,10 @@
   --accent-foreground: oklch(0.2221 0 0);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.75 0.16 145);
+  --success-foreground: oklch(0.22 0.05 145);
+  --ongoing: oklch(0.78 0.18 75);
+  --ongoing-foreground: oklch(0.24 0.05 75);
   --border: oklch(0.92 0.015 70);
   --input: oklch(0.92 0.015 70);
   --ring: oklch(0.6857 0.2086 41.4277);
@@ -32,7 +36,7 @@
   --sidebar-accent-foreground: oklch(0.2221 0 0);
   --sidebar-border: oklch(0.92 0.015 70);
   --sidebar-ring: oklch(0.6857 0.2086 41.4277);
-  --font-sans: Inter Variable, sans-serif;
+  --font-sans: Inter, sans-serif;
   --font-serif: Source Serif 4, serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.625rem;
@@ -77,6 +81,11 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-ongoing: var(--ongoing);
+  --color-ongoing-foreground: var(--ongoing-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
