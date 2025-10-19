@@ -4,6 +4,7 @@ import { HeaderConfig } from "@/components/header/header-context"
 import { Post, type PostType } from "@/components/post"
 import { Filters } from "@/components/ui/filters"
 import { FiltersProvider } from "@/hooks/use-filters"
+import { GroupedLayout } from "@/components/grouped-layout"
 
 const keywordsOptions = [
   {
@@ -153,13 +154,18 @@ export default function PostsPage() {
           }}
         />
         <Filters />
-        <div className="flex flex-col">
-          <div className="flex flex-col">
-            {posts.map((post) => (
-              <Post key={post.id} post={post as PostType} />
-            ))}
-          </div>
-        </div>
+        <GroupedLayout
+          className="flex flex-col"
+          items={posts as unknown as PostType[]}
+          getters={{
+            getScore: (p) => p.score,
+            getSentiment: (p) => p.sentiment,
+            getStatus: (p) => p.status,
+            getDate: (p) => new Date(p.postedAt),
+            getKey: (p) => p.id,
+          }}
+          renderItem={(post) => <Post post={post as PostType} />}
+        />
       </section>
     </FiltersProvider>
   )

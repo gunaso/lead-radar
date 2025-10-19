@@ -2,6 +2,7 @@ import { useEffect } from "react"
 
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { Sort, SortValue } from "@/components/ui/sort"
+import { Display } from "./display"
 import { Filter } from "@/components/ui/filter"
 import { DateRange } from "react-day-picker"
 import { useFiltersContext } from "@/hooks/use-filters"
@@ -50,6 +51,9 @@ function Filters() {
     keywordsState,
     scoreState,
     sortState,
+    groupState,
+    expandDetailsState,
+    archiveState,
   } = useFiltersContext()
 
   const [subreddits, setSubreddits] = subredditsState
@@ -58,6 +62,9 @@ function Filters() {
   const [keywords, setKeywords] = keywordsState
   const [score, setScore] = scoreState
   const [sort, setSort] = sortState
+  const [group, setGroup] = groupState
+  const [expandDetails, setExpandDetails] = expandDetailsState
+  const [archive, setArchive] = archiveState
 
   useEffect(() => {
     setSubreddits(subredditsOptions.map((option) => option.value))
@@ -93,8 +100,17 @@ function Filters() {
         />
         <DateRangePicker value={dateRange} onChange={setDateRange} />
       </div>
-      <div className="page-padding-x flex items-center justify-end h-10 md:max-[60rem]:w-full max-[45rem]:w-full">
-        <Sort value={sort} onChange={setSort} />
+      <div className="page-padding-x flex items-center justify-end h-10 gap-2 md:max-[60rem]:w-full max-[45rem]:w-full">
+        <Display
+          sortValue={sort}
+          onSortChange={setSort}
+          groupValue={group}
+          onGroupChange={setGroup}
+          expandDetails={expandDetails}
+          onExpandDetailsChange={setExpandDetails}
+          archiveValue={archive}
+          onArchiveChange={setArchive}
+        />
       </div>
     </div>
   )

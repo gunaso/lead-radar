@@ -11,6 +11,7 @@ type FeedItemType = {
   id: string
   score: Score
   status: Status
+  sentiment: "positive" | "neutral" | "negative"
   title: string
   keywords: string[]
   subreddit: {

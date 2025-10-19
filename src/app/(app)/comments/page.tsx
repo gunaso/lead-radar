@@ -4,6 +4,7 @@ import { HeaderConfig } from "@/components/header/header-context"
 import { Comment, type CommentType } from "@/components/comment"
 import { Filters } from "@/components/ui/filters"
 import { FiltersProvider } from "@/hooks/use-filters"
+import { GroupedLayout } from "@/components/grouped-layout"
 
 const keywordsOptions = [
   {
@@ -169,13 +170,18 @@ export default function CommentsPage() {
           }}
         />
         <Filters />
-        <div className="flex flex-col">
-          <div className="flex flex-col">
-            {comments.map((comment) => (
-              <Comment key={comment.id} comment={comment as CommentType} />
-            ))}
-          </div>
-        </div>
+        <GroupedLayout
+          className="flex flex-col"
+          items={comments as unknown as CommentType[]}
+          getters={{
+            getScore: (c) => c.score,
+            getSentiment: (c) => c.sentiment,
+            getStatus: (c) => c.status,
+            getDate: (c) => new Date(c.postedAt),
+            getKey: (c) => c.id,
+          }}
+          renderItem={(comment) => <Comment comment={comment as CommentType} />}
+        />
       </section>
     </FiltersProvider>
   )

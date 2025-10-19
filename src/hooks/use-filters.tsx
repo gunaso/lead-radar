@@ -4,6 +4,8 @@ import type { DateRange } from "react-day-picker"
 
 import type { SortValue } from "@/components/ui/sort"
 
+export type GroupField = "none" | "score" | "sentiment" | "status"
+
 type Option = { value: string; label: string }
 
 export type UseFiltersArgs = {
@@ -35,6 +37,18 @@ export type UseFiltersResult = {
   sortState: [
     SortValue | undefined,
     React.Dispatch<React.SetStateAction<SortValue | undefined>>
+  ]
+  groupState: [GroupField, React.Dispatch<React.SetStateAction<GroupField>>]
+
+  // display behavior
+  expandDetailsState: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
+  archiveState: [
+    "all" | "past day" | "past week" | "past month" | "none",
+    React.Dispatch<
+      React.SetStateAction<
+        "all" | "past day" | "past week" | "past month" | "none"
+      >
+    >
   ]
 
   // helpers for future URL-sync / navigation
@@ -105,6 +119,11 @@ export function useFilters(args: UseFiltersArgs = {}): UseFiltersResult {
     field: "score",
     direction: "desc",
   })
+  const [group, setGroup] = React.useState<GroupField>("status")
+  const [expandDetails, setExpandDetails] = React.useState<boolean>(true)
+  const [archive, setArchive] = React.useState<
+    "all" | "past day" | "past week" | "past month" | "none"
+  >("none")
 
   // Initialize to "all" when options arrive for the first time
   React.useEffect(() => {
@@ -138,8 +157,21 @@ export function useFilters(args: UseFiltersArgs = {}): UseFiltersResult {
     if (dateRange?.from) params.set("from", dateRange.from.toISOString())
     if (dateRange?.to) params.set("to", dateRange.to.toISOString())
     if (sort) params.set("sort", `${sort.field}:${sort.direction}`)
+    if (group && group !== "none") params.set("group", group)
+    if (expandDetails) params.set("expandDetails", "1")
+    if (archive) params.set("archive", archive)
     return params
-  }, [keywords, subreddits, sentiment, score, dateRange, sort])
+  }, [
+    keywords,
+    subreddits,
+    sentiment,
+    score,
+    dateRange,
+    sort,
+    group,
+    expandDetails,
+    archive,
+  ])
 
   return {
     keywordsOptions: keywordsOptionsState,
@@ -153,6 +185,9 @@ export function useFilters(args: UseFiltersArgs = {}): UseFiltersResult {
     scoreState: [score, setScore],
     dateRangeState: [dateRange, setDateRange],
     sortState: [sort, setSort],
+    groupState: [group, setGroup],
+    expandDetailsState: [expandDetails, setExpandDetails],
+    archiveState: [archive, setArchive],
 
     toSearchParams,
   }
