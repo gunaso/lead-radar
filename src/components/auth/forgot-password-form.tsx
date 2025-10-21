@@ -53,6 +53,7 @@ export function ForgotPasswordForm({
             type="button"
             variant="outline"
             className="w-full"
+            size="loginSm"
             onClick={() => {
               const params = emailValue
                 ? `?email=${encodeURIComponent(emailValue)}`
@@ -109,6 +110,7 @@ export function ForgotPasswordForm({
         <SubmitButton
           type="submit"
           className="w-full"
+          size="loginSm"
           disabled={!isFormValid}
           loadingText="Sending reset link..."
         >
