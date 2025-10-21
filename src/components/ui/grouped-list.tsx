@@ -99,9 +99,13 @@ function GroupedList<TItem>({
     <div className={className}>
       {order.map((k) => {
         const bucket = buckets.get(k) ?? []
+
+        if (bucket.length === 0) return null
+
         const isOpen = openGroups[k] !== false
         const toggle = () =>
           setOpenGroups((prev) => ({ ...prev, [k]: !isOpen }))
+
         return (
           <div key={k} className="flex flex-col">
             {renderSectionHeader(k, bucket.length, isOpen, toggle)}
