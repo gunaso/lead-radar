@@ -12,6 +12,7 @@ import { collapseVariants } from "@/lib/motion-config"
 import { NavGroupContainer } from "./nav-group"
 
 type SubredditEntry = {
+  id: number
   name: string
   image: string | null
 }
@@ -28,7 +29,7 @@ export default function NavSubreddits({
       <AnimatePresence initial={false}>
         {subreddits.slice(0, totalShowing).map((subreddit) => (
           <motion.div
-            key={subreddit.name}
+            key={subreddit.id}
             initial="closed"
             animate="open"
             exit="closed"
@@ -36,7 +37,7 @@ export default function NavSubreddits({
             className="overflow-hidden"
           >
             <SidebarMenuButton asChild>
-              <Link href={`/subreddits/${subreddit.name}`}>
+              <Link href={`/subreddits/${subreddit.id}`}>
                 <SubredditAvatar
                   classFallback="text-2xs font-medium"
                   className="size-4"
