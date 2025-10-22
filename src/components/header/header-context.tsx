@@ -16,10 +16,18 @@ export type HeaderAction = {
   element: ReactElement
 }
 
+export type BreadcrumbCrumb = {
+  key: string
+  label: string
+  href?: string
+  loading?: boolean
+}
+
 export type HeaderConfig = {
   title?: string
-  titleActions?: HeaderAction[]
+  titleElement?: ReactNode
   actions?: HeaderAction[]
+  breadcrumbs?: BreadcrumbCrumb[]
 }
 
 type HeaderContextValue = {
@@ -84,8 +92,9 @@ export function HeaderConfig({
     setConfig,
     reset,
     config.title,
-    JSON.stringify(config.titleActions?.map((a) => a.key)),
+    config.titleElement,
     JSON.stringify(config.actions?.map((a) => a.key)),
+    JSON.stringify(config.breadcrumbs?.map((c) => c.key)),
   ])
 
   return <>{children}</>

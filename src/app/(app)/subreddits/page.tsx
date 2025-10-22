@@ -118,7 +118,6 @@ export default function KeywordsPage() {
     <section className="flex flex-col">
       <HeaderConfig
         config={{
-          title: "Subreddits",
           actions: [
             {
               key: "new-keyword",
