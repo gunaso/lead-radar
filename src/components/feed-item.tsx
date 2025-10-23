@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { type Status, StatusDropdown } from "@/components/ui/dropdown-status"
 import { type Score, ScoreDropdown } from "@/components/ui/dropdown-score"
+import { GuardedLink } from "@/components/ui/guarded-link"
 import { SubredditAvatar } from "@/components/ui/avatar"
 import { DateLines } from "@/components/ui/date-lines"
 import { KeywordsRow } from "@/components/ui/keywords"
@@ -31,7 +32,7 @@ function FeedItem({
   children: React.ReactNode
 }) {
   return (
-    <Link
+    <GuardedLink
       href={`${url}/${item.id}`}
       className="page-padding-x group relative group flex flex-col hover:bg-muted has-[[data-state=checked]]:bg-accent/80 has-[[data-state=checked]]:hover:bg-accent hover:cursor-default border-b-border/20 not-last:border-b"
     >
@@ -55,7 +56,7 @@ function FeedItem({
         </div>
       </div>
       {children}
-    </Link>
+    </GuardedLink>
   )
 }
 

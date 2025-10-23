@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
+
+import { GuardedLink } from "@/components/ui/guarded-link"
 
 import { cn } from "@/lib/utils"
 
@@ -85,9 +86,9 @@ export function DataList<TItem>({
             }
           }
           return href ? (
-            <Link key={rowIndex} href={href} className="contents">
+            <GuardedLink key={rowIndex} href={href} className="contents">
               {base}
-            </Link>
+            </GuardedLink>
           ) : (
             <React.Fragment key={rowIndex}>{base}</React.Fragment>
           )
