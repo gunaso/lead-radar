@@ -24,8 +24,9 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-7 px-3.5 has-[>svg]:px-2.5",
-        onboarding: "h-9 px-4 py-2 has-[>svg]:px-3",
-        loginSm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+        onboarding: "h-9 px-4 py-2 has-[>svg]:px-3 active:scale-97",
+        loginSm:
+          "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5 active:scale-97",
         sm: "h-6 rounded-sm gap-1.5 pl-1.5 pr-2 text-xs",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-7",

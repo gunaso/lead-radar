@@ -46,11 +46,11 @@
   }
 }
 
-button:not([role="button"]):not([role="combobox"]):active {
+/* button:not([role="button"]):not([role="combobox"]):active {
   transition: transform var(--default-transition-duration)
     var(--default-transition-timing-function);
   scale: 0.97;
-}
+} */
 
 button:hover {
   cursor: default;

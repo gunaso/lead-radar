@@ -1,10 +1,11 @@
 "use client"
 
 import { HeaderConfig } from "@/components/header/header-context"
-import { Post, type PostType } from "@/components/post"
-import { Filters } from "@/components/ui/filters"
-import { FiltersProvider } from "@/hooks/use-filters"
 import { GroupedLayout } from "@/components/grouped-layout"
+import { Post, type PostType } from "@/components/post"
+import { Filters } from "@/components/filters"
+
+import { FiltersProvider } from "@/hooks/use-filters"
 
 const keywordsOptions = [
   {
@@ -157,13 +158,6 @@ export default function PostsPage() {
         <GroupedLayout
           className="flex flex-col"
           items={posts as unknown as PostType[]}
-          getters={{
-            getScore: (p) => p.score,
-            getSentiment: (p) => p.sentiment,
-            getStatus: (p) => p.status,
-            getDate: (p) => new Date(p.postedAt),
-            getKey: (p) => p.id,
-          }}
           renderItem={(post) => <Post post={post as PostType} />}
         />
       </section>

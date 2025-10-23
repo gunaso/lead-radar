@@ -28,6 +28,7 @@ export type HeaderConfig = {
   titleElement?: ReactNode
   actions?: HeaderAction[]
   breadcrumbs?: BreadcrumbCrumb[]
+  afterCrumbs?: ReactNode
 }
 
 type HeaderContextValue = {
@@ -95,6 +96,7 @@ export function HeaderConfig({
     config.titleElement,
     JSON.stringify(config.actions?.map((a) => a.key)),
     JSON.stringify(config.breadcrumbs?.map((c) => c.key)),
+    config.afterCrumbs,
   ])
 
   return <>{children}</>

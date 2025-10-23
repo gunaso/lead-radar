@@ -1,10 +1,11 @@
+"use client"
+
 import { useEffect } from "react"
 
 import { DateRangePicker } from "@/components/ui/date-range-picker"
-import { Sort, SortValue } from "@/components/ui/sort"
-import { Display } from "./display"
+import { Display } from "@/components/ui/display"
 import { Filter } from "@/components/ui/filter"
-import { DateRange } from "react-day-picker"
+
 import { useFiltersContext } from "@/hooks/use-filters"
 
 const sentimentOptions = [
@@ -41,7 +42,13 @@ const scoreOptions = [
   },
 ]
 
-function Filters() {
+function Filters({
+  disableSubreddits,
+  disableKeywords,
+}: {
+  disableSubreddits?: boolean
+  disableKeywords?: boolean
+}) {
   const {
     subredditsOptions,
     keywordsOptions,
@@ -76,16 +83,20 @@ function Filters() {
   return (
     <div className="flex flex-row h-10 md:max-[60rem]:flex-col md:max-[60rem]:h-20 max-[45rem]:flex-col max-[45rem]:h-20 shrink-0 items-center justify-between border-b-1">
       <div className="page-padding-x flex items-center gap-2 h-10 md:max-[60rem]:w-full md:max-[60rem]:border-b-1 max-[45rem]:w-full max-[45rem]:border-b-1">
-        <Filter
-          name="Keywords"
-          selectedState={[keywords, setKeywords]}
-          options={keywordsOptions}
-        />
-        <Filter
-          name="Subreddits"
-          selectedState={[subreddits, setSubreddits]}
-          options={subredditsOptions}
-        />
+        {!disableKeywords && (
+          <Filter
+            name="Keywords"
+            selectedState={[keywords, setKeywords]}
+            options={keywordsOptions}
+          />
+        )}
+        {!disableSubreddits && (
+          <Filter
+            name="Subreddits"
+            selectedState={[subreddits, setSubreddits]}
+            options={subredditsOptions}
+          />
+        )}
         <Filter
           name="Sentiment"
           selectedState={[sentiment, setSentiment]}

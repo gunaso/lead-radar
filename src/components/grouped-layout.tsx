@@ -3,15 +3,16 @@
 import * as React from "react"
 
 import { GroupedList } from "@/components/ui/grouped-list"
-import { useFiltersContext } from "@/hooks/use-filters"
 import type { SortValue } from "@/components/ui/sort"
 
-type Getters<T> = {
-  getScore: (item: T) => string
-  getSentiment: (item: T) => string
-  getStatus: (item: T) => string
-  getDate: (item: T) => Date
-  getKey?: (item: T) => string
+import { useFiltersContext } from "@/hooks/use-filters"
+
+export type GroupableItem = {
+  id: string
+  score: string
+  sentiment: string
+  status: string
+  postedAt: string | Date
 }
 
 const SCORE_ORDER = ["Prime", "High", "Medium", "Low"]
@@ -32,34 +33,37 @@ function compareByOrder(valueA: string, valueB: string, order: string[]) {
   return a - b
 }
 
-function sortItems<T>(items: T[], sort: SortValue | undefined, g: Getters<T>) {
+function getItemDate(item: GroupableItem): Date {
+  return item.postedAt instanceof Date ? item.postedAt : new Date(item.postedAt)
+}
+
+function sortItems<T extends GroupableItem>(
+  items: T[],
+  sort: SortValue | undefined
+) {
   if (!sort) return items
   const sorted = [...items]
   if (sort.field === "date") {
-    sorted.sort((a, b) => g.getDate(b).getTime() - g.getDate(a).getTime())
+    sorted.sort((a, b) => getItemDate(b).getTime() - getItemDate(a).getTime())
   } else if (sort.field === "score") {
-    sorted.sort((a, b) =>
-      compareByOrder(g.getScore(a), g.getScore(b), SCORE_ORDER)
-    )
+    sorted.sort((a, b) => compareByOrder(a.score, b.score, SCORE_ORDER))
   } else if (sort.field === "sentiment") {
     sorted.sort((a, b) =>
-      compareByOrder(g.getSentiment(a), g.getSentiment(b), SENTIMENT_ORDER)
+      compareByOrder(a.sentiment, b.sentiment, SENTIMENT_ORDER)
     )
   }
   if (sort.direction === "asc") sorted.reverse()
   return sorted
 }
 
-type GroupedLayoutProps<T> = {
+type GroupedLayoutProps<T extends GroupableItem> = {
   items: T[]
-  getters: Getters<T>
   renderItem: (item: T) => React.ReactNode
   className?: string
 }
 
-function GroupedLayout<T>({
+function GroupedLayout<T extends GroupableItem>({
   items,
-  getters,
   renderItem,
   className,
 }: GroupedLayoutProps<T>) {
@@ -88,17 +92,17 @@ function GroupedLayout<T>({
     }
 
     return items.filter((item) => {
-      const status = getters.getStatus(item)
+      const status = item.status
       if (status !== "Archived") return true
       if (archive === "none") return false
-      const date = getters.getDate(item)
+      const date = getItemDate(item)
       return withinWindow(date)
     })
-  }, [items, archive, getters, now])
+  }, [items, archive, now])
 
   const sorted = React.useMemo(
-    () => sortItems(filtered, sort, getters),
-    [filtered, sort, getters]
+    () => sortItems(filtered, sort),
+    [filtered, sort]
   )
 
   if (group === "none") {
@@ -106,7 +110,7 @@ function GroupedLayout<T>({
       <GroupedList
         className={className}
         items={sorted}
-        getItemKey={getters.getKey}
+        getItemKey={(item) => item.id}
         renderItem={renderItem}
       />
     )
@@ -114,9 +118,9 @@ function GroupedLayout<T>({
 
   const groupConfig = {
     getGroupKey: (item: T) => {
-      if (group === "score") return getters.getScore(item)
-      if (group === "sentiment") return getters.getSentiment(item)
-      return getters.getStatus(item)
+      if (group === "score") return item.score
+      if (group === "sentiment") return item.sentiment
+      return item.status
     },
     groupOrder:
       group === "score"
@@ -130,7 +134,7 @@ function GroupedLayout<T>({
     <GroupedList
       className={className}
       items={sorted}
-      getItemKey={getters.getKey}
+      getItemKey={(item) => item.id}
       renderItem={renderItem}
       group={groupConfig}
     />

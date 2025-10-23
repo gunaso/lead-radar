@@ -23,7 +23,7 @@ export default function Header() {
   const crumbs = useBreadcrumbs(config.breadcrumbs)
 
   return (
-    <header className="page-padding-x flex h-10 shrink-0 items-center gap-2 border-b-1">
+    <header className="page-padding-x flex h-10 shrink-0 items-center gap-2 border-b-1 max-[28rem]:h-20">
       {isMobile && (
         <>
           <SidebarTrigger className="[&_svg]:size-4" />
@@ -34,7 +34,7 @@ export default function Header() {
         </>
       )}
       <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-5 min-w-0 max-[28rem]:flex-col max-[28rem]:gap-2 max-[28rem]:items-start">
           <Breadcrumb>
             <BreadcrumbList>
               {crumbs.map((c, idx) => {
@@ -58,6 +58,7 @@ export default function Header() {
               })}
             </BreadcrumbList>
           </Breadcrumb>
+          {config.afterCrumbs}
         </div>
         {config.actions && config.actions.length > 0 && (
           <div className="flex items-center gap-2">
