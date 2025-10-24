@@ -88,9 +88,11 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  closeButtonClassName,
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  closeButtonClassName?: string
   showCloseButton?: boolean
 }) {
   const { open } = React.useContext(DialogContext)
@@ -124,7 +126,10 @@ function DialogContent({
               {showCloseButton && (
                 <DialogPrimitive.Close
                   data-slot="dialog-close"
-                  className="absolute top-1.5 right-1.5 p-1 rounded-sm bg-transparent hover:bg-accent focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                  className={cn(
+                    "absolute top-1.5 right-1.5 p-1 rounded-sm bg-transparent hover:bg-accent focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                    closeButtonClassName
+                  )}
                 >
                   <XIcon />
                   <span className="sr-only">Close</span>
