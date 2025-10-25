@@ -2,10 +2,14 @@
 
 import Link from "next/link"
 
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
+import { PanelRightIcon } from "lucide-react"
+
+import { useSideSlot } from "@/components/side-slot/side-slot-context"
 import { useHeaderConfig } from "@/components/header/header-context"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import LoadingDots from "@/components/ui/loading-dots"
 import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
 import {
   BreadcrumbSeparator,
   BreadcrumbItem,
@@ -15,16 +19,19 @@ import {
   Breadcrumb,
 } from "@/components/ui/breadcrumb"
 
+import { useIsBellowLg, useIsMobile } from "@/hooks/use-mobile"
 import { useBreadcrumbs } from "@/hooks/use-breadcrumbs"
 
 export default function Header() {
-  const { isMobile } = useSidebar()
+  const isBelowLg = useIsBellowLg()
+  const isMobile = useIsMobile()
   const { config } = useHeaderConfig()
+  const { config: sideSlotConfig, setOpenMobile } = useSideSlot()
   const crumbs = useBreadcrumbs(config.breadcrumbs)
 
   return (
-    <header className="page-padding-x flex h-10 shrink-0 items-center gap-2 border-b-1 max-[28rem]:h-20">
-      {isMobile && (
+    <header className="page-padding-x flex h-10 shrink-0 items-center gap-2 border-b-[0.5px] max-[28rem]:h-20">
+      {isBelowLg && (
         <>
           <SidebarTrigger className="[&_svg]:size-4" />
           <Separator
@@ -68,6 +75,17 @@ export default function Header() {
           </div>
         )}
       </div>
+      {isMobile && sideSlotConfig?.content && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="[&_svg]:size-4"
+          onClick={() => setOpenMobile(true)}
+        >
+          <PanelRightIcon />
+          <span className="sr-only">Open Side Slot</span>
+        </Button>
+      )}
     </header>
   )
 }
