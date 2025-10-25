@@ -38,7 +38,7 @@ function defaultSectionHeader(
   toggle: () => void
 ) {
   return (
-    <div className="relative page-padding-x h-9 flex items-center gap-1 bg-muted/40 border-b-1 not-first:border-t-1">
+    <div className="relative page-padding-x h-9 flex items-center gap-1 bg-muted/40 border-b-[0.5px] group-not-first:border-t-[0.5px]">
       <span
         className="group size-4 flex items-center justify-center"
         onClick={toggle}
@@ -107,7 +107,7 @@ function GroupedList<TItem>({
           setOpenGroups((prev) => ({ ...prev, [k]: !isOpen }))
 
         return (
-          <div key={k} className="flex flex-col">
+          <div key={k} className="flex flex-col group">
             {renderSectionHeader(k, bucket.length, isOpen, toggle)}
             {isOpen && (
               <div className="flex flex-col">

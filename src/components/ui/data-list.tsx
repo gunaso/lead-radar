@@ -45,7 +45,7 @@ export function DataList<TItem>({
 }: DataListProps<TItem>) {
   return (
     <div className="flex flex-col">
-      <div className="flex items-center gap-2 h-8 border-b page-padding-x text-sm font-medium text-muted-foreground">
+      <div className="flex items-center gap-2 h-8 border-b-[0.5px] page-padding-x text-sm font-medium text-muted-foreground">
         {headers.map((h) => (
           <span key={String(h.key)} className={h.className}>
             {h.label}

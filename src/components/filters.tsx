@@ -81,8 +81,8 @@ function Filters({
   }, [subredditsOptions, keywordsOptions, sentimentOptions, scoreOptions])
 
   return (
-    <div className="flex flex-row h-10 md:max-[60rem]:flex-col md:max-[60rem]:h-20 max-[45rem]:flex-col max-[45rem]:h-20 shrink-0 items-center justify-between border-b-1">
-      <div className="page-padding-x flex items-center gap-2 h-10 md:max-[60rem]:w-full md:max-[60rem]:border-b-1 max-[45rem]:w-full max-[45rem]:border-b-1">
+    <div className="flex flex-row h-10 md:max-[60rem]:flex-col md:max-[60rem]:h-20 max-[45rem]:flex-col max-[45rem]:h-20 shrink-0 items-center justify-between border-b-[0.5px]">
+      <div className="page-padding-x flex items-center gap-2 h-10 md:max-[60rem]:w-full md:max-[60rem]:border-b-[0.5px] max-[45rem]:w-full max-[45rem]:border-b-[0.5px]">
         {!disableKeywords && (
           <Filter
             name="Keywords"
