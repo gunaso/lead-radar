@@ -1,5 +1,12 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import {
+  differenceInDays,
+  format,
+  formatDistanceToNow,
+  isValid as isValidDate,
+  type Locale,
+} from "date-fns"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -50,4 +57,20 @@ export function formatPostDate(dateString: string): string {
 
   // Less than 6 months but different year, just show month and day
   return monthDay
+}
+
+export function formatRelativeOrLocaleDate(
+  dateInput: string | Date,
+  locale?: Locale
+): string {
+  const date = new Date(dateInput)
+  if (!isValidDate(date)) return ""
+
+  const daysDiff = differenceInDays(new Date(), date)
+
+  if (daysDiff < 7) {
+    return formatDistanceToNow(date, { addSuffix: true, locale })
+  }
+
+  return format(date, "PP", { locale })
 }

@@ -311,12 +311,16 @@ function GenericDropdown<T extends string>({
   onValueChange,
   renderIcon,
   contentClassName,
+  showLabelInTrigger = false,
+  triggerClassName,
 }: {
   initialValue: T
   options: T[]
   onValueChange?: (value: T) => void
-  renderIcon: (value: T) => React.ReactNode
+  renderIcon: (value: T, bigIcon?: boolean) => React.ReactNode
   contentClassName?: string
+  showLabelInTrigger?: boolean
+  triggerClassName?: string
 }) {
   const [selectedValue, setSelectedValue] = useState<T>(initialValue)
 
@@ -328,8 +332,20 @@ function GenericDropdown<T extends string>({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="iconSm" className="shrink-0">
-          {renderIcon(selectedValue)}
+        <Button
+          variant="ghost"
+          size={showLabelInTrigger ? "default" : "iconSm"}
+          className={cn(
+            showLabelInTrigger
+              ? "shrink-0 gap-1.5 w-full justify-start px-1.5!"
+              : "shrink-0",
+            triggerClassName
+          )}
+        >
+          {renderIcon(selectedValue, showLabelInTrigger)}
+          {showLabelInTrigger && (
+            <span className="text-xs font-normal">{selectedValue}</span>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className={contentClassName}>

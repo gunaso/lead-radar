@@ -18,4 +18,12 @@ function KeywordsRow({ keywords }: { keywords: string[] | undefined }) {
   )
 }
 
-export { KeywordsRow }
+function Keyword({ keyword }: { keyword: string }) {
+  return (
+    <span className=" flex items-center text-xs rounded-full bg-card px-3 border h-7 flex-shrink-0 group-last:max-w-[200px] truncate">
+      {keyword}
+    </span>
+  )
+}
+
+export { KeywordsRow, Keyword }

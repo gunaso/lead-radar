@@ -1,4 +1,5 @@
 type SubredditType = {
+  id: string
   name: string
   image: string
   url: string

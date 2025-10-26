@@ -9,24 +9,22 @@ import {
 
 import { GenericDropdown } from "@/components/ui/dropdown-menu"
 
-type Status =
-  | "Needs Review"
-  | "Ready to Engage"
-  | "Engaging"
-  | "Engaged"
-  | "Archived"
+import { type StatusType } from "@/types/reddit"
+import { cn } from "@/lib/utils"
 
 type StatusDropdownProps = {
-  initialStatus?: Status
-  onStatusChange?: (status: Status) => void
+  initialStatus?: StatusType
+  onStatusChange?: (status: StatusType) => void
+  showLabelInTrigger?: boolean
 }
 
 function StatusDropdown({
   initialStatus = "Needs Review",
   onStatusChange,
+  showLabelInTrigger = false,
 }: StatusDropdownProps) {
   return (
-    <GenericDropdown<Status>
+    <GenericDropdown<StatusType>
       initialValue={initialStatus}
       options={[
         "Engaged",
@@ -36,29 +34,40 @@ function StatusDropdown({
         "Archived",
       ]}
       onValueChange={onStatusChange}
-      renderIcon={(status) => <StatusIcon status={status} />}
+      renderIcon={(status, bigIcon) => (
+        <StatusIcon status={status} bigIcon={bigIcon} />
+      )}
       contentClassName="min-w-44"
+      showLabelInTrigger={showLabelInTrigger}
     />
   )
 }
 
-function StatusIcon({ status }: { status: Status }) {
+function StatusIcon({
+  status,
+  bigIcon,
+}: {
+  status: StatusType
+  bigIcon?: boolean
+}) {
+  const size = bigIcon ? "size-4.5" : "size-4"
+
   if (status === "Needs Review") {
-    return <Clipboard className="text-muted-foreground size-4" />
+    return <Clipboard className={cn("text-muted-foreground", size)} />
   }
   if (status === "Ready to Engage") {
-    return <ClipboardCopy className="text-ongoing size-4" />
+    return <ClipboardCopy className={cn("text-ongoing", size)} />
   }
   if (status === "Engaging") {
-    return <ClipboardClock className="text-success size-4" />
+    return <ClipboardClock className={cn("text-success", size)} />
   }
   if (status === "Engaged") {
-    return <ClipboardCheck className="text-primary size-4" />
+    return <ClipboardCheck className={cn("text-primary", size)} />
   }
   if (status === "Archived") {
-    return <Package className="text-muted-foreground/60 size-4" />
+    return <Package className={cn("text-muted-foreground/60", size)} />
   }
-  return <Ellipsis className="text-muted-foreground size-4" />
+  return <Ellipsis className={cn("text-muted-foreground", size)} />
 }
 
-export { StatusDropdown, StatusIcon, type Status }
+export { StatusDropdown, StatusIcon }

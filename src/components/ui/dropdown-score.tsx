@@ -8,41 +8,55 @@ import {
 
 import { GenericDropdown } from "@/components/ui/dropdown-menu"
 
-type Score = "Prime" | "High" | "Medium" | "Low"
+import { type ScoreType } from "@/types/reddit"
+import { cn } from "@/lib/utils"
 
 type ScoreDropdownProps = {
-  initialScore?: Score
-  onScoreChange?: (score: Score) => void
+  initialScore?: ScoreType
+  onScoreChange?: (score: ScoreType) => void
+  showLabelInTrigger?: boolean
 }
 
 function ScoreDropdown({
   initialScore = "Medium",
   onScoreChange,
+  showLabelInTrigger = false,
 }: ScoreDropdownProps) {
   return (
-    <GenericDropdown<Score>
+    <GenericDropdown<ScoreType>
       initialValue={initialScore}
       options={["Prime", "High", "Medium", "Low"]}
       onValueChange={onScoreChange}
-      renderIcon={(score) => <ScoreIcon score={score} />}
+      renderIcon={(score, bigIcon) => (
+        <ScoreIcon score={score} bigIcon={bigIcon} />
+      )}
+      showLabelInTrigger={showLabelInTrigger}
     />
   )
 }
 
-function ScoreIcon({ score }: { score: Score }) {
+function ScoreIcon({
+  score,
+  bigIcon,
+}: {
+  score: ScoreType
+  bigIcon?: boolean
+}) {
+  const size = bigIcon ? "size-4.5" : "size-4"
+
   if (score === "Prime") {
-    return <Flame className="text-primary size-4" fill="currentColor" />
+    return <Flame className={cn("text-primary", size)} fill="currentColor" />
   }
   if (score === "High") {
-    return <MessageCircleHeart className="text-muted-foreground size-4" />
+    return <MessageCircleHeart className={cn("text-muted-foreground", size)} />
   }
   if (score === "Medium") {
-    return <MessageCircle className="text-muted-foreground size-4" />
+    return <MessageCircle className={cn("text-muted-foreground", size)} />
   }
   if (score === "Low") {
-    return <MessageCircleDashed className="text-muted-foreground size-4" />
+    return <MessageCircleDashed className={cn("text-muted-foreground", size)} />
   }
-  return <Ellipsis className="text-muted-foreground size-4" />
+  return <Ellipsis className={cn("text-muted-foreground", size)} />
 }
 
-export { ScoreDropdown, ScoreIcon, type Score }
+export { ScoreDropdown, ScoreIcon }
