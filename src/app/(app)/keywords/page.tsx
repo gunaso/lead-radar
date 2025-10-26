@@ -8,6 +8,7 @@ import NewAction from "@/components/ui/new-action"
 import { Input } from "@/components/ui/input"
 
 import type { Keyword } from "@/types/objects"
+import { PATHS } from "@/lib/path"
 import { cn } from "@/lib/utils"
 
 const sizes = {
@@ -117,7 +118,7 @@ export default function KeywordsPage() {
           { key: "createdAt", label: "Created At", className: sizes.createdAt },
         ]}
         items={keywords}
-        rowHrefBase="/keywords"
+        rowHrefBase={PATHS.KEYWORDS}
       />
     </section>
   )

@@ -1,5 +1,8 @@
 "use client"
 
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+
 import {
   MessageCircle,
   SearchCheck,
@@ -23,17 +26,19 @@ import {
   SidebarGroup,
 } from "@/components/ui/sidebar"
 
+import { PATHS } from "@/lib/path"
+
 const navWorkspace = {
   label: "Workspace",
   items: [
     {
       title: "Posts",
-      url: "/posts",
+      url: PATHS.POSTS,
       icon: Newspaper,
     },
     {
       title: "Comments",
-      url: "/comments",
+      url: PATHS.COMMENTS,
       icon: MessageCircle,
     },
   ],
@@ -44,17 +49,17 @@ const navTracking = {
   items: [
     {
       title: "Keywords",
-      url: "/keywords",
+      url: PATHS.KEYWORDS,
       icon: SearchCheck,
     },
     {
       title: "Subreddits",
-      url: "/subreddits",
+      url: PATHS.SUBREDDITS,
       icon: Layers,
     },
     {
       title: "Competitors",
-      url: "/competitors",
+      url: PATHS.COMPETITORS,
       icon: Swords,
     },
   ],
@@ -136,16 +141,23 @@ function UpgradeToPro() {
 }
 
 function Inbox({ notification = false }: { notification?: boolean }) {
+  const pathname = usePathname()
+
   return (
     <SidebarGroup>
-      <SidebarMenuButton className="justify-between">
-        <span className="flex items-center gap-2">
-          <InboxIcon className="size-4" />
-          Inbox
-        </span>
-        {notification && (
-          <span className="size-2 mr-1 rounded-full bg-primary" />
-        )}
+      <SidebarMenuButton isActive={pathname === PATHS.INBOX}>
+        <Link
+          href={PATHS.INBOX}
+          className="flex items-center justify-between w-full hover:cursor-pointer"
+        >
+          <span className="flex items-center gap-2">
+            <InboxIcon className="size-4" />
+            Inbox
+          </span>
+          {notification && (
+            <span className="size-2 mr-1 rounded-full bg-primary" />
+          )}
+        </Link>
       </SidebarMenuButton>
     </SidebarGroup>
   )

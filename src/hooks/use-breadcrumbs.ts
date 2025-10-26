@@ -6,14 +6,15 @@ import { useMemo } from "react"
 import type { BreadcrumbCrumb } from "@/components/header/header-context"
 
 import { decodeBreadcrumbParam } from "@/lib/breadcrumbs"
+import { PATHS } from "@/lib/path"
 
 const ROOT_LABELS: Record<string, { label: string; href: string }> = {
-  "": { label: "Inbox", href: "/" },
-  subreddits: { label: "Subreddits", href: "/subreddits" },
-  posts: { label: "Posts", href: "/posts" },
-  comments: { label: "Comments", href: "/comments" },
-  competitors: { label: "Competitors", href: "/competitors" },
-  keywords: { label: "Keywords", href: "/keywords" },
+  "": { label: "Inbox", href: PATHS.INBOX },
+  subreddits: { label: "Subreddits", href: PATHS.SUBREDDITS },
+  posts: { label: "Posts", href: PATHS.POSTS },
+  comments: { label: "Comments", href: PATHS.COMMENTS },
+  competitors: { label: "Competitors", href: PATHS.COMPETITORS },
+  keywords: { label: "Keywords", href: PATHS.KEYWORDS },
 }
 
 export function useBreadcrumbs(

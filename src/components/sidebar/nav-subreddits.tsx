@@ -12,6 +12,7 @@ import { collapseVariants } from "@/lib/motion-config"
 import { NavGroupContainer } from "./nav-group"
 
 import type { SubredditEntry } from "@/types/nav-items"
+import { PATHS } from "@/lib/path"
 
 export default function NavSubreddits({
   subreddits,
@@ -33,7 +34,7 @@ export default function NavSubreddits({
             className="overflow-hidden"
           >
             <SidebarMenuButton asChild>
-              <Link href={`/subreddits/${subreddit.id}`}>
+              <Link href={`${PATHS.SUBREDDITS}/${subreddit.id}`}>
                 <SubredditAvatar
                   classFallback="text-2xs font-medium"
                   className="size-4"

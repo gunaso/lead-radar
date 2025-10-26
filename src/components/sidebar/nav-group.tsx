@@ -37,10 +37,7 @@ export default function NavGroup({ label, items }: NavGroupProps) {
         <SidebarMenuButton
           key={item.title}
           asChild
-          isActive={
-            item.url !== "#" &&
-            (pathname === item.url || pathname.startsWith(`${item.url}/`))
-          }
+          isActive={pathname === item.url}
         >
           <Link href={item.url}>
             <item.icon />

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import type { Workspace } from "@/types/objects"
+import { PATHS } from "@/lib/path"
 
 const workspace: Workspace = {
   company: "Acme Inc",
@@ -91,7 +92,7 @@ function WorkspaceDropdown() {
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuGroup>
-        <Link href="/settings/profile">
+        <Link href={PATHS.SETTINGS_PROFILE}>
           <DropdownMenuItem>
             <Settings />
             Settings

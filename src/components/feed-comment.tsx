@@ -9,6 +9,7 @@ import { FeedItem } from "@/components/feed-item"
 import { encodeBreadcrumbParam } from "@/lib/breadcrumbs"
 import { useFiltersContext } from "@/hooks/use-filters"
 import type { CommentType } from "@/types/reddit"
+import { PATHS } from "@/lib/path"
 import { cn } from "@/lib/utils"
 
 function FeedComment({
@@ -23,7 +24,7 @@ function FeedComment({
   const router = useRouter()
   const searchParams = useSearchParams()
   return (
-    <FeedItem item={comment} url="/comments" bcCrumbs={bcCrumbs}>
+    <FeedItem item={comment} url={PATHS.COMMENTS} bcCrumbs={bcCrumbs}>
       <div
         className={cn(
           "text-sm mx-4 mb-3 p-2 rounded-md bg-border/30",
@@ -37,7 +38,7 @@ function FeedComment({
           <button
             type="button"
             onClick={() => {
-              const hrefBase = `/posts/${comment.post.id}`
+              const hrefBase = `${PATHS.POSTS}/${comment.post.id}`
               // Prefer provided bcCrumbs (from parent context), else fall back to any bc in URL
               const bcFromCrumbs =
                 bcCrumbs && bcCrumbs.length > 0

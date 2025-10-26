@@ -5,6 +5,7 @@ import { FeedComment } from "@/components/feed-comment"
 import { Post } from "@/components/feed-post"
 
 import type { PostType, CommentType } from "@/types/reddit"
+import { PATHS } from "@/lib/path"
 
 const keywordsOptions = [
   {
@@ -243,8 +244,8 @@ const subreddit = {
 
 export default function SubredditPage() {
   const bcCrumbs = [
-    { label: "Subreddits", href: "/subreddits" },
-    { label: subreddit.name, href: `/subreddits/${subreddit.id}` },
+    { label: "Subreddits", href: PATHS.SUBREDDITS },
+    { label: subreddit.name, href: `${PATHS.SUBREDDITS}/${subreddit.id}` },
   ]
   return (
     <EntityTabbedFeed<PostType, CommentType>

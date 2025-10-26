@@ -4,6 +4,7 @@ import { FeedItem } from "@/components/feed-item"
 
 import { useFiltersContext } from "@/hooks/use-filters"
 import type { PostType } from "@/types/reddit"
+import { PATHS } from "@/lib/path"
 import { cn } from "@/lib/utils"
 
 function Post({
@@ -16,7 +17,7 @@ function Post({
   const { expandDetailsState } = useFiltersContext()
   const [expandDetails] = expandDetailsState
   return (
-    <FeedItem item={post} url="/posts" bcCrumbs={bcCrumbs}>
+    <FeedItem item={post} url={PATHS.POSTS} bcCrumbs={bcCrumbs}>
       <div
         className={cn(
           "text-sm mx-4 mb-3 p-2 rounded-md bg-border/30",

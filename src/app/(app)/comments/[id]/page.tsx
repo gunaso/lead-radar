@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator"
 
 import type { PostType, CommentType } from "@/types/reddit"
 import { formatRelativeOrLocaleDate } from "@/lib/utils"
+import { PATHS } from "@/lib/path"
 
 const comment: CommentType = {
   id: "1",
@@ -73,7 +74,7 @@ export default function CommentPage() {
   }`
   const bcParam = searchParams?.get("bc") || ""
   const showPostCrumb = (searchParams?.get("src") || "") === "post"
-  const postHrefBase = `/posts/${comment.post.id}`
+  const postHrefBase = `${PATHS.POSTS}/${comment.post.id}`
   const postHref = bcParam
     ? `${postHrefBase}?bc=${encodeURIComponent(bcParam)}`
     : postHrefBase
@@ -154,7 +155,7 @@ function CommentPost({ post, bcParam }: { post: PostType; bcParam?: string }) {
       </Expandable>
       <ItemActions
         className="mt-2"
-        openUrl={`/posts/${post.id}${
+        openUrl={`${PATHS.POSTS}/${post.id}${
           bcParam ? `?bc=${encodeURIComponent(bcParam)}` : ""
         }`}
         redditItemUrl={post.url}

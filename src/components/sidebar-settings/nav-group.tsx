@@ -13,6 +13,8 @@ import {
   SidebarMenu,
 } from "@/components/ui/sidebar"
 
+import { PATHS } from "@/lib/path"
+
 type Item = {
   title: string
   icon: LucideIcon
@@ -38,10 +40,11 @@ export default function NavGroup({ label, items }: NavGroupProps) {
                 asChild
                 isActive={
                   url !== "#" &&
-                  (pathname === url || pathname.startsWith(`/settings/${url}/`))
+                  (pathname === url ||
+                    pathname.startsWith(`${PATHS.SETTINGS}/${url}/`))
                 }
               >
-                <Link href={`/settings/${url}`}>
+                <Link href={`${PATHS.SETTINGS}/${url}`}>
                   <item.icon />
                   <span>{item.title}</span>
                 </Link>

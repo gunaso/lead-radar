@@ -8,6 +8,7 @@ import NewAction from "@/components/ui/new-action"
 import { Input } from "@/components/ui/input"
 
 import { Subreddit } from "@/types/objects"
+import { PATHS } from "@/lib/path"
 import { cn } from "@/lib/utils"
 
 const sizes = {
@@ -156,7 +157,7 @@ export default function KeywordsPage() {
           { key: "createdAt", label: "Created At", className: sizes.createdAt },
         ]}
         items={subreddits}
-        rowHrefBase="/subreddits"
+        rowHrefBase={PATHS.SUBREDDITS}
       />
     </section>
   )
