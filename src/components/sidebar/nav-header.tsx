@@ -6,7 +6,7 @@ import {
   ChevronDown,
   CreditCard,
   Settings,
-  Search,
+  // Search,
   LogOut,
 } from "lucide-react"
 
@@ -56,12 +56,13 @@ export default function NavHeader() {
             </DropdownMenuTrigger>
             <WorkspaceDropdown />
           </DropdownMenu>
-          <SidebarMenuButton
+          {/* TODO: Implement search */}
+          {/* <SidebarMenuButton
             className="size-7 shrink-0 flex items-center justify-center"
             tooltip="Search"
           >
             <Search className="size-4" />
-          </SidebarMenuButton>
+          </SidebarMenuButton> */}
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarHeader>
