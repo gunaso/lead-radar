@@ -5,24 +5,10 @@ import { ProfileAvatar } from "@/components/ui/avatar"
 import { DataList } from "@/components/ui/data-list"
 import DeleteItem from "@/components/ui/delete-item"
 import NewAction from "@/components/ui/new-action"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+import type { Keyword } from "@/types/objects"
 import { cn } from "@/lib/utils"
-
-type Keyword = {
-  id: number
-  name: string
-  owner: Owner
-  posts: number
-  comments: number
-  createdAt: string
-}
-
-type Owner = {
-  name: string
-  image: string | null
-}
 
 const sizes = {
   name: "flex-1 min-w-0",

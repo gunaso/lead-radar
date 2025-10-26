@@ -1,26 +1,12 @@
-import Link from "next/link"
-
-import { type Status, StatusDropdown } from "@/components/ui/dropdown-status"
-import { type Score, ScoreDropdown } from "@/components/ui/dropdown-score"
+import { StatusDropdown } from "@/components/ui/dropdown-status"
+import { ScoreDropdown } from "@/components/ui/dropdown-score"
 import { GuardedLink } from "@/components/ui/guarded-link"
 import { SubredditAvatar } from "@/components/ui/avatar"
 import { DateLines } from "@/components/ui/date-lines"
 import { KeywordsRow } from "@/components/ui/keywords"
 import { Checkbox } from "@/components/ui/checkbox"
 
-type FeedItemType = {
-  id: string
-  score: Score
-  status: Status
-  sentiment: "positive" | "neutral" | "negative"
-  title: string
-  keywords: string[]
-  subreddit: {
-    image: string
-    name: string
-  }
-  postedAt: string
-}
+import type { PostType, CommentType } from "@/types/reddit"
 
 function FeedItem({
   url,
@@ -28,7 +14,7 @@ function FeedItem({
   children,
 }: {
   url: string
-  item: FeedItemType
+  item: PostType | CommentType
   children: React.ReactNode
 }) {
   return (
@@ -42,7 +28,7 @@ function FeedItem({
           <ScoreDropdown initialScore={item.score} />
           <StatusDropdown initialStatus={item.status} />
           <span className="truncate min-w-0 text-sm font-medium pr-2 lg:max-w-120 md:max-w-100 sm:max-w-75">
-            {item.title}
+            {"title" in item ? item.title : item.summary}
           </span>
           <KeywordsRow keywords={item.keywords} />
         </div>
@@ -60,4 +46,4 @@ function FeedItem({
   )
 }
 
-export { FeedItem, type FeedItemType }
+export { FeedItem }

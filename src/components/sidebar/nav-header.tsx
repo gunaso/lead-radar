@@ -26,10 +26,7 @@ import {
   SidebarMenu,
 } from "@/components/ui/sidebar"
 
-type Workspace = {
-  company: string
-  logo: string | null
-}
+import type { Workspace } from "@/types/objects"
 
 const workspace: Workspace = {
   company: "Acme Inc",

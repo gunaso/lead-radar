@@ -1,11 +1,12 @@
 "use client"
 
 import { HeaderConfig } from "@/components/header/header-context"
-import { Comment, type CommentType } from "@/components/comment"
 import { GroupedLayout } from "@/components/grouped-layout"
+import { FeedComment } from "@/components/feed-comment"
 import { Filters } from "@/components/filters"
 
 import { FiltersProvider } from "@/hooks/use-filters"
+import { CommentType } from "@/types/reddit"
 
 const keywordsOptions = [
   {
@@ -174,7 +175,9 @@ export default function CommentsPage() {
         <GroupedLayout
           className="flex flex-col"
           items={comments as unknown as CommentType[]}
-          renderItem={(comment) => <Comment comment={comment as CommentType} />}
+          renderItem={(comment) => (
+            <FeedComment comment={comment as CommentType} />
+          )}
         />
       </section>
     </FiltersProvider>

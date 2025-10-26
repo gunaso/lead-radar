@@ -64,36 +64,36 @@ const navSubreddits = {
   label: "Subreddits",
   items: [
     {
-      id: 1,
+      id: "1",
       name: "r/SEO",
       image: null,
     },
     {
-      id: 2,
+      id: "2",
       name: "r/seogrowth",
       image:
         "https://styles.redditmedia.com/t5_4t7j8c/styles/communityIcon_gkpdve958xd71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=c8f055a39e68cc07a0f3573aba5f4fcc948291db",
     },
     {
-      id: 3,
+      id: "3",
       name: "r/SEO_Digital_Marketing",
       image:
         "https://styles.redditmedia.com/t5_3j43f/styles/communityIcon_tmxl7sjsju6d1.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=7b0a0073eefd147872ba5934c0157f3ffd150325",
     },
     {
-      id: 4,
+      id: "4",
       name: "r/bigseo",
       image:
         "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
     },
     {
-      id: 5,
+      id: "5",
       name: "r/SEO_Experts",
       image:
         "https://styles.redditmedia.com/t5_bshop8/styles/communityIcon_bei333mntv7d1.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=f4f1ad8fb4298cd5549d8591386b842402e7ef14",
     },
     {
-      id: 6,
+      id: "6",
       name: "r/localseo",
       image:
         "https://styles.redditmedia.com/t5_2sg2d/styles/communityIcon_obywzu5hm0991.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=a32231c60c3395edfc6da995de1de20198e4a3f1",

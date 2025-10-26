@@ -4,20 +4,13 @@ import { useRouter } from "next/navigation"
 
 import { ArrowUpRight } from "lucide-react"
 
-import { FeedItem, type FeedItemType } from "@/components/feed-item"
+import { FeedItem } from "@/components/feed-item"
 
 import { useFiltersContext } from "@/hooks/use-filters"
+import type { CommentType } from "@/types/reddit"
 import { cn } from "@/lib/utils"
 
-type CommentType = FeedItemType & {
-  post: {
-    id: string
-    title: string
-    summary: string
-  }
-}
-
-function Comment({ comment }: { comment: CommentType }) {
+function FeedComment({ comment }: { comment: CommentType }) {
   const { expandDetailsState } = useFiltersContext()
   const [expandDetails] = expandDetailsState
   const router = useRouter()
@@ -49,4 +42,4 @@ function Comment({ comment }: { comment: CommentType }) {
   )
 }
 
-export { Comment, type CommentType }
+export { FeedComment }

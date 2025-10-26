@@ -22,21 +22,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 
+import type { Competitor } from "@/types/objects"
 import { cn } from "@/lib/utils"
-
-type Competitor = {
-  id: number
-  name: string
-  logo: string | null
-  website: string | null
-  owner: Owner
-  createdAt: string
-}
-
-type Owner = {
-  name: string
-  image: string | null
-}
 
 const sizes = {
   name: "flex-1 min-w-0",

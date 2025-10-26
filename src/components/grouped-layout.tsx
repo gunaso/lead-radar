@@ -6,12 +6,13 @@ import { GroupedList } from "@/components/ui/grouped-list"
 import type { SortValue } from "@/components/ui/sort"
 
 import { useFiltersContext } from "@/hooks/use-filters"
+import { ScoreType, SentimentType, StatusType } from "@/types/reddit"
 
 export type GroupableItem = {
   id: string
-  score: string
-  sentiment: string
-  status: string
+  score: ScoreType
+  sentiment: SentimentType
+  status: StatusType
   postedAt: string | Date
 }
 

@@ -1,12 +1,10 @@
 "use client"
 
-import { FeedItem, type FeedItemType } from "@/components/feed-item"
-import { useFiltersContext } from "@/hooks/use-filters"
-import { cn } from "@/lib/utils"
+import { FeedItem } from "@/components/feed-item"
 
-type PostType = FeedItemType & {
-  summary: string
-}
+import { useFiltersContext } from "@/hooks/use-filters"
+import type { PostType } from "@/types/reddit"
+import { cn } from "@/lib/utils"
 
 function Post({ post }: { post: PostType }) {
   const { expandDetailsState } = useFiltersContext()
@@ -25,4 +23,4 @@ function Post({ post }: { post: PostType }) {
   )
 }
 
-export { Post, type PostType }
+export { Post }

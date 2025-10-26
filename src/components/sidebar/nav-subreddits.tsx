@@ -11,11 +11,7 @@ import { SubredditAvatar } from "@/components/ui/avatar"
 import { collapseVariants } from "@/lib/motion-config"
 import { NavGroupContainer } from "./nav-group"
 
-type SubredditEntry = {
-  id: number
-  name: string
-  image: string | null
-}
+import type { SubredditEntry } from "@/types/nav-items"
 
 export default function NavSubreddits({
   subreddits,

@@ -7,22 +7,8 @@ import DeleteItem from "@/components/ui/delete-item"
 import NewAction from "@/components/ui/new-action"
 import { Input } from "@/components/ui/input"
 
+import { Subreddit } from "@/types/objects"
 import { cn } from "@/lib/utils"
-
-type Subreddit = {
-  id: number
-  name: string
-  image: string | null
-  owner: Owner
-  posts: number
-  comments: number
-  createdAt: string
-}
-
-type Owner = {
-  name: string
-  image: string | null
-}
 
 const sizes = {
   name: "flex-1 min-w-0",

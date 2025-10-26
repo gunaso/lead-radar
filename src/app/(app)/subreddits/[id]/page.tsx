@@ -1,8 +1,10 @@
 "use client"
 
 import { EntityTabbedFeed } from "@/components/layouts/entity-tabbed-feed"
-import { Comment, type CommentType } from "@/components/comment"
-import { Post, type PostType } from "@/components/post"
+import { FeedComment } from "@/components/feed-comment"
+import { Post } from "@/components/feed-post"
+
+import type { PostType, CommentType } from "@/types/reddit"
 
 const keywordsOptions = [
   {
@@ -248,7 +250,9 @@ export default function SubredditPage() {
       posts={subreddit.posts as unknown as PostType[]}
       comments={subreddit.comments as unknown as CommentType[]}
       renderPost={(post) => <Post post={post as PostType} />}
-      renderComment={(comment) => <Comment comment={comment as CommentType} />}
+      renderComment={(comment) => (
+        <FeedComment comment={comment as CommentType} />
+      )}
     />
   )
 }

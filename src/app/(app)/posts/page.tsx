@@ -2,10 +2,11 @@
 
 import { HeaderConfig } from "@/components/header/header-context"
 import { GroupedLayout } from "@/components/grouped-layout"
-import { Post, type PostType } from "@/components/post"
 import { Filters } from "@/components/filters"
+import { Post } from "@/components/feed-post"
 
 import { FiltersProvider } from "@/hooks/use-filters"
+import { PostType } from "@/types/reddit"
 
 const keywordsOptions = [
   {
