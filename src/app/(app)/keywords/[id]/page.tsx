@@ -212,6 +212,10 @@ const keyword = {
 }
 
 export default function KeywordPage() {
+  const bcCrumbs = [
+    { label: "Keywords", href: "/keywords" },
+    { label: keyword.name, href: `/keywords/${keyword.id}` },
+  ]
   return (
     <EntityTabbedFeed<PostType, CommentType>
       headerBreadcrumb={{ key: keyword.id.toString(), label: keyword.name }}
@@ -219,9 +223,11 @@ export default function KeywordPage() {
       subredditsOptions={subredditsOptions}
       posts={keyword.posts as unknown as PostType[]}
       comments={keyword.comments as unknown as CommentType[]}
-      renderPost={(post) => <Post post={post as PostType} />}
+      renderPost={(post) => (
+        <Post post={post as PostType} bcCrumbs={bcCrumbs} />
+      )}
       renderComment={(comment) => (
-        <FeedComment comment={comment as CommentType} />
+        <FeedComment comment={comment as CommentType} bcCrumbs={bcCrumbs} />
       )}
     />
   )

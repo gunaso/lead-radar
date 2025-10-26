@@ -13,6 +13,7 @@ import { PostHeader } from "@/components/ui/post-header"
 import { Expandable } from "@/components/ui/expandable"
 import { Sentiment } from "@/components/ui/sentiment"
 import { Separator } from "@/components/ui/separator"
+import { useSearchParams } from "next/navigation"
 
 import type { PostType, PostCommentType } from "@/types/reddit"
 import { formatRelativeOrLocaleDate } from "@/lib/utils"
@@ -70,6 +71,7 @@ Let your client know that, in case of failure to complete the payment, you'll be
 ]
 
 export default function PostPage() {
+  const searchParams = useSearchParams()
   const label = post.title.split(" ")
 
   return (
@@ -108,7 +110,11 @@ export default function PostPage() {
         <span className="text-md font-semibold">Comments</span>
         <div className="flex flex-col gap-2">
           {comments.map((comment) => (
-            <PostComment key={comment.id} comment={comment} />
+            <PostComment
+              key={comment.id}
+              comment={comment}
+              bcParam={searchParams?.get("bc") || ""}
+            />
           ))}
         </div>
       </div>
@@ -116,7 +122,13 @@ export default function PostPage() {
   )
 }
 
-function PostComment({ comment }: { comment: PostCommentType }) {
+function PostComment({
+  comment,
+  bcParam,
+}: {
+  comment: PostCommentType
+  bcParam?: string
+}) {
   return (
     <div className="flex flex-col gap-2 bg-card p-2 rounded-sm">
       <div className="flex items-center justify-between">
@@ -135,7 +147,9 @@ function PostComment({ comment }: { comment: PostCommentType }) {
         </div>
       </Expandable>
       <ItemActions
-        openUrl={`/comments/${comment.id}`}
+        openUrl={`/comments/${comment.id}${
+          bcParam ? `?bc=${encodeURIComponent(bcParam)}&src=post` : `?src=post`
+        }`}
         redditItemUrl={post.url}
         extraActions={
           <>

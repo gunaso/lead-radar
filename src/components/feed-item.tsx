@@ -6,20 +6,31 @@ import { DateLines } from "@/components/ui/date-lines"
 import { KeywordsRow } from "@/components/ui/keywords"
 import { Checkbox } from "@/components/ui/checkbox"
 
+import { encodeBreadcrumbParam } from "@/lib/breadcrumbs"
+
 import type { PostType, CommentType } from "@/types/reddit"
 
 function FeedItem({
   url,
   item,
   children,
+  bcCrumbs,
 }: {
   url: string
   item: PostType | CommentType
   children: React.ReactNode
+  bcCrumbs?: Array<{ label: string; href?: string }>
 }) {
+  const baseHref = `${url}/${item.id}`
+  const href = (() => {
+    if (!bcCrumbs || bcCrumbs.length === 0) return baseHref
+    const bc = encodeBreadcrumbParam(bcCrumbs)
+    const sep = baseHref.includes("?") ? "&" : "?"
+    return `${baseHref}${sep}bc=${encodeURIComponent(bc)}`
+  })()
   return (
     <GuardedLink
-      href={`${url}/${item.id}`}
+      href={href}
       className="page-padding-x group relative group flex flex-col hover:bg-muted has-[[data-state=checked]]:bg-accent/80 has-[[data-state=checked]]:hover:bg-accent hover:cursor-default border-b-border/20 not-last:border-b"
     >
       <div className="flex items-center justify-between h-11 lg:pl-0 pl-6 gap-2">

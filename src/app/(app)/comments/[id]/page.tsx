@@ -1,5 +1,7 @@
 "use client"
 
+import { useSearchParams } from "next/navigation"
+
 import { DotIcon } from "lucide-react"
 
 import { SideSlotConfig } from "@/components/side-slot/side-slot-context"
@@ -63,7 +65,18 @@ const comment: CommentType = {
 }
 
 export default function CommentPage() {
+  const searchParams = useSearchParams()
   const label = comment.summary.split(" ")
+  const postTitleParts = comment.post.title.split(" ")
+  const postLabel = `${postTitleParts.slice(0, 3).join(" ")}${
+    postTitleParts.length > 3 ? "..." : ""
+  }`
+  const bcParam = searchParams?.get("bc") || ""
+  const showPostCrumb = (searchParams?.get("src") || "") === "post"
+  const postHrefBase = `/posts/${comment.post.id}`
+  const postHref = bcParam
+    ? `${postHrefBase}?bc=${encodeURIComponent(bcParam)}`
+    : postHrefBase
 
   return (
     <>
@@ -76,6 +89,16 @@ export default function CommentPage() {
         <HeaderConfig
           config={{
             breadcrumbs: [
+              ...(showPostCrumb
+                ? [
+                    {
+                      key: `post-${comment.post.id}`,
+                      label: postLabel,
+                      href: postHref,
+                      loading: false,
+                    },
+                  ]
+                : []),
               {
                 key: comment.id,
                 label: `${label.slice(0, 3).join(" ")}${
@@ -96,7 +119,10 @@ export default function CommentPage() {
 
         <Separator className="my-1.5" />
 
-        <CommentPost post={comment.post} />
+        <CommentPost
+          post={comment.post}
+          bcParam={searchParams?.get("bc") || ""}
+        />
       </div>
     </>
   )
@@ -116,7 +142,7 @@ function CommentHeader({ comment }: { comment: CommentType }) {
   )
 }
 
-function CommentPost({ post }: { post: PostType }) {
+function CommentPost({ post, bcParam }: { post: PostType; bcParam?: string }) {
   return (
     <div className="flex flex-col gap-2 bg-card p-3 rounded-sm">
       <PostHeader post={post} titleSize="text-lg" redditUrl={post.url} />
@@ -128,7 +154,9 @@ function CommentPost({ post }: { post: PostType }) {
       </Expandable>
       <ItemActions
         className="mt-2"
-        openUrl={`/posts/${post.id}`}
+        openUrl={`/posts/${post.id}${
+          bcParam ? `?bc=${encodeURIComponent(bcParam)}` : ""
+        }`}
         redditItemUrl={post.url}
         extraActions={
           <>

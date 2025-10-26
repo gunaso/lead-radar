@@ -33,14 +33,21 @@ export function useBreadcrumbs(
       crumbs.push({ key: `bc-${i}`, label: c.label, href: c.href })
     }
 
-    // 2) section root from first segment
-    const segments = (pathname || "/").split("/").filter(Boolean)
-    const first = segments[0] ?? ""
-    const root = ROOT_LABELS[first] ?? null
-    if (root) {
-      const alreadyHasRoot = crumbs.length > 0 && crumbs[0].label === root.label
-      if (!alreadyHasRoot) {
-        crumbs.push({ key: `root-${first || "inbox"}`, label: root.label, href: root.href })
+    // 2) section root from first segment (only when no bc trail provided)
+    if (bc.length === 0) {
+      const segments = (pathname || "/").split("/").filter(Boolean)
+      const first = segments[0] ?? ""
+      const root = ROOT_LABELS[first] ?? null
+      if (root) {
+        const alreadyHasRoot =
+          crumbs.length > 0 && crumbs[0].label === root.label
+        if (!alreadyHasRoot) {
+          crumbs.push({
+            key: `root-${first || "inbox"}`,
+            label: root.label,
+            href: root.href,
+          })
+        }
       }
     }
 

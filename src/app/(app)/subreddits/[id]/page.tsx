@@ -242,16 +242,22 @@ const subreddit = {
 }
 
 export default function SubredditPage() {
+  const bcCrumbs = [
+    { label: "Subreddits", href: "/subreddits" },
+    { label: subreddit.name, href: `/subreddits/${subreddit.id}` },
+  ]
   return (
     <EntityTabbedFeed<PostType, CommentType>
       headerBreadcrumb={{ key: subreddit.id.toString(), label: subreddit.name }}
       keywordsOptions={keywordsOptions}
       subredditsOptions={[]}
-      posts={subreddit.posts as unknown as PostType[]}
+      posts={(subreddit.posts as unknown as PostType[]).map((p) => ({ ...p }))}
       comments={subreddit.comments as unknown as CommentType[]}
-      renderPost={(post) => <Post post={post as PostType} />}
+      renderPost={(post) => (
+        <Post post={post as PostType} bcCrumbs={bcCrumbs} />
+      )}
       renderComment={(comment) => (
-        <FeedComment comment={comment as CommentType} />
+        <FeedComment comment={comment as CommentType} bcCrumbs={bcCrumbs} />
       )}
     />
   )
