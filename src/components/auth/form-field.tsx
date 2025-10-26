@@ -50,6 +50,8 @@ export function FormField({
         type={type}
         placeholder={placeholder}
         value={value}
+        size="onboarding"
+        variant="onboarding"
         onChange={onChange}
         onKeyDown={onKeyDown}
         required={required}

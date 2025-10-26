@@ -1,10 +1,9 @@
 import type { ReactElement, ReactNode } from "react"
 import type { Metadata } from "next"
 
-import { Toaster } from "@/components/ui/sonner"
-
 import { MotionConfigProvider } from "@/providers/motion-config-provider"
 import { ReactQueryProvider } from "@/providers/react-query-provider"
+import { Toaster } from "@/components/ui/sonner"
 
 import "@/assets/css/styles.css"
 

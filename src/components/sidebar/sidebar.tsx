@@ -1,0 +1,164 @@
+"use client"
+
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+
+import {
+  MessageCircle,
+  SearchCheck,
+  InboxIcon,
+  Newspaper,
+  Rocket,
+  Layers,
+  Swords,
+} from "lucide-react"
+
+import { ShineBorder } from "@/components/ui/shine-border"
+import NavCompetitors from "./nav-competitors"
+import NavSubreddits from "./nav-subreddits"
+import NavSecondary from "./nav-secondary"
+import NavHeader from "./nav-header"
+import NavGroup from "./nav-group"
+import {
+  Sidebar as SidebarComponent,
+  SidebarMenuButton,
+  SidebarContent,
+  SidebarGroup,
+} from "@/components/ui/sidebar"
+
+import { PATHS } from "@/lib/path"
+
+const navWorkspace = {
+  label: "Workspace",
+  items: [
+    {
+      title: "Posts",
+      url: PATHS.POSTS,
+      icon: Newspaper,
+    },
+    {
+      title: "Comments",
+      url: PATHS.COMMENTS,
+      icon: MessageCircle,
+    },
+  ],
+}
+
+const navTracking = {
+  label: "Tracking",
+  items: [
+    {
+      title: "Keywords",
+      url: PATHS.KEYWORDS,
+      icon: SearchCheck,
+    },
+    {
+      title: "Subreddits",
+      url: PATHS.SUBREDDITS,
+      icon: Layers,
+    },
+    {
+      title: "Competitors",
+      url: PATHS.COMPETITORS,
+      icon: Swords,
+    },
+  ],
+}
+
+const navSubreddits = {
+  label: "Subreddits",
+  items: [
+    {
+      id: "1",
+      name: "r/SEO",
+      image: null,
+    },
+    {
+      id: "2",
+      name: "r/seogrowth",
+      image:
+        "https://styles.redditmedia.com/t5_4t7j8c/styles/communityIcon_gkpdve958xd71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=c8f055a39e68cc07a0f3573aba5f4fcc948291db",
+    },
+    {
+      id: "3",
+      name: "r/SEO_Digital_Marketing",
+      image:
+        "https://styles.redditmedia.com/t5_3j43f/styles/communityIcon_tmxl7sjsju6d1.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=7b0a0073eefd147872ba5934c0157f3ffd150325",
+    },
+    {
+      id: "4",
+      name: "r/bigseo",
+      image:
+        "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
+    },
+    {
+      id: "5",
+      name: "r/SEO_Experts",
+      image:
+        "https://styles.redditmedia.com/t5_bshop8/styles/communityIcon_bei333mntv7d1.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=f4f1ad8fb4298cd5549d8591386b842402e7ef14",
+    },
+    {
+      id: "6",
+      name: "r/localseo",
+      image:
+        "https://styles.redditmedia.com/t5_2sg2d/styles/communityIcon_obywzu5hm0991.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=a32231c60c3395edfc6da995de1de20198e4a3f1",
+    },
+  ],
+}
+
+export default function Sidebar({
+  ...props
+}: React.ComponentProps<typeof SidebarComponent>) {
+  return (
+    <SidebarComponent variant="inset" {...props}>
+      <NavHeader />
+      <SidebarContent>
+        <UpgradeToPro />
+        <Inbox notification />
+        <NavGroup label={navTracking.label} items={navTracking.items} />
+        <NavGroup label={navWorkspace.label} items={navWorkspace.items} />
+        <NavSubreddits subreddits={navSubreddits.items} />
+        <NavCompetitors />
+        <NavSecondary />
+      </SidebarContent>
+    </SidebarComponent>
+  )
+}
+
+function UpgradeToPro() {
+  return (
+    <div className="relative rounded-lg hover:cursor-pointer active:scale-100 hover:scale-103 transition-transform mx-1">
+      <ShineBorder
+        shineColor={["#8B79F8", "#FF90A6", "var(--primary)"]}
+        duration={10}
+      />
+      <span className=" flex items-center justify-center gap-2 rounded-lg py-1.5 px-2.5 border">
+        <span className="text-sm">Upgrade to Pro</span>
+        <Rocket className="size-4" strokeWidth={1.5} />
+      </span>
+    </div>
+  )
+}
+
+function Inbox({ notification = false }: { notification?: boolean }) {
+  const pathname = usePathname()
+
+  return (
+    <SidebarGroup>
+      <SidebarMenuButton isActive={pathname === PATHS.INBOX}>
+        <Link
+          href={PATHS.INBOX}
+          className="flex items-center justify-between w-full hover:cursor-pointer"
+        >
+          <span className="flex items-center gap-2">
+            <InboxIcon className="size-4" />
+            Inbox
+          </span>
+          {notification && (
+            <span className="size-2 mr-1 rounded-full bg-primary" />
+          )}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarGroup>
+  )
+}

@@ -33,7 +33,13 @@ export default function LabeledInput({
   return (
     <div className="flex flex-col gap-1.5">
       {!hideLabel && <Label htmlFor={inputId}>{label}</Label>}
-      <Input id={inputId} className={inputClassName} {...inputProps} />
+      <Input
+        id={inputId}
+        className={inputClassName}
+        size="onboarding"
+        variant="onboarding"
+        {...inputProps}
+      />
     </div>
   )
 }

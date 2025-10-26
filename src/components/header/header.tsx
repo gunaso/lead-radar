@@ -1,83 +1,91 @@
 "use client"
 
-import { type ReactElement, useState } from "react"
-import Image from "next/image"
+import Link from "next/link"
 
-import { Rocket } from "lucide-react"
+import { PanelRightIcon } from "lucide-react"
 
-import { ShineBorder } from "@/components/ui/shine-border"
-import AccountSettings from "./account-settings/dialog"
-import WorkspaceSettings from "./workspace-settings"
-import ProfileMenu from "./profile-dropdown"
-import Preferences from "./preferences"
-import Search from "./search"
+import { useSideSlot } from "@/components/side-slot/side-slot-context"
+import { useHeaderConfig } from "@/components/header/header-context"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import LoadingDots from "@/components/ui/loading-dots"
+import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button"
+import {
+  BreadcrumbSeparator,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  Breadcrumb,
+} from "@/components/ui/breadcrumb"
 
-import header from "@/assets/img/header.webp"
+import { useIsBellowLg, useIsMobile } from "@/hooks/use-mobile"
+import { useBreadcrumbs } from "@/hooks/use-breadcrumbs"
 
-type AppHeaderProps = {
-  search: string
-  onSearchChange: (value: string) => void
-}
-
-export function Header({
-  search,
-  onSearchChange,
-}: AppHeaderProps): ReactElement {
-  const [preferencesDialogOpen, setPreferencesDialogOpen] = useState(false)
-  const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false)
-  const [accountDialogOpen, setAccountDialogOpen] = useState(false)
+export default function Header() {
+  const isBelowLg = useIsBellowLg()
+  const isMobile = useIsMobile()
+  const { config } = useHeaderConfig()
+  const { config: sideSlotConfig, setOpenMobile } = useSideSlot()
+  const crumbs = useBreadcrumbs(config.breadcrumbs)
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b bg-card backdrop-blur">
-      <div className="mx-auto max-w-6xl w-full px-4 h-14 flex items-center justify-between gap-3">
-        {/* Logo */}
-        <div className="w-[200px]">
-          <Image src={header} alt="header" height={30} />
-        </div>
-
-        <Search search={search} onSearchChange={onSearchChange} />
-
-        <div className="flex items-center justify-end gap-4 w-[200px]">
-          <UpgradeToPro /> {/* TODO: Only show this if user is on free plan */}
-          <ProfileMenu
-            user={{
-              name: "John Doe",
-              email: "john.doe@example.com",
-              avatar: null,
-            }}
-            onOpenPreferencesDialog={() => setPreferencesDialogOpen(true)}
-            onOpenWorkspaceDialog={() => setWorkspaceDialogOpen(true)}
-            onOpenAccountDialog={() => setAccountDialogOpen(true)}
+    <header className="page-padding-x flex h-10 shrink-0 items-center gap-2 border-b-[0.5px] max-[28rem]:h-20">
+      {isBelowLg && (
+        <>
+          <SidebarTrigger className="[&_svg]:size-4" />
+          <Separator
+            orientation="vertical"
+            className="mr-2 data-[orientation=vertical]:h-4"
           />
+        </>
+      )}
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-5 min-w-0 max-[28rem]:flex-col max-[28rem]:gap-2 max-[28rem]:items-start">
+          <Breadcrumb>
+            <BreadcrumbList>
+              {crumbs.map((c, idx) => {
+                const isLast = idx === crumbs.length - 1
+                return (
+                  <BreadcrumbItem key={c.key}>
+                    {isLast ? (
+                      <BreadcrumbPage>
+                        {c.loading ? <LoadingDots label="Loading" /> : c.label}
+                      </BreadcrumbPage>
+                    ) : c.href ? (
+                      <BreadcrumbLink asChild>
+                        <Link href={c.href}>{c.label}</Link>
+                      </BreadcrumbLink>
+                    ) : (
+                      <span className="text-muted-foreground">{c.label}</span>
+                    )}
+                    {!isLast && <BreadcrumbSeparator />}
+                  </BreadcrumbItem>
+                )
+              })}
+            </BreadcrumbList>
+          </Breadcrumb>
+          {config.afterCrumbs}
         </div>
+        {config.actions && config.actions.length > 0 && (
+          <div className="flex items-center gap-2">
+            {config.actions.map((action) => (
+              <span key={action.key}>{action.element}</span>
+            ))}
+          </div>
+        )}
       </div>
-      <Preferences
-        open={preferencesDialogOpen}
-        onOpenChange={setPreferencesDialogOpen}
-      />
-      <AccountSettings
-        open={accountDialogOpen}
-        onOpenChange={setAccountDialogOpen}
-      />
-      <WorkspaceSettings
-        open={workspaceDialogOpen}
-        onOpenChange={setWorkspaceDialogOpen}
-      />
+      {isMobile && sideSlotConfig?.content && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="[&_svg]:size-4"
+          onClick={() => setOpenMobile(true)}
+        >
+          <PanelRightIcon />
+          <span className="sr-only">Open Side Slot</span>
+        </Button>
+      )}
     </header>
-  )
-}
-
-function UpgradeToPro() {
-  return (
-    <div className="relative rounded-lg hover:cursor-pointer active:scale-100 hover:scale-103 transition-transform">
-      <ShineBorder
-        shineColor={["#8B79F8", "#FF90A6", "var(--primary)"]}
-        duration={10}
-      />
-      <span className=" flex items-center gap-1 rounded-lg py-1.5 px-2.5 border">
-        <span className="text-sm">Upgrade to Pro</span>
-        <Rocket className="size-4" strokeWidth={2} />
-      </span>
-    </div>
   )
 }

@@ -5,7 +5,9 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { motion, AnimatePresence } from "framer-motion"
 import { XIcon } from "lucide-react"
 
+import { dialogVariants, animationVariants } from "@/lib/motion-config"
 import { cn } from "@/lib/utils"
+import { useSidebar } from "@/components/ui/sidebar"
 
 const DialogContext = React.createContext<{
   open: boolean
@@ -72,10 +74,10 @@ function DialogOverlay({
           {...props}
         >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={animationVariants.fade}
           />
         </DialogPrimitive.Overlay>
       )}
@@ -86,12 +88,15 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  closeButtonClassName,
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  closeButtonClassName?: string
   showCloseButton?: boolean
 }) {
   const { open } = React.useContext(DialogContext)
+  const { state: sidebarState, isMobile } = useSidebar()
 
   return (
     <AnimatePresence>
@@ -103,22 +108,28 @@ function DialogContent({
             forceMount
             asChild
             className={cn(
-              "bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg",
+              "bg-background fixed top-[30%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-30%] rounded-md border shadow-xs sm:max-w-lg",
+              !isMobile &&
+                sidebarState === "expanded" &&
+                "md:left-[calc(50%+var(--sidebar-width-2)/2)]",
               className
             )}
             {...props}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial="closed"
+              animate="open"
+              exit="closed"
+              variants={dialogVariants}
             >
               {children}
               {showCloseButton && (
                 <DialogPrimitive.Close
                   data-slot="dialog-close"
-                  className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                  className={cn(
+                    "absolute top-1.5 right-1.5 p-1 rounded-sm bg-transparent hover:bg-accent focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                    closeButtonClassName
+                  )}
                 >
                   <XIcon />
                   <span className="sr-only">Close</span>
@@ -136,7 +147,17 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
+      className={cn("flex gap-2 px-3 pt-3 pb-1.5", className)}
+      {...props}
+    />
+  )
+}
+
+function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="dialog-body"
+      className={cn("flex flex-col px-3", className)}
       {...props}
     />
   )
@@ -147,7 +168,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        "flex items-center justify-end gap-2 p-3 border-t",
         className
       )}
       {...props}
@@ -162,7 +183,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg leading-none font-semibold", className)}
+      className={cn("text-sm leading-none font-semibold", className)}
       {...props}
     />
   )
@@ -192,4 +213,5 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
+  DialogBody,
 }

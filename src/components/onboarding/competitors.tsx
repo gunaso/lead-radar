@@ -11,7 +11,7 @@ import {
 import { X, Pencil, Plus } from "lucide-react"
 
 import LabeledInput from "@/components/ui/labeled-input"
-import AsyncInput from "@/components/input-async"
+import AsyncInput from "@/components/ui/input-async"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
@@ -137,6 +137,7 @@ export default function CompetitorsStep({
           <Button
             type="button"
             onClick={handleAdd}
+            size="onboarding"
             disabled={!canAdd || (Boolean(website.trim()) && !websiteValid)}
             className="inline-flex items-center gap-2"
           >
@@ -147,6 +148,7 @@ export default function CompetitorsStep({
             <Button
               type="button"
               variant="ghost"
+              size="onboarding"
               className="ml-2"
               onClick={resetForm}
             >

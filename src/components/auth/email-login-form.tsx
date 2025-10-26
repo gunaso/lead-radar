@@ -91,7 +91,12 @@ export function EmailLoginForm({ email, onBack }: EmailLoginFormProps) {
           <p className="text-sm text-destructive">{state.message}</p>
         ) : null}
 
-        <SubmitButton type="submit" className="w-full" disabled={!isFormValid}>
+        <SubmitButton
+          type="submit"
+          className="w-full"
+          size="loginSm"
+          disabled={!isFormValid}
+        >
           Login
         </SubmitButton>
 

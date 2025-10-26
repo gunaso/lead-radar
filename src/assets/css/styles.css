@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap");
 @import "tailwindcss";
 @import "./theme.css";
 
@@ -6,7 +7,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
@@ -45,14 +46,22 @@
   }
 }
 
-button:not([role="button"]):not([role="combobox"]):active {
+/* button:not([role="button"]):not([role="combobox"]):active {
   transition: transform var(--default-transition-duration)
     var(--default-transition-timing-function);
   scale: 0.97;
-}
+} */
 
 button:hover {
-  cursor: pointer;
+  cursor: default;
+}
+
+.page-padding-x {
+  @apply lg:pl-8 lg:pr-6 pl-4 pr-5;
+}
+
+.settings-section {
+  @apply flex flex-col gap-12 w-full;
 }
 
 @keyframes shine {

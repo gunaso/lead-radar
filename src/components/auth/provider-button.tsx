@@ -20,7 +20,7 @@ export function ProviderButton({
     <Button
       variant="outline"
       type="button"
-      className="w-full hover:cursor-pointer"
+      className="w-full hover:cursor-pointer h-9 rounded-md"
     >
       <Icon size={size} className="text-muted-foreground" />
       <span>Continue with {provider}</span>

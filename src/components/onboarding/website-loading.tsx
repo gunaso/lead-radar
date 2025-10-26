@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 
-import LoadingShapes from "@/components/loading-shapes"
+import LoadingShapes from "@/components/ui/loading-shapes"
 
 const sentences = [
   "Decoding your digital DNA...",
