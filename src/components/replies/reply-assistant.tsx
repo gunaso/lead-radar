@@ -14,12 +14,6 @@ import { cn } from "@/lib/utils"
 
 export type ReplyAssistantProps = {
   redditItemUrl: string
-  context?: {
-    postTitle?: string
-    subreddit?: string
-    keywords?: string[]
-    commentsSample?: string[]
-  }
   className?: string
   onClose?: () => void
 }
@@ -42,7 +36,6 @@ function buildFakeAnswer(bullets: string[]): string {
 
 export function ReplyAssistant({
   redditItemUrl,
-  context,
   className,
   onClose,
 }: ReplyAssistantProps) {

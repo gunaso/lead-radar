@@ -9,6 +9,7 @@ import { HeaderConfig } from "@/components/header/header-context"
 import { StatusDropdown } from "@/components/ui/dropdown-status"
 import { ScoreDropdown } from "@/components/ui/dropdown-score"
 import { ItemActions } from "@/components/ui/item-actions"
+import { PostHeader } from "@/components/ui/post-header"
 import { Expandable } from "@/components/ui/expandable"
 import { Sentiment } from "@/components/ui/sentiment"
 import { Separator } from "@/components/ui/separator"
@@ -21,7 +22,7 @@ const post: PostType = {
   title:
     "Website with better backlink profile had its traffic tanked in Jun-Jul Update",
   content: `So this is interesting, or perhaps I'm missing something.\n\nNeither of the websites are mine. These were ranking for a keyword I was trying to rank for. I found these when I was researching for top ranking websites for my keyword.\n\nWebsite 1: digitalmarkitors(dot)com: This is the website with better backlink profile. I say better because it seems to have links from pages that are contextually relevant (both content theme and location wise). But it's traffic started declining after the update.\n\nWebsite 2: pankajkumarseo(dot)com: However, this website, despite having a lot of irrelevant links, got a bump in traffic around the same time ye update was rolled out.\n\nWhat's the catch here?\n\nMy assumption was having a few high quality links (links from high DA websites and from pages that are contextually relevant) is better. But that seems to be the opposite for this case. Am I missing something?\n\nCould it be that the organic traffic on the pages the second website is getting links from is higher on an average and hence despite contextual irrelevance the links in the second case could be considered better than the first?`,
-  author: "u/user_123_seo",
+  author: "user_123_seo",
   subreddit: {
     id: "1",
     name: "r/SEO",
@@ -48,9 +49,9 @@ const comments: PostCommentType[] = [
     status: "Needs Review",
     score: "Low",
     sentiment: "Positive",
-    author: "u/user_123_seo",
+    author: "user_123_seo",
     postedAt: "2025-10-25 08:00:00",
-    url: "https://www.reddit.com/r/SEO/comments/1oavdbc/comment/nkcefli/",
+    url: "/r/SEO/comments/1oavdbc/comment/nkcefli/",
   },
   {
     id: "2",
@@ -62,9 +63,9 @@ Let your client know that, in case of failure to complete the payment, you'll be
     status: "Ready to Engage",
     score: "Medium",
     sentiment: "Neutral",
-    author: "u/user_123_seo",
+    author: "user_123_seo",
     postedAt: "2025-10-25 08:00:00",
-    url: "https://www.reddit.com/r/SEO/comments/1oavdbc/comment/nkcblp3/",
+    url: "r/SEO/comments/1oavdbc/comment/nkcblp3/",
   },
 ]
 
@@ -95,18 +96,12 @@ export default function PostPage() {
         <PostHeader post={post} />
 
         <Expandable collapsedHeight={220} bigDiv>
-          <div className="whitespace-pre-wrap text-sm">{post.content}</div>
+          <div className="whitespace-pre-wrap text-sm p-3 bg-muted rounded-md">
+            {post.content}
+          </div>
         </Expandable>
 
-        <ItemActions
-          redditItemUrl={post.url}
-          context={{
-            postTitle: post.title,
-            subreddit: post.subreddit.name,
-            keywords: post.keywords,
-            commentsSample: comments.slice(0, 2).map((c) => c.content),
-          }}
-        />
+        <ItemActions redditItemUrl={post.url} />
 
         <Separator className="my-1.5" />
 
@@ -121,25 +116,12 @@ export default function PostPage() {
   )
 }
 
-function PostHeader({ post }: { post: PostType }) {
-  return (
-    <div className="flex flex-col gap-1 mb-4">
-      <span className="text-lg font-semibold">{post.title}</span>
-      <span className="flex items-center gap-1 text-sm text-muted-foreground">
-        <span>{post.author}</span>
-        <DotIcon className="size-4" />
-        <span>{formatRelativeOrLocaleDate(post.postedAt)}</span>
-      </span>
-    </div>
-  )
-}
-
 function PostComment({ comment }: { comment: PostCommentType }) {
   return (
     <div className="flex flex-col gap-2 bg-card p-2 rounded-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <span className="text-sm font-medium">{comment.author}</span>
+          <span className="text-sm font-medium">u/{comment.author}</span>
           <DotIcon className="size-4 text-muted-foreground" />
           <span className="text-2xs text-muted-foreground">
             {formatRelativeOrLocaleDate(comment.postedAt)}
@@ -155,7 +137,6 @@ function PostComment({ comment }: { comment: PostCommentType }) {
       <ItemActions
         openUrl={`/comments/${comment.id}`}
         redditItemUrl={post.url}
-        context={{ commentsSample: [comment.content] }}
         extraActions={
           <>
             <StatusDropdown initialStatus={comment.status} />
