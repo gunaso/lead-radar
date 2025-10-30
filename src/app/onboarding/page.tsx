@@ -5,6 +5,7 @@ import OnboardingLayout from "@/components/onboarding/onboarding-layout"
 import WorkspaceStep from "@/components/onboarding/workspace"
 import PersonalStep from "@/components/onboarding/personal"
 import WelcomeStep from "@/components/onboarding/welcome"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import TipsStep from "@/components/onboarding/tips"
 import TrackingTabs, {
   type TrackingTabValue,
@@ -72,32 +73,34 @@ export default function OnboardingPage(): ReactElement {
   )
 
   return (
-    <OnboardingLayout
-      loading={ctrl.loading}
-      step={ctrl.step}
-      MAX_STEP={ctrl.MAX_STEP}
-      TOTAL_MAIN_STEPS={ctrl.TOTAL_MAIN_STEPS}
-      displayStepNumber={ctrl.displayStepNumber}
-      displayIndex={ctrl.displayIndex}
-      percent={ctrl.percent}
-      showLoadingScreen={ctrl.showLoadingScreen}
-      canContinue={ctrl.canContinue}
-      onBack={ctrl.handlers.handleBack}
-      onContinueOrFinish={
-        ctrl.step < ctrl.MAX_STEP
-          ? ctrl.handlers.handleContinue
-          : ctrl.handlers.handleFinish
-      }
-      isFinishing={ctrl.step >= ctrl.MAX_STEP}
-      dialog={{
-        showLogoutDialog: ctrl.dialog.showLogoutDialog,
-        setShowLogoutDialog: ctrl.dialog.setShowLogoutDialog,
-        loggingOut: ctrl.dialog.loggingOut,
-        confirmLogout: ctrl.handlers.confirmLogout,
-      }}
-      goToDisplayIndex={goToDisplayIndex}
-    >
-      {children}
-    </OnboardingLayout>
+    <SidebarProvider defaultOpen={false} className="flex-col">
+      <OnboardingLayout
+        loading={ctrl.loading}
+        step={ctrl.step}
+        MAX_STEP={ctrl.MAX_STEP}
+        TOTAL_MAIN_STEPS={ctrl.TOTAL_MAIN_STEPS}
+        displayStepNumber={ctrl.displayStepNumber}
+        displayIndex={ctrl.displayIndex}
+        percent={ctrl.percent}
+        showLoadingScreen={ctrl.showLoadingScreen}
+        canContinue={ctrl.canContinue}
+        onBack={ctrl.handlers.handleBack}
+        onContinueOrFinish={
+          ctrl.step < ctrl.MAX_STEP
+            ? ctrl.handlers.handleContinue
+            : ctrl.handlers.handleFinish
+        }
+        isFinishing={ctrl.step >= ctrl.MAX_STEP}
+        dialog={{
+          showLogoutDialog: ctrl.dialog.showLogoutDialog,
+          setShowLogoutDialog: ctrl.dialog.setShowLogoutDialog,
+          loggingOut: ctrl.dialog.loggingOut,
+          confirmLogout: ctrl.handlers.confirmLogout,
+        }}
+        goToDisplayIndex={goToDisplayIndex}
+      >
+        {children}
+      </OnboardingLayout>
+    </SidebarProvider>
   )
 }
