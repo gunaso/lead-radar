@@ -20,3 +20,17 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Supabase
+
+**Creting new migrations from last migrations**
+
+```bash
+npx supabase db diff --local -f <file_name>
+```
+
+**Generate new types**
+
+```bash
+npx supabase gen types --local --lang typescript > src/lib/db.types.ts
+```

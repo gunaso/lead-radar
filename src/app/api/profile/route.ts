@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
           .eq("workspace", profile.workspace)
 
         const keywordIds = (linkRows || [])
-          .map((r: { keyword?: number }) => r.keyword)
-          .filter((id: unknown): id is number => typeof id === "number")
+          .map((r: { keyword?: string }) => r.keyword)
+          .filter((id: unknown): id is string => typeof id === "string")
 
         if (keywordIds.length > 0) {
           const { data: keywordRows } = await supabase
@@ -70,13 +70,13 @@ export async function GET(request: NextRequest) {
           .eq("workspace", profile.workspace)
 
         const subredditIds = (subLinks || [])
-          .map((r: { subreddit?: number }) => r.subreddit)
-          .filter((id: unknown): id is number => typeof id === "number")
+          .map((r: { subreddit?: string }) => r.subreddit)
+          .filter((id: unknown): id is string => typeof id === "string")
 
         if (subredditIds.length > 0) {
           const { data: subRows } = await supabase
             .from("subreddits")
-            .select("name, title, description, description_reddit, created_at, total_members")
+            .select("name, title, description, description_reddit, imported_at")
             .in("id", subredditIds)
 
           linkedSubreddits = (subRows || []).map((s: {
@@ -84,15 +84,14 @@ export async function GET(request: NextRequest) {
             title?: string | null
             description?: string | null
             description_reddit?: string | null
-            created_at?: string | null
-            total_members?: number | null
+            imported_at?: string | null
           }) => ({
             name: s?.name || "",
             title: s?.title ?? null,
             description: s?.description ?? null,
             description_reddit: s?.description_reddit ?? null,
-            created_at: s?.created_at ?? null,
-            total_members: typeof s?.total_members === 'number' ? s.total_members : null,
+            created_at: s?.imported_at ?? null,
+            total_members: null,
           })).filter((s) => (s.name || "").length > 0)
         }
       } catch (e) {

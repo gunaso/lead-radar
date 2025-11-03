@@ -7,7 +7,7 @@ import { sendMessage } from "@/lib/openai"
 import { createClient } from "@/lib/supabase/server"
 
 type ScrapePayload = {
-  workspaceId: number
+  workspaceId: string
   website: string
 }
 

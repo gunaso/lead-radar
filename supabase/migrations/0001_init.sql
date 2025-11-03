@@ -1,937 +1,1420 @@
+create type "public"."sentiment" as enum ('Positive', 'Negative', 'Neutral');
+
+create type "public"."status" as enum ('-1', '0', '1', '2', '3');
 
 
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
-
-CREATE SCHEMA IF NOT EXISTS "public";
+  create table "public"."competitors" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone,
+    "created_by" uuid not null,
+    "updated_by" uuid,
+    "name" text not null,
+    "website" text,
+    "website_md" text,
+    "website_ai" text,
+    "workspace" uuid not null
+      );
 
 
-ALTER SCHEMA "public" OWNER TO "pg_database_owner";
+alter table "public"."competitors" enable row level security;
 
 
-COMMENT ON SCHEMA "public" IS 'standard public schema';
+  create table "public"."keywords" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "name" text not null,
+    "value" text not null,
+    "process" boolean not null default true,
+    "similar_words" text[]
+      );
 
 
+alter table "public"."keywords" enable row level security;
 
-CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
+
+  create table "public"."profiles" (
+    "user_id" uuid not null,
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone,
+    "name" text,
+    "role" text,
+    "onboarding" smallint not null default '0'::smallint,
+    "onboarded" boolean not null default false,
+    "workspace" uuid
+      );
+
+
+alter table "public"."profiles" enable row level security;
+
+
+  create table "public"."reddit_comments" (
+    "id" uuid not null default gen_random_uuid(),
+    "imported_at" timestamp with time zone not null default now(),
+    "posted_at" timestamp with time zone,
+    "post" uuid not null,
+    "reddit_user" uuid,
+    "content" text,
+    "summary" text,
+    "sentiment" public.sentiment not null default 'Neutral'::public.sentiment,
+    "score" integer not null default 0,
+    "processed" boolean not null default false,
+    "display" boolean not null default false,
+    "url" text
+      );
+
+
+alter table "public"."reddit_comments" enable row level security;
+
+
+  create table "public"."reddit_comments_keywords" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "comment" uuid not null,
+    "keyword" uuid not null
+      );
+
+
+alter table "public"."reddit_comments_keywords" enable row level security;
+
+
+  create table "public"."reddit_posts" (
+    "id" uuid not null default gen_random_uuid(),
+    "imported_at" timestamp with time zone not null default now(),
+    "created_at" timestamp with time zone,
+    "subreddit" uuid not null,
+    "reddit_user" uuid,
+    "title" text,
+    "content" text,
+    "summary" text,
+    "bullet_points" text,
+    "sentiment" public.sentiment not null default 'Neutral'::public.sentiment,
+    "score" integer not null default 0,
+    "processed" boolean not null default false,
+    "display" boolean not null default false,
+    "url" text,
+    "reply" text
+      );
+
+
+alter table "public"."reddit_posts" enable row level security;
+
+
+  create table "public"."reddit_posts_keywords" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "keyword" uuid not null,
+    "post" uuid not null
+      );
+
+
+alter table "public"."reddit_posts_keywords" enable row level security;
+
+
+  create table "public"."reddit_users" (
+    "id" uuid not null default gen_random_uuid(),
+    "imported_at" timestamp with time zone not null default now(),
+    "username" text not null
+      );
+
+
+alter table "public"."reddit_users" enable row level security;
+
+
+  create table "public"."subreddits" (
+    "id" uuid not null default gen_random_uuid(),
+    "imported_at" timestamp with time zone not null default now(),
+    "updated" timestamp with time zone,
+    "name" text not null,
+    "title" text,
+    "description" text,
+    "description_reddit" text,
+    "rules" text,
+    "image" text
+      );
+
+
+alter table "public"."subreddits" enable row level security;
+
+
+  create table "public"."subreddits_keywords" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "keyword" uuid not null,
+    "subreddit" uuid not null
+      );
+
+
+alter table "public"."subreddits_keywords" enable row level security;
+
+
+  create table "public"."workspaces" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone not null default now(),
+    "owner" uuid not null,
+    "name" text not null,
+    "company" text not null,
+    "website" text,
+    "website_md" text,
+    "website_ai" text,
+    "employees" text,
+    "keywords_suggested" text[],
+    "goal" text[],
+    "source" text
+      );
+
+
+alter table "public"."workspaces" enable row level security;
+
+
+  create table "public"."workspaces_keywords" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone,
+    "created_by" uuid not null,
+    "updated_by" uuid,
+    "keyword" uuid not null,
+    "workspace" uuid not null
+      );
+
+
+alter table "public"."workspaces_keywords" enable row level security;
+
+
+  create table "public"."workspaces_reddit_comments" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone,
+    "created_by" uuid not null,
+    "updated_by" uuid,
+    "workspace" uuid not null,
+    "comment" uuid not null,
+    "score" integer,
+    "status" public.status,
+    "reply" text[]
+      );
+
+
+alter table "public"."workspaces_reddit_comments" enable row level security;
+
+
+  create table "public"."workspaces_reddit_posts" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "updated_at" timestamp with time zone,
+    "created_by" uuid not null,
+    "updated_by" uuid,
+    "workspace" uuid not null,
+    "post" uuid not null,
+    "score" integer,
+    "status" public.status,
+    "reply" text[]
+      );
+
+
+alter table "public"."workspaces_reddit_posts" enable row level security;
+
+
+  create table "public"."workspaces_subreddits" (
+    "id" uuid not null default gen_random_uuid(),
+    "created_at" timestamp with time zone not null default now(),
+    "created_by" uuid not null,
+    "subreddit" uuid not null,
+    "workspace" uuid not null
+      );
+
+
+alter table "public"."workspaces_subreddits" enable row level security;
+
+CREATE UNIQUE INDEX competitors_pkey ON public.competitors USING btree (id);
+
+CREATE INDEX competitors_workspace_idx ON public.competitors USING btree (workspace);
+
+CREATE UNIQUE INDEX keywords_pkey ON public.keywords USING btree (id);
+
+CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (user_id);
+
+CREATE INDEX reddit_comments_keywords_comment_idx ON public.reddit_comments_keywords USING btree (comment);
+
+CREATE INDEX reddit_comments_keywords_keyword_idx ON public.reddit_comments_keywords USING btree (keyword);
+
+CREATE UNIQUE INDEX reddit_comments_keywords_pkey ON public.reddit_comments_keywords USING btree (id);
+
+CREATE UNIQUE INDEX reddit_comments_pkey ON public.reddit_comments USING btree (id);
+
+CREATE INDEX reddit_comments_post_idx ON public.reddit_comments USING btree (post);
+
+CREATE INDEX reddit_posts_keywords_keyword_idx ON public.reddit_posts_keywords USING btree (keyword);
+
+CREATE UNIQUE INDEX reddit_posts_keywords_pkey ON public.reddit_posts_keywords USING btree (id);
+
+CREATE INDEX reddit_posts_keywords_post_idx ON public.reddit_posts_keywords USING btree (post);
+
+CREATE UNIQUE INDEX reddit_posts_pkey ON public.reddit_posts USING btree (id);
+
+CREATE INDEX reddit_posts_subreddit_idx ON public.reddit_posts USING btree (subreddit);
+
+CREATE UNIQUE INDEX reddit_users_pkey ON public.reddit_users USING btree (id);
+
+CREATE INDEX subreddits_keywords_keyword_idx ON public.subreddits_keywords USING btree (keyword);
+
+CREATE UNIQUE INDEX subreddits_keywords_pkey ON public.subreddits_keywords USING btree (id);
+
+CREATE INDEX subreddits_keywords_subreddit_idx ON public.subreddits_keywords USING btree (subreddit);
+
+CREATE UNIQUE INDEX subreddits_name_key ON public.subreddits USING btree (name);
+
+CREATE UNIQUE INDEX subreddits_pkey ON public.subreddits USING btree (id);
+
+CREATE INDEX workspaces_keywords_keyword_idx ON public.workspaces_keywords USING btree (keyword);
+
+CREATE UNIQUE INDEX workspaces_keywords_pkey ON public.workspaces_keywords USING btree (id);
+
+CREATE INDEX workspaces_keywords_workspace_idx ON public.workspaces_keywords USING btree (workspace);
+
+CREATE UNIQUE INDEX workspaces_pkey ON public.workspaces USING btree (id);
+
+CREATE INDEX workspaces_reddit_comments_comment_idx ON public.workspaces_reddit_comments USING btree (comment);
+
+CREATE UNIQUE INDEX workspaces_reddit_comments_pkey ON public.workspaces_reddit_comments USING btree (id);
+
+CREATE INDEX workspaces_reddit_comments_workspace_idx ON public.workspaces_reddit_comments USING btree (workspace);
+
+CREATE UNIQUE INDEX workspaces_reddit_posts_pkey ON public.workspaces_reddit_posts USING btree (id);
+
+CREATE INDEX workspaces_reddit_posts_post_idx ON public.workspaces_reddit_posts USING btree (post);
+
+CREATE INDEX workspaces_reddit_posts_workspace_idx ON public.workspaces_reddit_posts USING btree (workspace);
+
+CREATE UNIQUE INDEX workspaces_subreddits_pkey ON public.workspaces_subreddits USING btree (id);
+
+CREATE INDEX workspaces_subreddits_subreddit_idx ON public.workspaces_subreddits USING btree (subreddit);
+
+CREATE INDEX workspaces_subreddits_workspace_idx ON public.workspaces_subreddits USING btree (workspace);
+
+alter table "public"."competitors" add constraint "competitors_pkey" PRIMARY KEY using index "competitors_pkey";
+
+alter table "public"."keywords" add constraint "keywords_pkey" PRIMARY KEY using index "keywords_pkey";
+
+alter table "public"."profiles" add constraint "profiles_pkey" PRIMARY KEY using index "profiles_pkey";
+
+alter table "public"."reddit_comments" add constraint "reddit_comments_pkey" PRIMARY KEY using index "reddit_comments_pkey";
+
+alter table "public"."reddit_comments_keywords" add constraint "reddit_comments_keywords_pkey" PRIMARY KEY using index "reddit_comments_keywords_pkey";
+
+alter table "public"."reddit_posts" add constraint "reddit_posts_pkey" PRIMARY KEY using index "reddit_posts_pkey";
+
+alter table "public"."reddit_posts_keywords" add constraint "reddit_posts_keywords_pkey" PRIMARY KEY using index "reddit_posts_keywords_pkey";
+
+alter table "public"."reddit_users" add constraint "reddit_users_pkey" PRIMARY KEY using index "reddit_users_pkey";
+
+alter table "public"."subreddits" add constraint "subreddits_pkey" PRIMARY KEY using index "subreddits_pkey";
+
+alter table "public"."subreddits_keywords" add constraint "subreddits_keywords_pkey" PRIMARY KEY using index "subreddits_keywords_pkey";
+
+alter table "public"."workspaces" add constraint "workspaces_pkey" PRIMARY KEY using index "workspaces_pkey";
+
+alter table "public"."workspaces_keywords" add constraint "workspaces_keywords_pkey" PRIMARY KEY using index "workspaces_keywords_pkey";
+
+alter table "public"."workspaces_reddit_comments" add constraint "workspaces_reddit_comments_pkey" PRIMARY KEY using index "workspaces_reddit_comments_pkey";
+
+alter table "public"."workspaces_reddit_posts" add constraint "workspaces_reddit_posts_pkey" PRIMARY KEY using index "workspaces_reddit_posts_pkey";
+
+alter table "public"."workspaces_subreddits" add constraint "workspaces_subreddits_pkey" PRIMARY KEY using index "workspaces_subreddits_pkey";
+
+alter table "public"."competitors" add constraint "competitors_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."competitors" validate constraint "competitors_created_by_fkey";
+
+alter table "public"."competitors" add constraint "competitors_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."competitors" validate constraint "competitors_updated_by_fkey";
+
+alter table "public"."competitors" add constraint "competitors_workspace_fkey" FOREIGN KEY (workspace) REFERENCES public.workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."competitors" validate constraint "competitors_workspace_fkey";
+
+alter table "public"."profiles" add constraint "profiles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."profiles" validate constraint "profiles_user_id_fkey";
+
+alter table "public"."profiles" add constraint "profiles_workspace_fkey" FOREIGN KEY (workspace) REFERENCES public.workspaces(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."profiles" validate constraint "profiles_workspace_fkey";
+
+alter table "public"."reddit_comments" add constraint "reddit_comments_post_fkey" FOREIGN KEY (post) REFERENCES public.reddit_posts(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."reddit_comments" validate constraint "reddit_comments_post_fkey";
+
+alter table "public"."reddit_comments" add constraint "reddit_comments_reddit_user_fkey" FOREIGN KEY (reddit_user) REFERENCES public.reddit_users(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."reddit_comments" validate constraint "reddit_comments_reddit_user_fkey";
+
+alter table "public"."reddit_comments" add constraint "reddit_comments_score_check" CHECK (((score >= 0) AND (score <= 100))) not valid;
+
+alter table "public"."reddit_comments" validate constraint "reddit_comments_score_check";
+
+alter table "public"."reddit_comments_keywords" add constraint "reddit_comments_keywords_comment_fkey" FOREIGN KEY (comment) REFERENCES public.reddit_comments(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."reddit_comments_keywords" validate constraint "reddit_comments_keywords_comment_fkey";
+
+alter table "public"."reddit_comments_keywords" add constraint "reddit_comments_keywords_keyword_fkey" FOREIGN KEY (keyword) REFERENCES public.keywords(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."reddit_comments_keywords" validate constraint "reddit_comments_keywords_keyword_fkey";
+
+alter table "public"."reddit_posts" add constraint "reddit_posts_reddit_user_fkey" FOREIGN KEY (reddit_user) REFERENCES public.reddit_users(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."reddit_posts" validate constraint "reddit_posts_reddit_user_fkey";
+
+alter table "public"."reddit_posts" add constraint "reddit_posts_score_check" CHECK (((score >= 0) AND (score <= 100))) not valid;
+
+alter table "public"."reddit_posts" validate constraint "reddit_posts_score_check";
+
+alter table "public"."reddit_posts" add constraint "reddit_posts_subreddit_fkey" FOREIGN KEY (subreddit) REFERENCES public.subreddits(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."reddit_posts" validate constraint "reddit_posts_subreddit_fkey";
+
+alter table "public"."reddit_posts_keywords" add constraint "reddit_posts_keywords_keyword_fkey" FOREIGN KEY (keyword) REFERENCES public.keywords(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."reddit_posts_keywords" validate constraint "reddit_posts_keywords_keyword_fkey";
+
+alter table "public"."reddit_posts_keywords" add constraint "reddit_posts_keywords_post_fkey" FOREIGN KEY (post) REFERENCES public.reddit_posts(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."reddit_posts_keywords" validate constraint "reddit_posts_keywords_post_fkey";
+
+alter table "public"."subreddits" add constraint "subreddits_name_key" UNIQUE using index "subreddits_name_key";
+
+alter table "public"."subreddits_keywords" add constraint "subreddits_keywords_keyword_fkey" FOREIGN KEY (keyword) REFERENCES public.keywords(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."subreddits_keywords" validate constraint "subreddits_keywords_keyword_fkey";
+
+alter table "public"."subreddits_keywords" add constraint "subreddits_keywords_subreddit_fkey" FOREIGN KEY (subreddit) REFERENCES public.subreddits(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."subreddits_keywords" validate constraint "subreddits_keywords_subreddit_fkey";
+
+alter table "public"."workspaces" add constraint "workspaces_owner_fkey" FOREIGN KEY (owner) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces" validate constraint "workspaces_owner_fkey";
+
+alter table "public"."workspaces_keywords" add constraint "workspaces_keywords_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_keywords" validate constraint "workspaces_keywords_created_by_fkey";
+
+alter table "public"."workspaces_keywords" add constraint "workspaces_keywords_keyword_fkey" FOREIGN KEY (keyword) REFERENCES public.keywords(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_keywords" validate constraint "workspaces_keywords_keyword_fkey";
+
+alter table "public"."workspaces_keywords" add constraint "workspaces_keywords_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."workspaces_keywords" validate constraint "workspaces_keywords_updated_by_fkey";
+
+alter table "public"."workspaces_keywords" add constraint "workspaces_keywords_workspace_fkey" FOREIGN KEY (workspace) REFERENCES public.workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_keywords" validate constraint "workspaces_keywords_workspace_fkey";
+
+alter table "public"."workspaces_reddit_comments" add constraint "workspaces_reddit_comments_comment_fkey" FOREIGN KEY (comment) REFERENCES public.reddit_comments(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_reddit_comments" validate constraint "workspaces_reddit_comments_comment_fkey";
+
+alter table "public"."workspaces_reddit_comments" add constraint "workspaces_reddit_comments_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_reddit_comments" validate constraint "workspaces_reddit_comments_created_by_fkey";
+
+alter table "public"."workspaces_reddit_comments" add constraint "workspaces_reddit_comments_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."workspaces_reddit_comments" validate constraint "workspaces_reddit_comments_updated_by_fkey";
+
+alter table "public"."workspaces_reddit_comments" add constraint "workspaces_reddit_comments_workspace_fkey" FOREIGN KEY (workspace) REFERENCES public.workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_reddit_comments" validate constraint "workspaces_reddit_comments_workspace_fkey";
+
+alter table "public"."workspaces_reddit_posts" add constraint "workspaces_reddit_posts_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_reddit_posts" validate constraint "workspaces_reddit_posts_created_by_fkey";
+
+alter table "public"."workspaces_reddit_posts" add constraint "workspaces_reddit_posts_post_fkey" FOREIGN KEY (post) REFERENCES public.reddit_posts(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_reddit_posts" validate constraint "workspaces_reddit_posts_post_fkey";
+
+alter table "public"."workspaces_reddit_posts" add constraint "workspaces_reddit_posts_updated_by_fkey" FOREIGN KEY (updated_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."workspaces_reddit_posts" validate constraint "workspaces_reddit_posts_updated_by_fkey";
+
+alter table "public"."workspaces_reddit_posts" add constraint "workspaces_reddit_posts_workspace_fkey" FOREIGN KEY (workspace) REFERENCES public.workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_reddit_posts" validate constraint "workspaces_reddit_posts_workspace_fkey";
+
+alter table "public"."workspaces_subreddits" add constraint "workspaces_subreddits_created_by_fkey" FOREIGN KEY (created_by) REFERENCES auth.users(id) ON UPDATE CASCADE ON DELETE SET NULL not valid;
+
+alter table "public"."workspaces_subreddits" validate constraint "workspaces_subreddits_created_by_fkey";
+
+alter table "public"."workspaces_subreddits" add constraint "workspaces_subreddits_subreddit_fkey" FOREIGN KEY (subreddit) REFERENCES public.subreddits(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_subreddits" validate constraint "workspaces_subreddits_subreddit_fkey";
+
+alter table "public"."workspaces_subreddits" add constraint "workspaces_subreddits_workspace_fkey" FOREIGN KEY (workspace) REFERENCES public.workspaces(id) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+
+alter table "public"."workspaces_subreddits" validate constraint "workspaces_subreddits_workspace_fkey";
+
+set check_function_bodies = off;
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO ''
+AS $function$
 begin
-  insert into public.profiles (user_id)
-  values (new.id);
+  insert into public.profiles (user_id, created_at)
+  values (new.id, now());
   return new;
 end;
-$$;
+$function$
+;
 
-
-ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
-
-
-CREATE OR REPLACE FUNCTION "public"."update_updated_at_column"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
-    AS $$
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SET search_path TO ''
+AS $function$
 BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$;
+$function$
+;
 
+grant delete on table "public"."competitors" to "anon";
 
-ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
+grant insert on table "public"."competitors" to "anon";
 
-SET default_tablespace = '';
+grant references on table "public"."competitors" to "anon";
 
-SET default_table_access_method = "heap";
+grant select on table "public"."competitors" to "anon";
 
+grant trigger on table "public"."competitors" to "anon";
 
-CREATE TABLE IF NOT EXISTS "public"."competitors" (
-    "id" bigint NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "created_by" "uuid" DEFAULT "auth"."uid"(),
-    "workspace" bigint NOT NULL,
-    "name" "text" NOT NULL,
-    "website" "text",
-    "website_info" "text",
-    "website_summary" "text"
-);
+grant truncate on table "public"."competitors" to "anon";
 
+grant update on table "public"."competitors" to "anon";
 
-ALTER TABLE "public"."competitors" OWNER TO "postgres";
+grant delete on table "public"."competitors" to "authenticated";
 
+grant insert on table "public"."competitors" to "authenticated";
 
-ALTER TABLE "public"."competitors" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."competitor_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant references on table "public"."competitors" to "authenticated";
 
+grant select on table "public"."competitors" to "authenticated";
 
+grant trigger on table "public"."competitors" to "authenticated";
 
-CREATE TABLE IF NOT EXISTS "public"."keywords" (
-    "id" bigint NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "name" "text" NOT NULL,
-    "similar_words" "text"[],
-    "value" "text" NOT NULL,
-    "process" boolean DEFAULT true NOT NULL
-);
+grant truncate on table "public"."competitors" to "authenticated";
 
+grant update on table "public"."competitors" to "authenticated";
 
-ALTER TABLE "public"."keywords" OWNER TO "postgres";
+grant delete on table "public"."competitors" to "service_role";
 
+grant insert on table "public"."competitors" to "service_role";
 
-ALTER TABLE "public"."keywords" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."keyword_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant references on table "public"."competitors" to "service_role";
 
+grant select on table "public"."competitors" to "service_role";
 
+grant trigger on table "public"."competitors" to "service_role";
 
-CREATE TABLE IF NOT EXISTS "public"."workspaces" (
-    "id" bigint NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp without time zone DEFAULT "now"() NOT NULL,
-    "owner" "uuid" DEFAULT "auth"."uid"() NOT NULL,
-    "name" "text" NOT NULL,
-    "website" "text",
-    "website_md" "text",
-    "company" "text" NOT NULL,
-    "employees" "text",
-    "website_ai" "text",
-    "keywords_suggested" "text"[]
-);
+grant truncate on table "public"."competitors" to "service_role";
 
+grant update on table "public"."competitors" to "service_role";
 
-ALTER TABLE "public"."workspaces" OWNER TO "postgres";
+grant delete on table "public"."keywords" to "anon";
 
+grant insert on table "public"."keywords" to "anon";
 
-ALTER TABLE "public"."workspaces" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."organization_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant references on table "public"."keywords" to "anon";
 
+grant select on table "public"."keywords" to "anon";
 
+grant trigger on table "public"."keywords" to "anon";
 
-CREATE TABLE IF NOT EXISTS "public"."workspaces_keywords" (
-    "id" bigint NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "workspace" bigint NOT NULL,
-    "keyword" bigint NOT NULL,
-    "created_by" "uuid" DEFAULT "auth"."uid"()
-);
+grant truncate on table "public"."keywords" to "anon";
 
+grant update on table "public"."keywords" to "anon";
 
-ALTER TABLE "public"."workspaces_keywords" OWNER TO "postgres";
+grant delete on table "public"."keywords" to "authenticated";
 
+grant insert on table "public"."keywords" to "authenticated";
 
-ALTER TABLE "public"."workspaces_keywords" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."organization_keywords_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant references on table "public"."keywords" to "authenticated";
 
+grant select on table "public"."keywords" to "authenticated";
 
+grant trigger on table "public"."keywords" to "authenticated";
 
-CREATE TABLE IF NOT EXISTS "public"."workspaces_subreddits" (
-    "id" bigint NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "created_by" "uuid",
-    "subreddit" bigint NOT NULL,
-    "workspace" bigint NOT NULL
-);
+grant truncate on table "public"."keywords" to "authenticated";
 
+grant update on table "public"."keywords" to "authenticated";
 
-ALTER TABLE "public"."workspaces_subreddits" OWNER TO "postgres";
+grant delete on table "public"."keywords" to "service_role";
 
+grant insert on table "public"."keywords" to "service_role";
 
-ALTER TABLE "public"."workspaces_subreddits" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."organization_subreddits_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant references on table "public"."keywords" to "service_role";
 
+grant select on table "public"."keywords" to "service_role";
 
+grant trigger on table "public"."keywords" to "service_role";
 
-CREATE TABLE IF NOT EXISTS "public"."profiles" (
-    "user_id" "uuid" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp without time zone DEFAULT "now"() NOT NULL,
-    "workspace" bigint,
-    "name" "text",
-    "onboarding" smallint DEFAULT '0'::smallint NOT NULL,
-    "onboarded" boolean DEFAULT false NOT NULL,
-    "role" "text"
-);
+grant truncate on table "public"."keywords" to "service_role";
 
+grant update on table "public"."keywords" to "service_role";
 
-ALTER TABLE "public"."profiles" OWNER TO "postgres";
+grant delete on table "public"."profiles" to "anon";
 
+grant insert on table "public"."profiles" to "anon";
 
-CREATE TABLE IF NOT EXISTS "public"."reddit_comments" (
-    "id" bigint NOT NULL,
-    "imported_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "created_at" timestamp without time zone NOT NULL,
-    "post" bigint NOT NULL,
-    "reddit_user" bigint NOT NULL,
-    "comment" "text" NOT NULL,
-    "reviewed" boolean DEFAULT false NOT NULL,
-    "display" boolean DEFAULT false NOT NULL,
-    "sentiment" "text"
-);
+grant references on table "public"."profiles" to "anon";
 
+grant select on table "public"."profiles" to "anon";
 
-ALTER TABLE "public"."reddit_comments" OWNER TO "postgres";
+grant trigger on table "public"."profiles" to "anon";
 
+grant truncate on table "public"."profiles" to "anon";
 
-ALTER TABLE "public"."reddit_comments" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."reddit_comment_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant update on table "public"."profiles" to "anon";
 
+grant delete on table "public"."profiles" to "authenticated";
 
+grant insert on table "public"."profiles" to "authenticated";
 
-CREATE TABLE IF NOT EXISTS "public"."reddit_comments_keywords" (
-    "id" bigint NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "comment" bigint NOT NULL,
-    "keywords" bigint NOT NULL
-);
+grant references on table "public"."profiles" to "authenticated";
 
+grant select on table "public"."profiles" to "authenticated";
 
-ALTER TABLE "public"."reddit_comments_keywords" OWNER TO "postgres";
+grant trigger on table "public"."profiles" to "authenticated";
 
+grant truncate on table "public"."profiles" to "authenticated";
 
-ALTER TABLE "public"."reddit_comments_keywords" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."reddit_comment_keywords_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant update on table "public"."profiles" to "authenticated";
 
+grant delete on table "public"."profiles" to "service_role";
 
+grant insert on table "public"."profiles" to "service_role";
 
-CREATE TABLE IF NOT EXISTS "public"."reddit_posts" (
-    "id" bigint NOT NULL,
-    "imported_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "created_at" timestamp without time zone NOT NULL,
-    "title" "text" NOT NULL,
-    "body" "text",
-    "reddit_user" bigint NOT NULL,
-    "subreddit" bigint NOT NULL
-);
+grant references on table "public"."profiles" to "service_role";
 
+grant select on table "public"."profiles" to "service_role";
 
-ALTER TABLE "public"."reddit_posts" OWNER TO "postgres";
+grant trigger on table "public"."profiles" to "service_role";
 
+grant truncate on table "public"."profiles" to "service_role";
 
-ALTER TABLE "public"."reddit_posts" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."reddit_post_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant update on table "public"."profiles" to "service_role";
 
+grant delete on table "public"."reddit_comments" to "anon";
 
+grant insert on table "public"."reddit_comments" to "anon";
 
-CREATE TABLE IF NOT EXISTS "public"."reddit_posts_keywords" (
-    "id" bigint NOT NULL,
-    "post" bigint NOT NULL,
-    "keyword" bigint NOT NULL,
-    "created_at" timestamp without time zone DEFAULT "now"() NOT NULL
-);
+grant references on table "public"."reddit_comments" to "anon";
 
+grant select on table "public"."reddit_comments" to "anon";
 
-ALTER TABLE "public"."reddit_posts_keywords" OWNER TO "postgres";
+grant trigger on table "public"."reddit_comments" to "anon";
 
+grant truncate on table "public"."reddit_comments" to "anon";
 
-ALTER TABLE "public"."reddit_posts_keywords" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."reddit_post_keywords_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant update on table "public"."reddit_comments" to "anon";
 
+grant delete on table "public"."reddit_comments" to "authenticated";
 
+grant insert on table "public"."reddit_comments" to "authenticated";
 
-CREATE TABLE IF NOT EXISTS "public"."reddit_users" (
-    "id" bigint NOT NULL,
-    "imported_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "username" "text" NOT NULL
-);
+grant references on table "public"."reddit_comments" to "authenticated";
 
+grant select on table "public"."reddit_comments" to "authenticated";
 
-ALTER TABLE "public"."reddit_users" OWNER TO "postgres";
+grant trigger on table "public"."reddit_comments" to "authenticated";
 
+grant truncate on table "public"."reddit_comments" to "authenticated";
 
-ALTER TABLE "public"."reddit_users" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."reddit_user_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant update on table "public"."reddit_comments" to "authenticated";
 
+grant delete on table "public"."reddit_comments" to "service_role";
 
+grant insert on table "public"."reddit_comments" to "service_role";
 
-CREATE TABLE IF NOT EXISTS "public"."subreddits" (
-    "id" bigint NOT NULL,
-    "imported_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp without time zone DEFAULT "now"() NOT NULL,
-    "name" "text" NOT NULL,
-    "description" "text",
-    "rules" "text",
-    "created_at" "date",
-    "weekly_visitors" integer,
-    "weekly_contrib" integer,
-    "total_members" integer,
-    "image" "text",
-    "title" "text",
-    "description_reddit" "text"
-);
+grant references on table "public"."reddit_comments" to "service_role";
 
+grant select on table "public"."reddit_comments" to "service_role";
 
-ALTER TABLE "public"."subreddits" OWNER TO "postgres";
+grant trigger on table "public"."reddit_comments" to "service_role";
 
+grant truncate on table "public"."reddit_comments" to "service_role";
 
-ALTER TABLE "public"."subreddits" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."subreddit_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant update on table "public"."reddit_comments" to "service_role";
 
+grant delete on table "public"."reddit_comments_keywords" to "anon";
 
+grant insert on table "public"."reddit_comments_keywords" to "anon";
 
-CREATE TABLE IF NOT EXISTS "public"."subreddits_keywords" (
-    "id" bigint NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "keyword" bigint NOT NULL,
-    "subreddit" bigint NOT NULL
-);
+grant references on table "public"."reddit_comments_keywords" to "anon";
 
+grant select on table "public"."reddit_comments_keywords" to "anon";
 
-ALTER TABLE "public"."subreddits_keywords" OWNER TO "postgres";
+grant trigger on table "public"."reddit_comments_keywords" to "anon";
 
+grant truncate on table "public"."reddit_comments_keywords" to "anon";
 
-ALTER TABLE "public"."subreddits_keywords" ALTER COLUMN "id" ADD GENERATED BY DEFAULT AS IDENTITY (
-    SEQUENCE NAME "public"."subreddit_keywords_id_seq"
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
+grant update on table "public"."reddit_comments_keywords" to "anon";
 
+grant delete on table "public"."reddit_comments_keywords" to "authenticated";
 
+grant insert on table "public"."reddit_comments_keywords" to "authenticated";
 
-ALTER TABLE ONLY "public"."competitors"
-    ADD CONSTRAINT "competitor_pkey" PRIMARY KEY ("id");
+grant references on table "public"."reddit_comments_keywords" to "authenticated";
 
+grant select on table "public"."reddit_comments_keywords" to "authenticated";
 
+grant trigger on table "public"."reddit_comments_keywords" to "authenticated";
 
-ALTER TABLE ONLY "public"."keywords"
-    ADD CONSTRAINT "keyword_pkey" PRIMARY KEY ("id");
+grant truncate on table "public"."reddit_comments_keywords" to "authenticated";
 
+grant update on table "public"."reddit_comments_keywords" to "authenticated";
 
+grant delete on table "public"."reddit_comments_keywords" to "service_role";
 
-ALTER TABLE ONLY "public"."workspaces_keywords"
-    ADD CONSTRAINT "organization_keywords_pkey" PRIMARY KEY ("id");
+grant insert on table "public"."reddit_comments_keywords" to "service_role";
 
+grant references on table "public"."reddit_comments_keywords" to "service_role";
 
+grant select on table "public"."reddit_comments_keywords" to "service_role";
 
-ALTER TABLE ONLY "public"."workspaces"
-    ADD CONSTRAINT "organization_pkey" PRIMARY KEY ("id");
+grant trigger on table "public"."reddit_comments_keywords" to "service_role";
 
+grant truncate on table "public"."reddit_comments_keywords" to "service_role";
 
+grant update on table "public"."reddit_comments_keywords" to "service_role";
 
-ALTER TABLE ONLY "public"."workspaces_subreddits"
-    ADD CONSTRAINT "organization_subreddits_pkey" PRIMARY KEY ("id");
+grant delete on table "public"."reddit_posts" to "anon";
 
+grant insert on table "public"."reddit_posts" to "anon";
 
+grant references on table "public"."reddit_posts" to "anon";
 
-ALTER TABLE ONLY "public"."profiles"
-    ADD CONSTRAINT "profile_pkey" PRIMARY KEY ("user_id");
+grant select on table "public"."reddit_posts" to "anon";
 
+grant trigger on table "public"."reddit_posts" to "anon";
 
+grant truncate on table "public"."reddit_posts" to "anon";
 
-ALTER TABLE ONLY "public"."reddit_comments_keywords"
-    ADD CONSTRAINT "reddit_comment_keywords_pkey" PRIMARY KEY ("id");
+grant update on table "public"."reddit_posts" to "anon";
 
+grant delete on table "public"."reddit_posts" to "authenticated";
 
+grant insert on table "public"."reddit_posts" to "authenticated";
 
-ALTER TABLE ONLY "public"."reddit_comments"
-    ADD CONSTRAINT "reddit_comment_pkey" PRIMARY KEY ("id");
+grant references on table "public"."reddit_posts" to "authenticated";
 
+grant select on table "public"."reddit_posts" to "authenticated";
 
+grant trigger on table "public"."reddit_posts" to "authenticated";
 
-ALTER TABLE ONLY "public"."reddit_posts_keywords"
-    ADD CONSTRAINT "reddit_post_keywords_pkey" PRIMARY KEY ("id");
+grant truncate on table "public"."reddit_posts" to "authenticated";
 
+grant update on table "public"."reddit_posts" to "authenticated";
 
+grant delete on table "public"."reddit_posts" to "service_role";
 
-ALTER TABLE ONLY "public"."reddit_posts"
-    ADD CONSTRAINT "reddit_post_pkey" PRIMARY KEY ("id");
+grant insert on table "public"."reddit_posts" to "service_role";
 
+grant references on table "public"."reddit_posts" to "service_role";
 
+grant select on table "public"."reddit_posts" to "service_role";
 
-ALTER TABLE ONLY "public"."reddit_users"
-    ADD CONSTRAINT "reddit_user_pkey" PRIMARY KEY ("id");
+grant trigger on table "public"."reddit_posts" to "service_role";
 
+grant truncate on table "public"."reddit_posts" to "service_role";
 
+grant update on table "public"."reddit_posts" to "service_role";
 
-ALTER TABLE ONLY "public"."subreddits_keywords"
-    ADD CONSTRAINT "subreddit_keywords_pkey" PRIMARY KEY ("id");
+grant delete on table "public"."reddit_posts_keywords" to "anon";
 
+grant insert on table "public"."reddit_posts_keywords" to "anon";
 
+grant references on table "public"."reddit_posts_keywords" to "anon";
 
-ALTER TABLE ONLY "public"."subreddits"
-    ADD CONSTRAINT "subreddit_name_key" UNIQUE ("name");
+grant select on table "public"."reddit_posts_keywords" to "anon";
 
+grant trigger on table "public"."reddit_posts_keywords" to "anon";
 
+grant truncate on table "public"."reddit_posts_keywords" to "anon";
 
-ALTER TABLE ONLY "public"."subreddits"
-    ADD CONSTRAINT "subreddit_pkey" PRIMARY KEY ("id");
+grant update on table "public"."reddit_posts_keywords" to "anon";
 
+grant delete on table "public"."reddit_posts_keywords" to "authenticated";
 
+grant insert on table "public"."reddit_posts_keywords" to "authenticated";
 
-CREATE UNIQUE INDEX "organizations_name_ci_idx" ON "public"."workspaces" USING "btree" ("lower"("name"));
+grant references on table "public"."reddit_posts_keywords" to "authenticated";
 
+grant select on table "public"."reddit_posts_keywords" to "authenticated";
 
+grant trigger on table "public"."reddit_posts_keywords" to "authenticated";
 
-CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+grant truncate on table "public"."reddit_posts_keywords" to "authenticated";
 
+grant update on table "public"."reddit_posts_keywords" to "authenticated";
 
+grant delete on table "public"."reddit_posts_keywords" to "service_role";
 
-CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."subreddits" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+grant insert on table "public"."reddit_posts_keywords" to "service_role";
 
+grant references on table "public"."reddit_posts_keywords" to "service_role";
 
+grant select on table "public"."reddit_posts_keywords" to "service_role";
 
-CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "public"."workspaces" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+grant trigger on table "public"."reddit_posts_keywords" to "service_role";
 
+grant truncate on table "public"."reddit_posts_keywords" to "service_role";
 
+grant update on table "public"."reddit_posts_keywords" to "service_role";
 
-ALTER TABLE ONLY "public"."competitors"
-    ADD CONSTRAINT "competitor_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON UPDATE CASCADE ON DELETE SET NULL;
+grant delete on table "public"."reddit_users" to "anon";
 
+grant insert on table "public"."reddit_users" to "anon";
 
+grant references on table "public"."reddit_users" to "anon";
 
-ALTER TABLE ONLY "public"."competitors"
-    ADD CONSTRAINT "competitor_organization_fkey" FOREIGN KEY ("workspace") REFERENCES "public"."workspaces"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant select on table "public"."reddit_users" to "anon";
 
+grant trigger on table "public"."reddit_users" to "anon";
 
+grant truncate on table "public"."reddit_users" to "anon";
 
-ALTER TABLE ONLY "public"."workspaces_keywords"
-    ADD CONSTRAINT "organization_keywords_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON UPDATE CASCADE ON DELETE SET NULL;
+grant update on table "public"."reddit_users" to "anon";
 
+grant delete on table "public"."reddit_users" to "authenticated";
 
+grant insert on table "public"."reddit_users" to "authenticated";
 
-ALTER TABLE ONLY "public"."workspaces_keywords"
-    ADD CONSTRAINT "organization_keywords_keyword_fkey" FOREIGN KEY ("keyword") REFERENCES "public"."keywords"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant references on table "public"."reddit_users" to "authenticated";
 
+grant select on table "public"."reddit_users" to "authenticated";
 
+grant trigger on table "public"."reddit_users" to "authenticated";
 
-ALTER TABLE ONLY "public"."workspaces_keywords"
-    ADD CONSTRAINT "organization_keywords_organization_fkey" FOREIGN KEY ("workspace") REFERENCES "public"."workspaces"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant truncate on table "public"."reddit_users" to "authenticated";
 
+grant update on table "public"."reddit_users" to "authenticated";
 
+grant delete on table "public"."reddit_users" to "service_role";
 
-ALTER TABLE ONLY "public"."workspaces"
-    ADD CONSTRAINT "organization_owner_fkey" FOREIGN KEY ("owner") REFERENCES "auth"."users"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant insert on table "public"."reddit_users" to "service_role";
 
+grant references on table "public"."reddit_users" to "service_role";
 
+grant select on table "public"."reddit_users" to "service_role";
 
-ALTER TABLE ONLY "public"."workspaces_subreddits"
-    ADD CONSTRAINT "organization_subreddits_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON UPDATE CASCADE ON DELETE SET NULL;
+grant trigger on table "public"."reddit_users" to "service_role";
 
+grant truncate on table "public"."reddit_users" to "service_role";
 
+grant update on table "public"."reddit_users" to "service_role";
 
-ALTER TABLE ONLY "public"."workspaces_subreddits"
-    ADD CONSTRAINT "organization_subreddits_organization_fkey" FOREIGN KEY ("workspace") REFERENCES "public"."workspaces"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant delete on table "public"."subreddits" to "anon";
 
+grant insert on table "public"."subreddits" to "anon";
 
+grant references on table "public"."subreddits" to "anon";
 
-ALTER TABLE ONLY "public"."workspaces_subreddits"
-    ADD CONSTRAINT "organization_subreddits_subreddit_fkey" FOREIGN KEY ("subreddit") REFERENCES "public"."subreddits"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant select on table "public"."subreddits" to "anon";
 
+grant trigger on table "public"."subreddits" to "anon";
 
+grant truncate on table "public"."subreddits" to "anon";
 
-ALTER TABLE ONLY "public"."profiles"
-    ADD CONSTRAINT "profile_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant update on table "public"."subreddits" to "anon";
 
+grant delete on table "public"."subreddits" to "authenticated";
 
+grant insert on table "public"."subreddits" to "authenticated";
 
-ALTER TABLE ONLY "public"."profiles"
-    ADD CONSTRAINT "profiles_workspace_fkey" FOREIGN KEY ("workspace") REFERENCES "public"."workspaces"("id") ON UPDATE CASCADE ON DELETE SET NULL;
+grant references on table "public"."subreddits" to "authenticated";
 
+grant select on table "public"."subreddits" to "authenticated";
 
+grant trigger on table "public"."subreddits" to "authenticated";
 
-ALTER TABLE ONLY "public"."reddit_comments_keywords"
-    ADD CONSTRAINT "reddit_comment_keywords_comment_fkey" FOREIGN KEY ("comment") REFERENCES "public"."reddit_comments"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant truncate on table "public"."subreddits" to "authenticated";
 
+grant update on table "public"."subreddits" to "authenticated";
 
+grant delete on table "public"."subreddits" to "service_role";
 
-ALTER TABLE ONLY "public"."reddit_comments_keywords"
-    ADD CONSTRAINT "reddit_comment_keywords_keywords_fkey" FOREIGN KEY ("keywords") REFERENCES "public"."keywords"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant insert on table "public"."subreddits" to "service_role";
 
+grant references on table "public"."subreddits" to "service_role";
 
+grant select on table "public"."subreddits" to "service_role";
 
-ALTER TABLE ONLY "public"."reddit_comments"
-    ADD CONSTRAINT "reddit_comment_post_fkey" FOREIGN KEY ("post") REFERENCES "public"."reddit_posts"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant trigger on table "public"."subreddits" to "service_role";
 
+grant truncate on table "public"."subreddits" to "service_role";
 
+grant update on table "public"."subreddits" to "service_role";
 
-ALTER TABLE ONLY "public"."reddit_comments"
-    ADD CONSTRAINT "reddit_comment_reddit_user_fkey" FOREIGN KEY ("reddit_user") REFERENCES "public"."reddit_posts"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant delete on table "public"."subreddits_keywords" to "anon";
 
+grant insert on table "public"."subreddits_keywords" to "anon";
 
+grant references on table "public"."subreddits_keywords" to "anon";
 
-ALTER TABLE ONLY "public"."reddit_posts_keywords"
-    ADD CONSTRAINT "reddit_post_keywords_keyword_fkey" FOREIGN KEY ("keyword") REFERENCES "public"."keywords"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant select on table "public"."subreddits_keywords" to "anon";
 
+grant trigger on table "public"."subreddits_keywords" to "anon";
 
+grant truncate on table "public"."subreddits_keywords" to "anon";
 
-ALTER TABLE ONLY "public"."reddit_posts_keywords"
-    ADD CONSTRAINT "reddit_post_keywords_post_fkey" FOREIGN KEY ("post") REFERENCES "public"."reddit_posts"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant update on table "public"."subreddits_keywords" to "anon";
 
+grant delete on table "public"."subreddits_keywords" to "authenticated";
 
+grant insert on table "public"."subreddits_keywords" to "authenticated";
 
-ALTER TABLE ONLY "public"."reddit_posts"
-    ADD CONSTRAINT "reddit_post_reddit_user_fkey" FOREIGN KEY ("reddit_user") REFERENCES "public"."reddit_users"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant references on table "public"."subreddits_keywords" to "authenticated";
 
+grant select on table "public"."subreddits_keywords" to "authenticated";
 
+grant trigger on table "public"."subreddits_keywords" to "authenticated";
 
-ALTER TABLE ONLY "public"."reddit_posts"
-    ADD CONSTRAINT "reddit_post_subreddit_fkey" FOREIGN KEY ("subreddit") REFERENCES "public"."subreddits"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant truncate on table "public"."subreddits_keywords" to "authenticated";
 
+grant update on table "public"."subreddits_keywords" to "authenticated";
 
+grant delete on table "public"."subreddits_keywords" to "service_role";
 
-ALTER TABLE ONLY "public"."subreddits_keywords"
-    ADD CONSTRAINT "subreddit_keywords_keyword_fkey" FOREIGN KEY ("keyword") REFERENCES "public"."keywords"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant insert on table "public"."subreddits_keywords" to "service_role";
 
+grant references on table "public"."subreddits_keywords" to "service_role";
 
+grant select on table "public"."subreddits_keywords" to "service_role";
 
-ALTER TABLE ONLY "public"."subreddits_keywords"
-    ADD CONSTRAINT "subreddit_keywords_subreddit_fkey" FOREIGN KEY ("subreddit") REFERENCES "public"."subreddits"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+grant trigger on table "public"."subreddits_keywords" to "service_role";
 
+grant truncate on table "public"."subreddits_keywords" to "service_role";
 
+grant update on table "public"."subreddits_keywords" to "service_role";
 
-CREATE POLICY "Enable insert for authenticated users only" ON "public"."keywords" FOR INSERT TO "authenticated" WITH CHECK (true);
+grant delete on table "public"."workspaces" to "anon";
 
+grant insert on table "public"."workspaces" to "anon";
 
+grant references on table "public"."workspaces" to "anon";
 
-CREATE POLICY "Enable insert for authenticated users only" ON "public"."subreddits" FOR INSERT TO "authenticated" WITH CHECK (true);
+grant select on table "public"."workspaces" to "anon";
 
+grant trigger on table "public"."workspaces" to "anon";
 
+grant truncate on table "public"."workspaces" to "anon";
 
-CREATE POLICY "Enable read access for all authenticated users" ON "public"."keywords" FOR SELECT TO "authenticated" USING (true);
+grant update on table "public"."workspaces" to "anon";
 
+grant delete on table "public"."workspaces" to "authenticated";
 
+grant insert on table "public"."workspaces" to "authenticated";
 
-CREATE POLICY "Enable read access for all authenticated users" ON "public"."subreddits" FOR SELECT TO "authenticated" USING (true);
+grant references on table "public"."workspaces" to "authenticated";
 
+grant select on table "public"."workspaces" to "authenticated";
 
+grant trigger on table "public"."workspaces" to "authenticated";
 
-CREATE POLICY "Enable users to view their own data only" ON "public"."profiles" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+grant truncate on table "public"."workspaces" to "authenticated";
 
+grant update on table "public"."workspaces" to "authenticated";
 
+grant delete on table "public"."workspaces" to "service_role";
 
-CREATE POLICY "Only enable users to edit their own profile" ON "public"."profiles" FOR UPDATE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
+grant insert on table "public"."workspaces" to "service_role";
 
+grant references on table "public"."workspaces" to "service_role";
 
+grant select on table "public"."workspaces" to "service_role";
 
-CREATE POLICY "Only owner and member of organization can delete" ON "public"."workspaces_subreddits" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "workspaces_subreddits"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces_subreddits"."workspace"))))));
+grant trigger on table "public"."workspaces" to "service_role";
 
+grant truncate on table "public"."workspaces" to "service_role";
 
+grant update on table "public"."workspaces" to "service_role";
 
-CREATE POLICY "Only owner and member of organization can select" ON "public"."workspaces_subreddits" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "workspaces_subreddits"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces_subreddits"."workspace"))))));
+grant delete on table "public"."workspaces_keywords" to "anon";
 
+grant insert on table "public"."workspaces_keywords" to "anon";
 
+grant references on table "public"."workspaces_keywords" to "anon";
 
-CREATE POLICY "Only owner and members of organization can delete" ON "public"."competitors" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "competitors"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "competitors"."workspace"))))));
+grant select on table "public"."workspaces_keywords" to "anon";
 
+grant trigger on table "public"."workspaces_keywords" to "anon";
 
+grant truncate on table "public"."workspaces_keywords" to "anon";
 
-CREATE POLICY "Only owner and members of organization can delete" ON "public"."workspaces_keywords" FOR DELETE TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "workspaces_keywords"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces_keywords"."workspace"))))));
+grant update on table "public"."workspaces_keywords" to "anon";
 
+grant delete on table "public"."workspaces_keywords" to "authenticated";
 
+grant insert on table "public"."workspaces_keywords" to "authenticated";
 
-CREATE POLICY "Only owner and members of organization can insert" ON "public"."competitors" FOR INSERT TO "authenticated" WITH CHECK ((((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "competitors"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "competitors"."workspace"))))) AND ("created_by" = "auth"."uid"())));
+grant references on table "public"."workspaces_keywords" to "authenticated";
 
+grant select on table "public"."workspaces_keywords" to "authenticated";
 
+grant trigger on table "public"."workspaces_keywords" to "authenticated";
 
-CREATE POLICY "Only owner and members of organization can insert" ON "public"."workspaces_keywords" FOR INSERT TO "authenticated" WITH CHECK ((((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "workspaces_keywords"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR ((EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces_keywords"."workspace")))) AND ("created_by" = "auth"."uid"()))) AND ("created_by" = "auth"."uid"())));
+grant truncate on table "public"."workspaces_keywords" to "authenticated";
 
+grant update on table "public"."workspaces_keywords" to "authenticated";
 
+grant delete on table "public"."workspaces_keywords" to "service_role";
 
-CREATE POLICY "Only owner and members of organization can insert" ON "public"."workspaces_subreddits" FOR INSERT TO "authenticated" WITH CHECK ((((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "workspaces_subreddits"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces_subreddits"."workspace"))))) AND ("created_by" = "auth"."uid"())));
+grant insert on table "public"."workspaces_keywords" to "service_role";
 
+grant references on table "public"."workspaces_keywords" to "service_role";
 
+grant select on table "public"."workspaces_keywords" to "service_role";
 
-CREATE POLICY "Only owner and members of organization can select" ON "public"."workspaces_keywords" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "workspaces_keywords"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces_keywords"."workspace"))))));
+grant trigger on table "public"."workspaces_keywords" to "service_role";
 
+grant truncate on table "public"."workspaces_keywords" to "service_role";
 
+grant update on table "public"."workspaces_keywords" to "service_role";
 
-CREATE POLICY "Only owner and members of organization can update" ON "public"."competitors" FOR UPDATE TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "competitors"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "competitors"."workspace")))))) WITH CHECK (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "competitors"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "competitors"."workspace"))))));
+grant delete on table "public"."workspaces_reddit_comments" to "anon";
 
+grant insert on table "public"."workspaces_reddit_comments" to "anon";
 
+grant references on table "public"."workspaces_reddit_comments" to "anon";
 
-CREATE POLICY "Only owner and members of orgnization can select" ON "public"."competitors" FOR SELECT TO "authenticated" USING (((EXISTS ( SELECT 1
-   FROM "public"."workspaces" "w"
-  WHERE (("w"."id" = "competitors"."workspace") AND ("w"."owner" = "auth"."uid"())))) OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "competitors"."workspace"))))));
+grant select on table "public"."workspaces_reddit_comments" to "anon";
 
+grant trigger on table "public"."workspaces_reddit_comments" to "anon";
 
+grant truncate on table "public"."workspaces_reddit_comments" to "anon";
 
-CREATE POLICY "Owner of members can select" ON "public"."workspaces" FOR SELECT USING ((("auth"."uid"() = "owner") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces"."id"))))));
+grant update on table "public"."workspaces_reddit_comments" to "anon";
 
+grant delete on table "public"."workspaces_reddit_comments" to "authenticated";
 
+grant insert on table "public"."workspaces_reddit_comments" to "authenticated";
 
-CREATE POLICY "Update Owner of Member" ON "public"."workspaces" FOR UPDATE TO "authenticated" USING ((("auth"."uid"() = "owner") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces"."id")))))) WITH CHECK ((("auth"."uid"() = "owner") OR (EXISTS ( SELECT 1
-   FROM "public"."profiles" "p"
-  WHERE (("p"."user_id" = "auth"."uid"()) AND ("p"."workspace" = "workspaces"."id"))))));
+grant references on table "public"."workspaces_reddit_comments" to "authenticated";
 
+grant select on table "public"."workspaces_reddit_comments" to "authenticated";
 
+grant trigger on table "public"."workspaces_reddit_comments" to "authenticated";
 
-CREATE POLICY "User can create their own organization" ON "public"."workspaces" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "owner"));
+grant truncate on table "public"."workspaces_reddit_comments" to "authenticated";
 
+grant update on table "public"."workspaces_reddit_comments" to "authenticated";
 
+grant delete on table "public"."workspaces_reddit_comments" to "service_role";
 
-ALTER TABLE "public"."competitors" ENABLE ROW LEVEL SECURITY;
+grant insert on table "public"."workspaces_reddit_comments" to "service_role";
 
+grant references on table "public"."workspaces_reddit_comments" to "service_role";
 
-ALTER TABLE "public"."keywords" ENABLE ROW LEVEL SECURITY;
+grant select on table "public"."workspaces_reddit_comments" to "service_role";
 
+grant trigger on table "public"."workspaces_reddit_comments" to "service_role";
 
-ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
+grant truncate on table "public"."workspaces_reddit_comments" to "service_role";
 
+grant update on table "public"."workspaces_reddit_comments" to "service_role";
 
-ALTER TABLE "public"."reddit_comments" ENABLE ROW LEVEL SECURITY;
+grant delete on table "public"."workspaces_reddit_posts" to "anon";
 
+grant insert on table "public"."workspaces_reddit_posts" to "anon";
 
-ALTER TABLE "public"."reddit_comments_keywords" ENABLE ROW LEVEL SECURITY;
+grant references on table "public"."workspaces_reddit_posts" to "anon";
 
+grant select on table "public"."workspaces_reddit_posts" to "anon";
 
-ALTER TABLE "public"."reddit_posts" ENABLE ROW LEVEL SECURITY;
+grant trigger on table "public"."workspaces_reddit_posts" to "anon";
 
+grant truncate on table "public"."workspaces_reddit_posts" to "anon";
 
-ALTER TABLE "public"."reddit_posts_keywords" ENABLE ROW LEVEL SECURITY;
+grant update on table "public"."workspaces_reddit_posts" to "anon";
 
+grant delete on table "public"."workspaces_reddit_posts" to "authenticated";
 
-ALTER TABLE "public"."reddit_users" ENABLE ROW LEVEL SECURITY;
+grant insert on table "public"."workspaces_reddit_posts" to "authenticated";
 
+grant references on table "public"."workspaces_reddit_posts" to "authenticated";
 
-ALTER TABLE "public"."subreddits" ENABLE ROW LEVEL SECURITY;
+grant select on table "public"."workspaces_reddit_posts" to "authenticated";
 
+grant trigger on table "public"."workspaces_reddit_posts" to "authenticated";
 
-ALTER TABLE "public"."subreddits_keywords" ENABLE ROW LEVEL SECURITY;
+grant truncate on table "public"."workspaces_reddit_posts" to "authenticated";
 
+grant update on table "public"."workspaces_reddit_posts" to "authenticated";
 
-ALTER TABLE "public"."workspaces" ENABLE ROW LEVEL SECURITY;
+grant delete on table "public"."workspaces_reddit_posts" to "service_role";
 
+grant insert on table "public"."workspaces_reddit_posts" to "service_role";
 
-ALTER TABLE "public"."workspaces_keywords" ENABLE ROW LEVEL SECURITY;
+grant references on table "public"."workspaces_reddit_posts" to "service_role";
 
+grant select on table "public"."workspaces_reddit_posts" to "service_role";
 
-ALTER TABLE "public"."workspaces_subreddits" ENABLE ROW LEVEL SECURITY;
+grant trigger on table "public"."workspaces_reddit_posts" to "service_role";
 
+grant truncate on table "public"."workspaces_reddit_posts" to "service_role";
 
-GRANT USAGE ON SCHEMA "public" TO "postgres";
-GRANT USAGE ON SCHEMA "public" TO "anon";
-GRANT USAGE ON SCHEMA "public" TO "authenticated";
-GRANT USAGE ON SCHEMA "public" TO "service_role";
+grant update on table "public"."workspaces_reddit_posts" to "service_role";
 
+grant delete on table "public"."workspaces_subreddits" to "anon";
 
+grant insert on table "public"."workspaces_subreddits" to "anon";
 
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "anon";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
+grant references on table "public"."workspaces_subreddits" to "anon";
 
+grant select on table "public"."workspaces_subreddits" to "anon";
 
+grant trigger on table "public"."workspaces_subreddits" to "anon";
 
-GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "anon";
-GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."update_updated_at_column"() TO "service_role";
+grant truncate on table "public"."workspaces_subreddits" to "anon";
 
+grant update on table "public"."workspaces_subreddits" to "anon";
 
+grant delete on table "public"."workspaces_subreddits" to "authenticated";
 
-GRANT ALL ON TABLE "public"."competitors" TO "anon";
-GRANT ALL ON TABLE "public"."competitors" TO "authenticated";
-GRANT ALL ON TABLE "public"."competitors" TO "service_role";
+grant insert on table "public"."workspaces_subreddits" to "authenticated";
 
+grant references on table "public"."workspaces_subreddits" to "authenticated";
 
+grant select on table "public"."workspaces_subreddits" to "authenticated";
 
-GRANT ALL ON SEQUENCE "public"."competitor_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."competitor_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."competitor_id_seq" TO "service_role";
+grant trigger on table "public"."workspaces_subreddits" to "authenticated";
 
+grant truncate on table "public"."workspaces_subreddits" to "authenticated";
 
+grant update on table "public"."workspaces_subreddits" to "authenticated";
 
-GRANT ALL ON TABLE "public"."keywords" TO "anon";
-GRANT ALL ON TABLE "public"."keywords" TO "authenticated";
-GRANT ALL ON TABLE "public"."keywords" TO "service_role";
+grant delete on table "public"."workspaces_subreddits" to "service_role";
 
+grant insert on table "public"."workspaces_subreddits" to "service_role";
 
+grant references on table "public"."workspaces_subreddits" to "service_role";
 
-GRANT ALL ON SEQUENCE "public"."keyword_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."keyword_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."keyword_id_seq" TO "service_role";
+grant select on table "public"."workspaces_subreddits" to "service_role";
 
+grant trigger on table "public"."workspaces_subreddits" to "service_role";
 
+grant truncate on table "public"."workspaces_subreddits" to "service_role";
 
-GRANT ALL ON TABLE "public"."workspaces" TO "anon";
-GRANT ALL ON TABLE "public"."workspaces" TO "authenticated";
-GRANT ALL ON TABLE "public"."workspaces" TO "service_role";
+grant update on table "public"."workspaces_subreddits" to "service_role";
 
 
+  create policy "Members can ALL"
+  on "public"."competitors"
+  as permissive
+  for all
+  to authenticated
+using (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = competitors.workspace))))))
+with check (((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = competitors.workspace))))));
 
-GRANT ALL ON SEQUENCE "public"."organization_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."organization_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."organization_id_seq" TO "service_role";
 
 
+  create policy "Everyone can insert"
+  on "public"."keywords"
+  as permissive
+  for insert
+  to authenticated
+with check (true);
 
-GRANT ALL ON TABLE "public"."workspaces_keywords" TO "anon";
-GRANT ALL ON TABLE "public"."workspaces_keywords" TO "authenticated";
-GRANT ALL ON TABLE "public"."workspaces_keywords" TO "service_role";
 
 
+  create policy "Everyone can select"
+  on "public"."keywords"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON SEQUENCE "public"."organization_keywords_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."organization_keywords_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."organization_keywords_id_seq" TO "service_role";
 
 
+  create policy "Owner can delete"
+  on "public"."profiles"
+  as permissive
+  for delete
+  to authenticated
+using ((user_id = ( SELECT auth.uid() AS uid)));
 
-GRANT ALL ON TABLE "public"."workspaces_subreddits" TO "anon";
-GRANT ALL ON TABLE "public"."workspaces_subreddits" TO "authenticated";
-GRANT ALL ON TABLE "public"."workspaces_subreddits" TO "service_role";
 
 
+  create policy "Owner can select"
+  on "public"."profiles"
+  as permissive
+  for select
+  to authenticated
+using ((user_id = ( SELECT auth.uid() AS uid)));
 
-GRANT ALL ON SEQUENCE "public"."organization_subreddits_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."organization_subreddits_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."organization_subreddits_id_seq" TO "service_role";
 
 
+  create policy "Owner can update"
+  on "public"."profiles"
+  as permissive
+  for update
+  to authenticated
+using ((user_id = ( SELECT auth.uid() AS uid)))
+with check ((user_id = ( SELECT auth.uid() AS uid)));
 
-GRANT ALL ON TABLE "public"."profiles" TO "anon";
-GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
-GRANT ALL ON TABLE "public"."profiles" TO "service_role";
 
 
+  create policy "Every can select"
+  on "public"."reddit_comments"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON TABLE "public"."reddit_comments" TO "anon";
-GRANT ALL ON TABLE "public"."reddit_comments" TO "authenticated";
-GRANT ALL ON TABLE "public"."reddit_comments" TO "service_role";
 
 
+  create policy "Everyone can select"
+  on "public"."reddit_comments_keywords"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON SEQUENCE "public"."reddit_comment_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."reddit_comment_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."reddit_comment_id_seq" TO "service_role";
 
 
+  create policy "Everyone can select"
+  on "public"."reddit_posts"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON TABLE "public"."reddit_comments_keywords" TO "anon";
-GRANT ALL ON TABLE "public"."reddit_comments_keywords" TO "authenticated";
-GRANT ALL ON TABLE "public"."reddit_comments_keywords" TO "service_role";
 
 
+  create policy "Everyone can select"
+  on "public"."reddit_posts_keywords"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON SEQUENCE "public"."reddit_comment_keywords_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."reddit_comment_keywords_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."reddit_comment_keywords_id_seq" TO "service_role";
 
 
+  create policy "Everyone can select"
+  on "public"."reddit_users"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON TABLE "public"."reddit_posts" TO "anon";
-GRANT ALL ON TABLE "public"."reddit_posts" TO "authenticated";
-GRANT ALL ON TABLE "public"."reddit_posts" TO "service_role";
 
 
+  create policy "Everyone can insert"
+  on "public"."subreddits"
+  as permissive
+  for insert
+  to public
+with check (true);
 
-GRANT ALL ON SEQUENCE "public"."reddit_post_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."reddit_post_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."reddit_post_id_seq" TO "service_role";
 
 
+  create policy "Everyone can select"
+  on "public"."subreddits"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON TABLE "public"."reddit_posts_keywords" TO "anon";
-GRANT ALL ON TABLE "public"."reddit_posts_keywords" TO "authenticated";
-GRANT ALL ON TABLE "public"."reddit_posts_keywords" TO "service_role";
 
 
+  create policy "Everyone can select"
+  on "public"."subreddits_keywords"
+  as permissive
+  for select
+  to authenticated
+using (true);
 
-GRANT ALL ON SEQUENCE "public"."reddit_post_keywords_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."reddit_post_keywords_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."reddit_post_keywords_id_seq" TO "service_role";
 
 
+  create policy "Only members select"
+  on "public"."workspaces"
+  as permissive
+  for select
+  to authenticated
+using (((owner = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces.id))))));
 
-GRANT ALL ON TABLE "public"."reddit_users" TO "anon";
-GRANT ALL ON TABLE "public"."reddit_users" TO "authenticated";
-GRANT ALL ON TABLE "public"."reddit_users" TO "service_role";
 
 
+  create policy "Only members update"
+  on "public"."workspaces"
+  as permissive
+  for update
+  to authenticated
+using (((owner = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces.id))))))
+with check (((owner = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces.id))))));
 
-GRANT ALL ON SEQUENCE "public"."reddit_user_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."reddit_user_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."reddit_user_id_seq" TO "service_role";
 
 
+  create policy "Only owner delete"
+  on "public"."workspaces"
+  as permissive
+  for delete
+  to authenticated
+using ((( SELECT auth.uid() AS uid) = owner));
 
-GRANT ALL ON TABLE "public"."subreddits" TO "anon";
-GRANT ALL ON TABLE "public"."subreddits" TO "authenticated";
-GRANT ALL ON TABLE "public"."subreddits" TO "service_role";
 
 
+  create policy "Only owner insert"
+  on "public"."workspaces"
+  as permissive
+  for insert
+  to authenticated
+with check ((owner = ( SELECT auth.uid() AS uid)));
 
-GRANT ALL ON SEQUENCE "public"."subreddit_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."subreddit_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."subreddit_id_seq" TO "service_role";
 
 
+  create policy "Only members delete"
+  on "public"."workspaces_keywords"
+  as permissive
+  for delete
+  to authenticated
+using (((EXISTS ( SELECT 1
+   FROM public.workspaces w
+  WHERE ((w.id = workspaces_keywords.workspace) AND (w.owner = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_keywords.workspace))))));
 
-GRANT ALL ON TABLE "public"."subreddits_keywords" TO "anon";
-GRANT ALL ON TABLE "public"."subreddits_keywords" TO "authenticated";
-GRANT ALL ON TABLE "public"."subreddits_keywords" TO "service_role";
 
 
+  create policy "Only members insert"
+  on "public"."workspaces_keywords"
+  as permissive
+  for insert
+  to authenticated
+with check (((EXISTS ( SELECT 1
+   FROM public.workspaces w
+  WHERE ((w.id = workspaces_keywords.workspace) AND (w.owner = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_keywords.workspace))))));
 
-GRANT ALL ON SEQUENCE "public"."subreddit_keywords_id_seq" TO "anon";
-GRANT ALL ON SEQUENCE "public"."subreddit_keywords_id_seq" TO "authenticated";
-GRANT ALL ON SEQUENCE "public"."subreddit_keywords_id_seq" TO "service_role";
 
 
+  create policy "Only members select"
+  on "public"."workspaces_keywords"
+  as permissive
+  for select
+  to authenticated
+using (((EXISTS ( SELECT 1
+   FROM public.workspaces w
+  WHERE ((w.id = workspaces_keywords.workspace) AND (w.owner = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_keywords.workspace))))));
 
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
 
 
+  create policy "Members can insert"
+  on "public"."workspaces_reddit_comments"
+  as permissive
+  for insert
+  to authenticated
+with check ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_comments.workspace)))));
 
 
 
+  create policy "Members can select"
+  on "public"."workspaces_reddit_comments"
+  as permissive
+  for select
+  to authenticated
+using ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_comments.workspace)))));
 
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
 
 
+  create policy "Members can update"
+  on "public"."workspaces_reddit_comments"
+  as permissive
+  for update
+  to authenticated
+using ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_comments.workspace)))))
+with check ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_comments.workspace)))));
 
 
 
+  create policy "Members can insert"
+  on "public"."workspaces_reddit_posts"
+  as permissive
+  for insert
+  to authenticated
+with check ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_posts.workspace)))));
 
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
 
 
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY definer SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO public.profiles (user_id, created_at)
-  VALUES (new.id, now());
-  RETURN new;
-END;
-$$;
+  create policy "Members can select"
+  on "public"."workspaces_reddit_posts"
+  as permissive
+  for select
+  to authenticated
+using ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_posts.workspace)))));
 
 
-CREATE TRIGGER on_auth_user_created
-AFTER INSERT ON auth.users
-FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+  create policy "Members can update"
+  on "public"."workspaces_reddit_posts"
+  as permissive
+  for update
+  to authenticated
+using ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_posts.workspace)))))
+with check ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_reddit_posts.workspace)))));
 
-RESET ALL;
+
+
+  create policy "Members can all"
+  on "public"."workspaces_subreddits"
+  as permissive
+  for all
+  to authenticated
+using ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_subreddits.workspace)))))
+with check ((EXISTS ( SELECT 1
+   FROM public.profiles p
+  WHERE ((p.user_id = ( SELECT auth.uid() AS uid)) AND (p.workspace = workspaces_subreddits.workspace)))));
+
+
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+

@@ -114,7 +114,7 @@ export const createWorkspaceSchema = z.object({
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>
 
 export const updateWorkspaceSchema = z.object({
-  workspaceId: z.number().int(),
+  workspaceId: z.string().min(1),
   companyName: z.string().min(1).max(100).optional(),
   workspaceName: z.string().min(2).max(50).optional(),
   website: z.string().url().nullable().optional(),

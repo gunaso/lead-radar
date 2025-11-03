@@ -6,7 +6,7 @@ import { request } from "@/lib/api/client"
 import { qk } from "@/lib/api/query-keys"
 
 export type ProfileWorkspace = {
-  id: number
+  id: string
   name: string | null
   company: string | null
   website: string | null

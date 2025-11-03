@@ -4,7 +4,7 @@ import { getUserClient } from "@/services/supabase/user"
 
 export type Profile = {
   onboarding: number
-  workspace: number | null
+  workspace: string | null
   name: string | null
   role: string | null
 }

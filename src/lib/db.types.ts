@@ -37,37 +37,43 @@ export type Database = {
       competitors: {
         Row: {
           created_at: string
-          created_by: string | null
-          id: number
+          created_by: string
+          id: string
           name: string
+          updated_at: string | null
+          updated_by: string | null
           website: string | null
-          website_info: string | null
-          website_summary: string | null
-          workspace: number
+          website_ai: string | null
+          website_md: string | null
+          workspace: string
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
-          id?: number
+          created_by: string
+          id?: string
           name: string
+          updated_at?: string | null
+          updated_by?: string | null
           website?: string | null
-          website_info?: string | null
-          website_summary?: string | null
-          workspace: number
+          website_ai?: string | null
+          website_md?: string | null
+          workspace: string
         }
         Update: {
           created_at?: string
-          created_by?: string | null
-          id?: number
+          created_by?: string
+          id?: string
           name?: string
+          updated_at?: string | null
+          updated_by?: string | null
           website?: string | null
-          website_info?: string | null
-          website_summary?: string | null
-          workspace?: number
+          website_ai?: string | null
+          website_md?: string | null
+          workspace?: string
         }
         Relationships: [
           {
-            foreignKeyName: "competitor_organization_fkey"
+            foreignKeyName: "competitors_workspace_fkey"
             columns: ["workspace"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -78,7 +84,7 @@ export type Database = {
       keywords: {
         Row: {
           created_at: string
-          id: number
+          id: string
           name: string
           process: boolean
           similar_words: string[] | null
@@ -86,7 +92,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          id?: number
+          id?: string
           name: string
           process?: boolean
           similar_words?: string[] | null
@@ -94,7 +100,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          id?: number
+          id?: string
           name?: string
           process?: boolean
           similar_words?: string[] | null
@@ -109,9 +115,9 @@ export type Database = {
           onboarded: boolean
           onboarding: number
           role: string | null
-          updated_at: string
+          updated_at: string | null
           user_id: string
-          workspace: number | null
+          workspace: string | null
         }
         Insert: {
           created_at?: string
@@ -119,9 +125,9 @@ export type Database = {
           onboarded?: boolean
           onboarding?: number
           role?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
-          workspace?: number | null
+          workspace?: string | null
         }
         Update: {
           created_at?: string
@@ -129,9 +135,9 @@ export type Database = {
           onboarded?: boolean
           onboarding?: number
           role?: string | null
-          updated_at?: string
+          updated_at?: string | null
           user_id?: string
-          workspace?: number | null
+          workspace?: string | null
         }
         Relationships: [
           {
@@ -145,85 +151,94 @@ export type Database = {
       }
       reddit_comments: {
         Row: {
-          comment: string
-          created_at: string
+          content: string | null
           display: boolean
-          id: number
+          id: string
           imported_at: string
-          post: number
-          reddit_user: number
-          reviewed: boolean
-          sentiment: string | null
+          post: string
+          posted_at: string | null
+          processed: boolean
+          reddit_user: string | null
+          score: number
+          sentiment: Database["public"]["Enums"]["sentiment"]
+          summary: string | null
+          url: string | null
         }
         Insert: {
-          comment: string
-          created_at: string
+          content?: string | null
           display?: boolean
-          id?: number
+          id?: string
           imported_at?: string
-          post: number
-          reddit_user: number
-          reviewed?: boolean
-          sentiment?: string | null
+          post: string
+          posted_at?: string | null
+          processed?: boolean
+          reddit_user?: string | null
+          score?: number
+          sentiment?: Database["public"]["Enums"]["sentiment"]
+          summary?: string | null
+          url?: string | null
         }
         Update: {
-          comment?: string
-          created_at?: string
+          content?: string | null
           display?: boolean
-          id?: number
+          id?: string
           imported_at?: string
-          post?: number
-          reddit_user?: number
-          reviewed?: boolean
-          sentiment?: string | null
+          post?: string
+          posted_at?: string | null
+          processed?: boolean
+          reddit_user?: string | null
+          score?: number
+          sentiment?: Database["public"]["Enums"]["sentiment"]
+          summary?: string | null
+          url?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "reddit_comment_post_fkey"
+            foreignKeyName: "reddit_comments_post_fkey"
             columns: ["post"]
             isOneToOne: false
             referencedRelation: "reddit_posts"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "reddit_comment_reddit_user_fkey"
+            foreignKeyName: "reddit_comments_reddit_user_fkey"
             columns: ["reddit_user"]
             isOneToOne: false
-            referencedRelation: "reddit_posts"
+            referencedRelation: "reddit_users"
             referencedColumns: ["id"]
           },
         ]
       }
       reddit_comments_keywords: {
         Row: {
-          comment: number
+          comment: string
           created_at: string
-          id: number
-          keywords: number
+          id: string
+          keyword: string
         }
         Insert: {
-          comment: number
+          comment: string
           created_at?: string
-          id?: number
-          keywords: number
+          id?: string
+          keyword: string
         }
         Update: {
-          comment?: number
+          comment?: string
           created_at?: string
-          id?: number
-          keywords?: number
+          id?: string
+          keyword?: string
         }
         Relationships: [
           {
-            foreignKeyName: "reddit_comment_keywords_comment_fkey"
+            foreignKeyName: "reddit_comments_keywords_comment_fkey"
             columns: ["comment"]
             isOneToOne: false
             referencedRelation: "reddit_comments"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "reddit_comment_keywords_keywords_fkey"
-            columns: ["keywords"]
+            foreignKeyName: "reddit_comments_keywords_keyword_fkey"
+            columns: ["keyword"]
             isOneToOne: false
             referencedRelation: "keywords"
             referencedColumns: ["id"]
@@ -232,42 +247,66 @@ export type Database = {
       }
       reddit_posts: {
         Row: {
-          body: string | null
-          created_at: string
-          id: number
+          bullet_points: string | null
+          content: string | null
+          created_at: string | null
+          display: boolean
+          id: string
           imported_at: string
-          reddit_user: number
-          subreddit: number
-          title: string
+          processed: boolean
+          reddit_user: string | null
+          reply: string | null
+          score: number
+          sentiment: Database["public"]["Enums"]["sentiment"]
+          subreddit: string
+          summary: string | null
+          title: string | null
+          url: string | null
         }
         Insert: {
-          body?: string | null
-          created_at: string
-          id?: number
+          bullet_points?: string | null
+          content?: string | null
+          created_at?: string | null
+          display?: boolean
+          id?: string
           imported_at?: string
-          reddit_user: number
-          subreddit: number
-          title: string
+          processed?: boolean
+          reddit_user?: string | null
+          reply?: string | null
+          score?: number
+          sentiment?: Database["public"]["Enums"]["sentiment"]
+          subreddit: string
+          summary?: string | null
+          title?: string | null
+          url?: string | null
         }
         Update: {
-          body?: string | null
-          created_at?: string
-          id?: number
+          bullet_points?: string | null
+          content?: string | null
+          created_at?: string | null
+          display?: boolean
+          id?: string
           imported_at?: string
-          reddit_user?: number
-          subreddit?: number
-          title?: string
+          processed?: boolean
+          reddit_user?: string | null
+          reply?: string | null
+          score?: number
+          sentiment?: Database["public"]["Enums"]["sentiment"]
+          subreddit?: string
+          summary?: string | null
+          title?: string | null
+          url?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "reddit_post_reddit_user_fkey"
+            foreignKeyName: "reddit_posts_reddit_user_fkey"
             columns: ["reddit_user"]
             isOneToOne: false
             referencedRelation: "reddit_users"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "reddit_post_subreddit_fkey"
+            foreignKeyName: "reddit_posts_subreddit_fkey"
             columns: ["subreddit"]
             isOneToOne: false
             referencedRelation: "subreddits"
@@ -278,32 +317,32 @@ export type Database = {
       reddit_posts_keywords: {
         Row: {
           created_at: string
-          id: number
-          keyword: number
-          post: number
+          id: string
+          keyword: string
+          post: string
         }
         Insert: {
           created_at?: string
-          id?: number
-          keyword: number
-          post: number
+          id?: string
+          keyword: string
+          post: string
         }
         Update: {
           created_at?: string
-          id?: number
-          keyword?: number
-          post?: number
+          id?: string
+          keyword?: string
+          post?: string
         }
         Relationships: [
           {
-            foreignKeyName: "reddit_post_keywords_keyword_fkey"
+            foreignKeyName: "reddit_posts_keywords_keyword_fkey"
             columns: ["keyword"]
             isOneToOne: false
             referencedRelation: "keywords"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "reddit_post_keywords_post_fkey"
+            foreignKeyName: "reddit_posts_keywords_post_fkey"
             columns: ["post"]
             isOneToOne: false
             referencedRelation: "reddit_posts"
@@ -313,17 +352,17 @@ export type Database = {
       }
       reddit_users: {
         Row: {
-          id: number
+          id: string
           imported_at: string
           username: string
         }
         Insert: {
-          id?: number
+          id?: string
           imported_at?: string
           username: string
         }
         Update: {
-          id?: number
+          id?: string
           imported_at?: string
           username?: string
         }
@@ -331,81 +370,69 @@ export type Database = {
       }
       subreddits: {
         Row: {
-          created_at: string | null
           description: string | null
           description_reddit: string | null
-          id: number
+          id: string
           image: string | null
           imported_at: string
           name: string
           rules: string | null
           title: string | null
-          total_members: number | null
-          updated_at: string
-          weekly_contrib: number | null
-          weekly_visitors: number | null
+          updated: string | null
         }
         Insert: {
-          created_at?: string | null
           description?: string | null
           description_reddit?: string | null
-          id?: number
+          id?: string
           image?: string | null
           imported_at?: string
           name: string
           rules?: string | null
           title?: string | null
-          total_members?: number | null
-          updated_at?: string
-          weekly_contrib?: number | null
-          weekly_visitors?: number | null
+          updated?: string | null
         }
         Update: {
-          created_at?: string | null
           description?: string | null
           description_reddit?: string | null
-          id?: number
+          id?: string
           image?: string | null
           imported_at?: string
           name?: string
           rules?: string | null
           title?: string | null
-          total_members?: number | null
-          updated_at?: string
-          weekly_contrib?: number | null
-          weekly_visitors?: number | null
+          updated?: string | null
         }
         Relationships: []
       }
       subreddits_keywords: {
         Row: {
           created_at: string
-          id: number
-          keyword: number
-          subreddit: number
+          id: string
+          keyword: string
+          subreddit: string
         }
         Insert: {
           created_at?: string
-          id?: number
-          keyword: number
-          subreddit: number
+          id?: string
+          keyword: string
+          subreddit: string
         }
         Update: {
           created_at?: string
-          id?: number
-          keyword?: number
-          subreddit?: number
+          id?: string
+          keyword?: string
+          subreddit?: string
         }
         Relationships: [
           {
-            foreignKeyName: "subreddit_keywords_keyword_fkey"
+            foreignKeyName: "subreddits_keywords_keyword_fkey"
             columns: ["keyword"]
             isOneToOne: false
             referencedRelation: "keywords"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "subreddit_keywords_subreddit_fkey"
+            foreignKeyName: "subreddits_keywords_subreddit_fkey"
             columns: ["subreddit"]
             isOneToOne: false
             referencedRelation: "subreddits"
@@ -419,7 +446,7 @@ export type Database = {
           created_at: string
           employees: string | null
           goal: string[] | null
-          id: number
+          id: string
           keywords_suggested: string[] | null
           name: string
           owner: string
@@ -434,10 +461,10 @@ export type Database = {
           created_at?: string
           employees?: string | null
           goal?: string[] | null
-          id?: number
+          id?: string
           keywords_suggested?: string[] | null
           name: string
-          owner?: string
+          owner: string
           source?: string | null
           updated_at?: string
           website?: string | null
@@ -449,7 +476,7 @@ export type Database = {
           created_at?: string
           employees?: string | null
           goal?: string[] | null
-          id?: number
+          id?: string
           keywords_suggested?: string[] | null
           name?: string
           owner?: string
@@ -464,35 +491,149 @@ export type Database = {
       workspaces_keywords: {
         Row: {
           created_at: string
-          created_by: string | null
-          id: number
-          keyword: number
-          workspace: number
+          created_by: string
+          id: string
+          keyword: string
+          updated_at: string | null
+          updated_by: string | null
+          workspace: string
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
-          id?: number
-          keyword: number
-          workspace: number
+          created_by: string
+          id?: string
+          keyword: string
+          updated_at?: string | null
+          updated_by?: string | null
+          workspace: string
         }
         Update: {
           created_at?: string
-          created_by?: string | null
-          id?: number
-          keyword?: number
-          workspace?: number
+          created_by?: string
+          id?: string
+          keyword?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          workspace?: string
         }
         Relationships: [
           {
-            foreignKeyName: "organization_keywords_keyword_fkey"
+            foreignKeyName: "workspaces_keywords_keyword_fkey"
             columns: ["keyword"]
             isOneToOne: false
             referencedRelation: "keywords"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "organization_keywords_organization_fkey"
+            foreignKeyName: "workspaces_keywords_workspace_fkey"
+            columns: ["workspace"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces_reddit_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          created_by: string
+          id: string
+          reply: string[] | null
+          score: number | null
+          status: Database["public"]["Enums"]["status"] | null
+          updated_at: string | null
+          updated_by: string | null
+          workspace: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          created_by: string
+          id?: string
+          reply?: string[] | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["status"] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          workspace: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          reply?: string[] | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["status"] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          workspace?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspaces_reddit_comments_comment_fkey"
+            columns: ["comment"]
+            isOneToOne: false
+            referencedRelation: "reddit_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspaces_reddit_comments_workspace_fkey"
+            columns: ["workspace"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces_reddit_posts: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          post: string
+          reply: string[] | null
+          score: number | null
+          status: Database["public"]["Enums"]["status"] | null
+          updated_at: string | null
+          updated_by: string | null
+          workspace: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          post: string
+          reply?: string[] | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["status"] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          workspace: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          post?: string
+          reply?: string[] | null
+          score?: number | null
+          status?: Database["public"]["Enums"]["status"] | null
+          updated_at?: string | null
+          updated_by?: string | null
+          workspace?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspaces_reddit_posts_post_fkey"
+            columns: ["post"]
+            isOneToOne: false
+            referencedRelation: "reddit_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspaces_reddit_posts_workspace_fkey"
             columns: ["workspace"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -503,38 +644,38 @@ export type Database = {
       workspaces_subreddits: {
         Row: {
           created_at: string
-          created_by: string | null
-          id: number
-          subreddit: number
-          workspace: number
+          created_by: string
+          id: string
+          subreddit: string
+          workspace: string
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
-          id?: number
-          subreddit: number
-          workspace: number
+          created_by: string
+          id?: string
+          subreddit: string
+          workspace: string
         }
         Update: {
           created_at?: string
-          created_by?: string | null
-          id?: number
-          subreddit?: number
-          workspace?: number
+          created_by?: string
+          id?: string
+          subreddit?: string
+          workspace?: string
         }
         Relationships: [
           {
-            foreignKeyName: "organization_subreddits_organization_fkey"
-            columns: ["workspace"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "organization_subreddits_subreddit_fkey"
+            foreignKeyName: "workspaces_subreddits_subreddit_fkey"
             columns: ["subreddit"]
             isOneToOne: false
             referencedRelation: "subreddits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspaces_subreddits_workspace_fkey"
+            columns: ["workspace"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -547,7 +688,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      sentiment: "Positive" | "Negative" | "Neutral"
+      status: "-1" | "0" | "1" | "2" | "3"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -677,7 +819,10 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      sentiment: ["Positive", "Negative", "Neutral"],
+      status: ["-1", "0", "1", "2", "3"],
+    },
   },
 } as const
 

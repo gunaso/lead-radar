@@ -84,11 +84,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .from("profiles" as const)
       .select("workspace")
       .eq("user_id", authResult.userId)
-      .single<{ workspace: number | null }>()
+      .single<{ workspace: string | null }>()
 
     const existingWorkspaceId = profile?.workspace
 
-    let workspace: { id: number; name: string; company: string }
+    let workspace: { id: string; name: string; company: string }
 
     if (existingWorkspaceId) {
       // Fetch current website to detect changes
@@ -215,7 +215,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       .from("workspaces" as const)
       .select("id, owner, website")
       .eq("id", workspaceId)
-      .single<{ id: number; owner: string; website: string | null }>()
+      .single<{ id: string; owner: string; website: string | null }>()
 
     if (fetchError || !workspace || workspace.owner !== authResult.userId) {
       return errorResponse("Workspace not found or access denied", 404)

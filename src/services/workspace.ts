@@ -8,7 +8,7 @@ export async function getUserWorkspaceId(client?: SupabaseClient) {
     .from("profiles")
     .select("workspace")
     .single()
-  return data?.workspace as number | null | undefined
+  return data?.workspace as string | null | undefined
 }
 
 

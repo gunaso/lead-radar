@@ -4,7 +4,7 @@ export const qk = {
   profile: () => ["profile"] as const,
   workspace: {
     base: () => ["workspace"] as const,
-    byId: (id: number | null) => ["workspace", id] as const,
+    byId: (id: string | null) => ["workspace", id] as const,
     validation: {
       company: (name: string) => ["workspace", "validate", "company", name] as const,
       name: (name: string) => ["workspace", "validate", "name", name] as const,

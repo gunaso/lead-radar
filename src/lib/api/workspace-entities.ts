@@ -34,7 +34,7 @@ const ENTITY_CONFIGS: Record<string, EntityConfig> = {
  */
 export async function linkEntitiesToWorkspace(
   entityType: 'keywords' | 'subreddits',
-  workspaceId: number,
+  workspaceId: string,
   items: string[],
   userId: string,
   supabase: SupabaseClient
@@ -60,7 +60,7 @@ export async function linkEntitiesToWorkspace(
     if (!trimmedName) continue
 
     // Check if entity exists (case-insensitive for subreddits)
-    let existingEntity: { id: number } | null = null
+  let existingEntity: { id: string } | null = null
     if (entityType === 'subreddits') {
       const { data } = await supabase
         .from(config.entityTable)
@@ -77,7 +77,7 @@ export async function linkEntitiesToWorkspace(
       existingEntity = data as any
     }
 
-    let entityId: number
+  let entityId: string
 
     if (existingEntity) {
       entityId = existingEntity.id
@@ -101,8 +101,6 @@ export async function linkEntitiesToWorkspace(
             if (typeof d.title === 'string') insertPayload.title = d.title
             if (typeof d.public_description === 'string') insertPayload.description = d.public_description
             if (typeof d.description === 'string') insertPayload.description_reddit = d.description
-            if (typeof d.created_utc === 'number') insertPayload.created_at = new Date(d.created_utc * 1000).toISOString()
-            if (typeof d.subscribers === 'number') insertPayload.total_members = d.subscribers
           }
         } catch (e) {
           // Ignore fetch errors and proceed with minimal insert
@@ -145,14 +143,22 @@ export type SubredditDetailsInput = {
  * Specialized helper to upsert subreddits with metadata and link to a workspace.
  */
 export async function linkSubredditsToWorkspace(
-  workspaceId: number,
+  workspaceId: string,
   names: string[],
   details: SubredditDetailsInput[] | undefined,
   userId: string,
   supabase: SupabaseClient
 ): Promise<void> {
   // Clear existing links
-  await supabase.from("workspaces_subreddits").delete().eq("workspace", workspaceId)
+  {
+    const { error } = await supabase
+      .from("workspaces_subreddits")
+      .delete()
+      .eq("workspace", workspaceId)
+    if (error) {
+      console.error("Failed clearing existing subreddit links:", error)
+    }
+  }
 
   if (!names || names.length === 0) return
 
@@ -169,12 +175,16 @@ export async function linkSubredditsToWorkspace(
     const meta = detailsByName.get(key)
 
     // Check if subreddit exists (case-insensitive)
-    let entityId: number | null = null
-    const { data: existing } = await supabase
+    let entityId: string | null = null
+    const { data: existing, error: existingError } = await supabase
       .from("subreddits")
       .select("id")
       .ilike("name", canonical)
       .single()
+    if (existingError && existingError.code !== "PGRST116") {
+      // Ignore "No rows" but log other errors
+      console.error("Error checking existing subreddit:", { name: canonical, error: existingError })
+    }
     if (existing?.id) {
       entityId = existing.id
       // Optionally update metadata if provided
@@ -183,46 +193,39 @@ export async function linkSubredditsToWorkspace(
         if (typeof meta.title === 'string') updatePayload.title = meta.title
         if (typeof meta.description === 'string') updatePayload.description = meta.description
         if (typeof meta.description_reddit === 'string') updatePayload.description_reddit = meta.description_reddit
-        if (typeof meta.total_members === 'number') updatePayload.total_members = meta.total_members
-        if (typeof meta.created_utc === 'number') {
-          const date = new Date(meta.created_utc * 1000)
-          // Store only date component for date column
-          const dateOnly = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
-          updatePayload.created_at = dateOnly.toISOString().slice(0, 10)
-        }
       }
       if (Object.keys(updatePayload).length > 0) {
         await supabase.from("subreddits").update(updatePayload).eq("id", entityId)
       }
     } else {
       // Insert new with metadata
-      const insertPayload: Record<string, unknown> = { name: canonical }
+      const insertPayload: Record<string, unknown> = { name: key }
       if (meta) {
         if (typeof meta.title === 'string') insertPayload.title = meta.title
         if (typeof meta.description === 'string') insertPayload.description = meta.description
         if (typeof meta.description_reddit === 'string') insertPayload.description_reddit = meta.description_reddit
-        if (typeof meta.total_members === 'number') insertPayload.total_members = meta.total_members
-        if (typeof meta.created_utc === 'number') {
-          const date = new Date(meta.created_utc * 1000)
-          const dateOnly = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
-          insertPayload.created_at = dateOnly.toISOString().slice(0, 10)
-        }
       }
       const { data: newRow, error } = await supabase
         .from("subreddits")
         .insert(insertPayload)
         .select("id")
         .single()
-      if (error || !newRow) continue
+      if (error || !newRow) {
+        console.error("Error inserting subreddit:", { name: key, error })
+        continue
+      }
       entityId = newRow.id
     }
 
     if (!entityId) continue
-    await supabase.from("workspaces_subreddits").insert({
+    const { error: linkError } = await supabase.from("workspaces_subreddits").insert({
       workspace: workspaceId,
       subreddit: entityId,
       created_by: userId,
     })
+    if (linkError) {
+      console.error("Error linking subreddit to workspace:", { workspaceId, subredditId: entityId, error: linkError })
+    }
   }
 }
 
@@ -236,7 +239,7 @@ export type CompetitorInput = {
  * Clears existing competitors and inserts the provided list.
  */
 export async function linkCompetitorsToWorkspace(
-  workspaceId: number,
+  workspaceId: string,
   competitors: Array<CompetitorInput | string>,
   userId: string,
   supabase: SupabaseClient

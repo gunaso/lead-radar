@@ -1,5 +1,5 @@
 type Competitor = {
-  id: number
+  id: string
   name: string
   logo: string | null
   website: string | null
@@ -8,7 +8,7 @@ type Competitor = {
 }
 
 type Keyword = {
-  id: number
+  id: string
   name: string
   owner: Owner
   posts: number
@@ -17,7 +17,7 @@ type Keyword = {
 }
 
 type Subreddit = {
-  id: number
+  id: string
   name: string
   image: string | null
   owner: Owner

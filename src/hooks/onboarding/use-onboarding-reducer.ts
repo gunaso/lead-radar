@@ -42,7 +42,7 @@ export type OnboardingState = {
     goalsValid: boolean
   }
 
-  workspaceId: number | null
+  workspaceId: string | null
   previousWebsite: string
 
   keywords: string[]
@@ -122,7 +122,7 @@ export type OnboardingAction =
       type: "set_personal_validation"
       validation: OnboardingState["personalValidation"]
     }
-  | { type: "set_workspace_id"; workspaceId: number | null }
+  | { type: "set_workspace_id"; workspaceId: string | null }
   | { type: "set_previous_website"; previousWebsite: string }
   | { type: "set_keywords"; keywords: string[] }
   | { type: "set_subreddits"; subreddits: string[] }

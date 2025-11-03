@@ -7,7 +7,7 @@ import { request } from "@/lib/api/client"
 import { qk } from "@/lib/api/query-keys"
 
 export type WorkspaceUpsertPayload = {
-  workspaceId?: number | null
+  workspaceId?: string | null
   companyName: string
   workspaceName: string
   website: string | null
@@ -48,7 +48,7 @@ export function useUpsertWorkspace() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (payload: WorkspaceUpsertPayload) =>
-      request<{ ok: boolean; workspace?: { id: number } }>("/api/workspace", {
+      request<{ ok: boolean; workspace?: { id: string } }>("/api/workspace", {
         method: payload.workspaceId ? "PATCH" : "POST",
         body: JSON.stringify(payload.workspaceId ? {
           workspaceId: payload.workspaceId,
@@ -78,7 +78,7 @@ export function useUpsertWorkspace() {
 }
 
 export function useScrapeWorkspace() {
-  return useMutation<{ ok: boolean }, unknown, { workspaceId: number; website: string }>({
+  return useMutation<{ ok: boolean }, unknown, { workspaceId: string; website: string }>({
     mutationFn: async ({ workspaceId, website }) =>
       request<{ ok: boolean }>("/api/workspace/scrape", {
         method: "POST",
@@ -91,7 +91,7 @@ export function useUpdateWorkspaceEntities() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (payload: {
-      workspaceId: number
+      workspaceId: string
       keywords?: string[]
       subreddits?: string[]
       subredditsDetails?: Array<{
@@ -176,7 +176,7 @@ export function useUpdateWorkspaceBasics() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (payload: {
-      workspaceId: number
+      workspaceId: string
       companyName: string
       website: string | null
       employees: string
