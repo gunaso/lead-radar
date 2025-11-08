@@ -39,6 +39,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
+    "firecrawl": "^4.5.0",
     "framer-motion": "^12.23.22",
     "langsmith": "^0.3.73",
     "lottie-react": "^2.4.1",
