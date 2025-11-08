@@ -107,7 +107,7 @@ export default function WorkspaceStep({
         valueState={[website, setWebsite]}
         setValid={setWebsiteValid}
         skipValidation={skipValidation}
-        helperText="We’ll use this to suggest keywords, subs, and competitors — never to crawl private data."
+        helperText="We’ll use this to suggest keywords, subs, and competitors. Never to crawl private data."
         validate={async (val, signal) => {
           const trimmed = val.trim()
           if (!trimmed) return { ok: true }

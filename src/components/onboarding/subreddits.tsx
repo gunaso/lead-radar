@@ -248,7 +248,7 @@ function Subreddit({
     <li key={subreddit.name}>
       <button
         type="button"
-        className="flex w-full items-center justify-between px-3 py-2 rounded-md text-left hover:bg-accent transition-colors active:scale-95"
+        className="flex w-full items-center justify-between px-3 py-2 rounded-md text-left hover:bg-accent transition-colors"
         onClick={() => {
           addSubreddit(subreddit.name)
           // Persist details from search result so we can avoid refetch later

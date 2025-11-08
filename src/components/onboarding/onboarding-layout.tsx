@@ -45,7 +45,7 @@ const STEP_DESCRIPTIONS: Record<Step, string> = {
   3: "Add keywords, subreddits, and competitor names. We’ll do the rest.",
   4: "Add keywords, subreddits, and competitor names. We’ll do the rest.",
   5: "Add keywords, subreddits, and competitor names. We’ll do the rest.",
-  6: "Here’s how to make every Reddit interaction count — for your audience, your brand, and AI visibility.",
+  6: "Here’s how to make every Reddit interaction count for your audience, your brand, and AI visibility.",
 }
 
 type OnboardingLayoutProps = {

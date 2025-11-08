@@ -17,12 +17,12 @@ export default function TipsStep(): ReactElement {
         <TipCard
           icon={<ShieldCheck className="size-5" />}
           title="Follow the Culture, Not Just the Rules"
-          description="Every subreddit has its own tone and taboos. Read the room before you post — authenticity earns more trust than self-promotion ever will."
+          description="Every subreddit has its own tone and taboos. Read the room before you post, authenticity earns more trust than self-promotion ever will."
         />
         <TipCard
           icon={<MessageCircleHeart className="size-5" />}
           title="Comment Like a Human, Not a Marketer"
-          description="Share experiences, give honest help, and drop insights that make people think “this person knows their stuff“. Great comments naturally attract leads — no sales pitch needed."
+          description="Share experiences, give honest help, and drop insights that make people think “this person knows their stuff“. Great comments naturally attract leads, no sales pitch needed."
         />
         <TipCard
           icon={<TextSearch className="size-5" />}
@@ -31,7 +31,7 @@ export default function TipsStep(): ReactElement {
         />
       </div>
       <p className="text-sm text-muted-foreground text-center">
-        Keep these in mind when you start exploring your feed —{" "}
+        Keep these in mind when you start exploring your feed,{" "}
         <span className="text-primary font-semibold">Prompted</span> will guide
         you to the right threads and help you craft replies that stand out.
       </p>

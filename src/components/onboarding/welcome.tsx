@@ -27,7 +27,7 @@ export default function WelcomeStep(): ReactElement {
         <FeatureCard
           Icon={Megaphone}
           title="Build Visibility"
-          description="Contribute to Reddit discussions in ways that get noticed — both by people and AI models that power modern search."
+          description="Contribute to Reddit discussions in ways that get noticed, both by people and AI models that power modern search."
         />
         <FeatureCard
           Icon={Sparkles}
