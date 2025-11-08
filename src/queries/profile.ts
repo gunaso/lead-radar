@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { request } from "@/lib/api/client"
+import { request, type ApiError } from "@/lib/api/client"
 import { qk } from "@/lib/api/query-keys"
 
 export type ProfileWorkspace = {
@@ -73,9 +73,13 @@ export function useUpdateProfileMutation() {
       }
       return { previous }
     },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) {
-        qc.setQueryData(qk.profile(), ctx.previous)
+    onError: (err: ApiError, _vars, ctx) => {
+      // Input errors (400) should NOT revert the optimistic UI
+      // Only revert for server/unexpected errors
+      if (err?.status && err.status >= 500) {
+        if (ctx?.previous) {
+          qc.setQueryData(qk.profile(), ctx.previous)
+        }
       }
     },
     onSettled: async () => {
