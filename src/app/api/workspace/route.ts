@@ -78,6 +78,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const supabase = await createClient()
+    const admin = createAdminClient()
 
     // Check if user already has a workspace
     const { data: profile } = await supabase
@@ -209,6 +210,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     }
 
     const supabase = await createClient()
+    const admin = createAdminClient()
 
     // Verify workspace belongs to user
     const { data: workspace, error: fetchError } = await supabase
@@ -255,7 +257,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     // Only update each entity type if the corresponding payload was provided
     if (Array.isArray(keywords)) {
-      await linkEntitiesToWorkspace('keywords', workspaceId, keywords, authResult.userId, supabase)
+      await linkEntitiesToWorkspace('keywords', workspaceId, keywords, authResult.userId, supabase, admin)
     }
 
     if (Array.isArray(subreddits)) {

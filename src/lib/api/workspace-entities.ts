@@ -1,4 +1,7 @@
+import type { SupabaseClient as AdminClient } from "@supabase/supabase-js"
 import type { SupabaseClient } from "@supabase/supabase-js"
+
+import { markKeywordProcessFalseIfUnlinked, markKeywordProcessTrue } from "@/lib/api/keywords-utils"
 
 type EntityConfig = {
   entityTable: string
@@ -37,9 +40,22 @@ export async function linkEntitiesToWorkspace(
   workspaceId: string,
   items: string[],
   userId: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  admin?: AdminClient
 ): Promise<void> {
   const config = ENTITY_CONFIGS[entityType]
+
+  // Track previously linked entity IDs (for keywords only, to maintain process flag)
+  let previouslyLinkedIds: string[] = []
+  if (entityType === 'keywords') {
+    const { data: prev } = await supabase
+      .from(config.linkTable)
+      .select(`${config.entityColumn}`)
+      .eq("workspace", workspaceId)
+    previouslyLinkedIds = (prev || [])
+      .map((r: any) => r?.[config.entityColumn])
+      .filter((id: unknown): id is string => typeof id === "string")
+  }
 
   // Always clear existing links for this workspace first
   await supabase
@@ -127,6 +143,25 @@ export async function linkEntitiesToWorkspace(
       [config.entityColumn]: entityId,
       created_by: userId,
     })
+
+    // Ensure keyword is active when linked
+    if (entityType === 'keywords' && admin) {
+      await markKeywordProcessTrue(admin, entityId)
+    }
+  }
+
+  // For keywords, after relinking, any previously linked IDs that are no longer linked
+  // should be checked globally; if unused, mark process=false
+  if (entityType === 'keywords' && admin) {
+    const { data: now } = await supabase
+      .from(config.linkTable)
+      .select(`${config.entityColumn}`)
+      .eq("workspace", workspaceId)
+    const currentlyLinkedIds = (now || [])
+      .map((r: any) => r?.[config.entityColumn])
+      .filter((id: unknown): id is string => typeof id === "string")
+    const removedIds = previouslyLinkedIds.filter((id) => !currentlyLinkedIds.includes(id))
+    await Promise.all(removedIds.map((id) => markKeywordProcessFalseIfUnlinked(admin, id)))
   }
 }
 

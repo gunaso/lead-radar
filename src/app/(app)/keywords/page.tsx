@@ -1,5 +1,8 @@
 "use client"
 
+import { format } from "date-fns"
+import { useState } from "react"
+
 import { HeaderConfig } from "@/components/header/header-context"
 import { ProfileAvatar } from "@/components/ui/avatar"
 import { DataList } from "@/components/ui/data-list"
@@ -10,6 +13,11 @@ import { Input } from "@/components/ui/input"
 import type { Keyword } from "@/types/objects"
 import { PATHS } from "@/lib/path"
 import { cn } from "@/lib/utils"
+import {
+  useCreateKeyword,
+  useDeleteKeyword,
+  useKeywords,
+} from "@/queries/keywords"
 
 const sizes = {
   name: "flex-1 min-w-0",
@@ -20,54 +28,12 @@ const sizes = {
   createdAt: "w-24 text-center max-[20rem]:hidden",
 }
 
-const keywords: Keyword[] = [
-  {
-    id: 1,
-    name: "Keyword 1",
-    owner: {
-      name: "Owner 1",
-      image: null,
-    },
-    posts: 10,
-    comments: 20,
-    createdAt: "2021-01-01",
-  },
-  {
-    id: 2,
-    name: "Keyword 2",
-    owner: {
-      name: "Owner 2",
-      image: null,
-    },
-    posts: 20,
-    comments: 40,
-    createdAt: "2021-01-02",
-  },
-  {
-    id: 3,
-    name: "Keyword 3",
-    owner: {
-      name: "Owner 3",
-      image: null,
-    },
-    posts: 30,
-    comments: 60,
-    createdAt: "2021-01-03",
-  },
-  {
-    id: 4,
-    name: "Keyword 4",
-    owner: {
-      name: "Owner 4",
-      image: null,
-    },
-    posts: 40,
-    comments: 80,
-    createdAt: "2021-01-04",
-  },
-]
-
 export default function KeywordsPage() {
+  const { data: keywords = [] } = useKeywords()
+  const del = useDeleteKeyword()
+  const create = useCreateKeyword()
+  const [error, setError] = useState<string | null>(null)
+
   return (
     <section className="flex flex-col">
       <HeaderConfig
@@ -77,11 +43,28 @@ export default function KeywordsPage() {
             {
               key: "new-keyword",
               element: (
-                <NewAction name="Keyword" dialogBodyClassName="py-4">
+                <NewAction
+                  name="Keyword"
+                  dialogBodyClassName="py-4"
+                  error={error}
+                  onErrorChange={setError}
+                  onSubmit={async (fd) => {
+                    const name = String(fd.get("name") || "").trim()
+                    if (!name) return
+                    try {
+                      await create.mutateAsync({ name })
+                    } catch (err) {
+                      // Error will be caught and handled by NewAction component
+                      // The optimistic item will be removed by the mutation's onError handler
+                      throw err
+                    }
+                  }}
+                >
                   <Input
                     size="creating"
                     variant="creating"
                     placeholder="Keyword"
+                    name="name"
                   />
                 </NewAction>
               ),
@@ -98,7 +81,16 @@ export default function KeywordsPage() {
             render: ({ item }) => (
               <>
                 <span className="truncate">{(item as Keyword).name}</span>
-                <DeleteItem name={(item as Keyword).name} onClick={() => {}} />
+                <DeleteItem
+                  name={(item as Keyword).name}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    const id = (item as Keyword).id
+                    if (!id) return
+                    // Optimistic mutation handled in hook
+                    del.mutate({ id })
+                  }}
+                />
               </>
             ),
           },
@@ -115,7 +107,17 @@ export default function KeywordsPage() {
           },
           { key: "posts", label: "Posts", className: sizes.posts },
           { key: "comments", label: "Comments", className: sizes.comments },
-          { key: "createdAt", label: "Created At", className: sizes.createdAt },
+          {
+            key: "createdAt",
+            label: "Created At",
+            className: sizes.createdAt,
+            render: ({ item }) => {
+              const raw = (item as Keyword).createdAt
+              const d = new Date(raw)
+              const text = isNaN(d.getTime()) ? "" : format(d, "yyyy-MM-dd")
+              return <span>{text}</span>
+            },
+          },
         ]}
         items={keywords}
         rowHrefBase={PATHS.KEYWORDS}
