@@ -50,6 +50,7 @@ type TrackingTabsProps = {
       description_reddit?: string | null
       created_utc?: number | null
       total_members?: number | null
+      community_icon?: string | null
     }>
   ) => void
 

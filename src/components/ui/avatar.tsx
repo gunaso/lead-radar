@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 
 import { cn, getInitials } from "@/lib/utils"
@@ -100,7 +101,7 @@ function SubredditAvatar({
   classFallback?: string
 }) {
   return (
-    <Avatar className={cn("size-8 rounded-full", className)}>
+    <Avatar className={cn("size-7 rounded-full", className)}>
       <AvatarImage src={image || undefined} alt={name} />
       <AvatarFallback
         className={cn(

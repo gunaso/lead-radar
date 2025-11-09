@@ -74,3 +74,10 @@ export function formatRelativeOrLocaleDate(
 
   return format(date, "PP", { locale })
 }
+
+// Formats a date as YYYY-MM-DD; returns empty string if invalid
+export function formatDateYMD(dateInput: string | Date): string {
+  const date = new Date(dateInput)
+  if (!isValidDate(date)) return ""
+  return format(date, "yyyy-MM-dd")
+}

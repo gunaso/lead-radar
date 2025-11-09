@@ -9,6 +9,7 @@ export type SubredditDetails = {
   description_reddit?: string | null
   created_utc?: number | null
   total_members?: number | null
+  community_icon?: string | null
 }
 
 export type OnboardingState = {
@@ -178,6 +179,12 @@ export function onboardingReducer(state: OnboardingState, action: OnboardingActi
       const key = (action.input.name || "").replace(/^r\//i, "").trim().toLowerCase()
       if (!key) return state
       const existing = state.subredditDetailsByName[key] || { name: key }
+      const rawIcon = action.input.community_icon
+      // Ensure we store the icon URL without query params
+      const sanitizedIcon =
+        typeof rawIcon === "string" && rawIcon.length > 0
+          ? rawIcon.split("?")[0]
+          : rawIcon ?? existing.community_icon ?? null
       return {
         ...state,
         subredditDetailsByName: {
@@ -190,6 +197,7 @@ export function onboardingReducer(state: OnboardingState, action: OnboardingActi
             description_reddit: action.input.description_reddit ?? existing.description_reddit ?? null,
             created_utc: action.input.created_utc ?? existing.created_utc ?? null,
             total_members: action.input.total_members ?? existing.total_members ?? null,
+            community_icon: sanitizedIcon,
           },
         },
       }

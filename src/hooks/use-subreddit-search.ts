@@ -61,10 +61,8 @@ export function useSubredditSearch({
           throw new Error(`Reddit search failed: ${res.status} ${res.statusText}`)
         }
         const json = await res.json()
-        // For now just log the output
-        console.log("Reddit communities search response:", json)
 
-        // Extract first 5 subreddit entries
+        // Extract subreddit entries
         const children: any[] = Array.isArray(json?.data?.children)
           ? json.data.children
           : []

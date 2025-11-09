@@ -18,6 +18,7 @@ export default function NewAction({
   children,
   dialogBodyClassName,
   onSubmit,
+  submitDisabled,
   error,
   onErrorChange,
 }: {
@@ -25,6 +26,7 @@ export default function NewAction({
   children: ReactNode
   dialogBodyClassName?: string
   onSubmit?: (formData: FormData) => void | Promise<void>
+  submitDisabled?: boolean
   error?: string | null
   onErrorChange?: (error: string | null) => void
 }) {
@@ -99,7 +101,7 @@ export default function NewAction({
               )}
             </DialogBody>
             <DialogFooter>
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting || !!submitDisabled}>
                 Add {name}
               </Button>
             </DialogFooter>

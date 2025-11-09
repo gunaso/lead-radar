@@ -15,7 +15,7 @@ const inputVariants = cva(
         onboarding:
           "rounded-md text-base md:text-sm shadow-xs focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
         creating:
-          "bg-transparent border-none text-base font-semibold placeholder:text-muted-foreground/70",
+          "bg-transparent border-none text-base font-semibold text-foreground placeholder:text-muted-foreground/70",
       },
       size: {
         default: "h-8 px-3 py-1.5",
@@ -30,15 +30,20 @@ const inputVariants = cva(
   }
 )
 
-function Input({ className, type, variant, size, ...props }: InputProps) {
-  return (
-    <input
-      type={type}
-      data-slot="input"
-      className={cn(inputVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
-}
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, variant, size, ...props }, ref) => {
+    return (
+      <input
+        ref={ref}
+        type={type}
+        data-slot="input"
+        className={cn(inputVariants({ variant, size, className }))}
+        {...props}
+      />
+    )
+  }
+)
+
+Input.displayName = "Input"
 
 export { Input, type InputProps }

@@ -1,6 +1,4 @@
 "use client"
-
-import { format } from "date-fns"
 import { useState } from "react"
 
 import { HeaderConfig } from "@/components/header/header-context"
@@ -10,9 +8,9 @@ import DeleteItem from "@/components/ui/delete-item"
 import NewAction from "@/components/ui/new-action"
 import { Input } from "@/components/ui/input"
 
+import { cn, formatDateYMD } from "@/lib/utils"
 import type { Keyword } from "@/types/objects"
 import { PATHS } from "@/lib/path"
-import { cn } from "@/lib/utils"
 import {
   useCreateKeyword,
   useDeleteKeyword,
@@ -111,12 +109,9 @@ export default function KeywordsPage() {
             key: "createdAt",
             label: "Created At",
             className: sizes.createdAt,
-            render: ({ item }) => {
-              const raw = (item as Keyword).createdAt
-              const d = new Date(raw)
-              const text = isNaN(d.getTime()) ? "" : format(d, "yyyy-MM-dd")
-              return <span>{text}</span>
-            },
+            render: ({ item }) => (
+              <span>{formatDateYMD((item as Keyword).createdAt)}</span>
+            ),
           },
         ]}
         items={keywords}

@@ -159,6 +159,7 @@ export const updateWorkspaceSchema = z.object({
         // Accept created_utc (unix seconds) from client; server maps to date
         created_utc: z.number().nullable().optional(),
         total_members: z.number().nullable().optional(),
+        community_icon: z.string().nullable().optional(),
       })
     )
     .optional(),

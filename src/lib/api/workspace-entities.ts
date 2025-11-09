@@ -172,6 +172,7 @@ export type SubredditDetailsInput = {
   description_reddit?: string | null
   created_utc?: number | null // unix seconds; will be converted to date (YYYY-MM-DD)
   total_members?: number | null
+  community_icon?: string | null
 }
 
 /**
@@ -208,6 +209,7 @@ export async function linkSubredditsToWorkspace(
     if (!canonical) continue
     const key = canonical.toLowerCase()
     const meta = detailsByName.get(key)
+    // meta may include community_icon; sanitize if present when mapping below
 
     // Check if subreddit exists (case-insensitive)
     let entityId: string | null = null
@@ -228,9 +230,16 @@ export async function linkSubredditsToWorkspace(
         if (typeof meta.title === 'string') updatePayload.title = meta.title
         if (typeof meta.description === 'string') updatePayload.description = meta.description
         if (typeof meta.description_reddit === 'string') updatePayload.description_reddit = meta.description_reddit
+        if (typeof meta.community_icon === 'string' && meta.community_icon.length > 0) {
+          const sanitized = meta.community_icon.split("?")[0]
+          updatePayload.image = sanitized
+        }
       }
       if (Object.keys(updatePayload).length > 0) {
-        await supabase.from("subreddits").update(updatePayload).eq("id", entityId)
+        const { error: updateErr } = await supabase.from("subreddits").update(updatePayload).eq("id", entityId)
+        if (updateErr) {
+          console.error("[linkSubredditsToWorkspace] Update failed", { entityId, updatePayload, error: updateErr })
+        }
       }
     } else {
       // Insert new with metadata
@@ -239,6 +248,10 @@ export async function linkSubredditsToWorkspace(
         if (typeof meta.title === 'string') insertPayload.title = meta.title
         if (typeof meta.description === 'string') insertPayload.description = meta.description
         if (typeof meta.description_reddit === 'string') insertPayload.description_reddit = meta.description_reddit
+        if (typeof meta.community_icon === 'string' && meta.community_icon.length > 0) {
+          const sanitized = meta.community_icon.split("?")[0]
+          insertPayload.image = sanitized
+        }
       }
       const { data: newRow, error } = await supabase
         .from("subreddits")
