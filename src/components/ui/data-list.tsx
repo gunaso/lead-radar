@@ -3,6 +3,8 @@
 import * as React from "react"
 
 import { GuardedLink } from "@/components/ui/guarded-link"
+import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/ui/empty-state"
 
 import { cn } from "@/lib/utils"
 
@@ -32,6 +34,12 @@ type DataListProps<TItem> = {
    * Optional function to get className for the row container
    */
   getRowClassName?: (item: TItem, index: number) => string | undefined
+  /** Whether data is loading */
+  isLoading?: boolean
+  /** Name of the entity for the empty state message (e.g. "Keyword", "Competitor") */
+  emptyStateName?: string
+  /** Action component to show in empty state (e.g. New button) */
+  emptyStateAction?: React.ReactNode
 }
 
 export function DataList<TItem>({
@@ -42,6 +50,9 @@ export function DataList<TItem>({
   idKey,
   getRowId,
   getRowClassName,
+  isLoading,
+  emptyStateName,
+  emptyStateAction,
 }: DataListProps<TItem>) {
   return (
     <div className="flex flex-col">
@@ -54,45 +65,60 @@ export function DataList<TItem>({
       </div>
 
       <div className="flex flex-col">
-        {items.map((item, rowIndex) => {
-          const base = (
-            <div
-              className={cn(
-                "group flex items-center gap-2 page-padding-x h-12 text-sm hover:bg-muted",
-                getRowClassName?.(item, rowIndex)
-              )}
-            >
-              {headers.map((h) => {
-                const value = (item as any)[h.key as any]
-                const content = h.render
-                  ? h.render({ item, value, rowIndex })
-                  : (value as React.ReactNode)
-                return (
-                  <span key={String(h.key)} className={h.className}>
-                    {content}
-                  </span>
-                )
-              })}
-            </div>
-          )
+        {isLoading ? (
+          Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton
+              key={i}
+              className="page-padding-x h-12 border-b-[0.5px] last:border-none rounded-none bg-muted/80"
+            />
+          ))
+        ) : items.length === 0 && emptyStateName ? (
+          <div className="mt-4">
+            <EmptyState name={emptyStateName}>{emptyStateAction}</EmptyState>
+          </div>
+        ) : (
+          items.map((item, rowIndex) => {
+            const base = (
+              <div
+                className={cn(
+                  "group flex items-center gap-2 page-padding-x h-12 text-sm hover:bg-muted",
+                  getRowClassName?.(item, rowIndex)
+                )}
+              >
+                {headers.map((h) => {
+                  const value = (item as any)[h.key as any]
+                  const content = h.render
+                    ? h.render({ item, value, rowIndex })
+                    : (value as React.ReactNode)
+                  return (
+                    <span key={String(h.key)} className={h.className}>
+                      {content}
+                    </span>
+                  )
+                })}
+              </div>
+            )
 
-          let href = getRowHref?.(item, rowIndex)
-          if (!href && rowHrefBase) {
-            const resolvedId = (
-              getRowId ? getRowId(item) : (item as any)[(idKey as any) ?? "id"]
-            ) as string | number
-            if (resolvedId !== undefined && resolvedId !== null) {
-              href = `${rowHrefBase}/${resolvedId}`
+            let href = getRowHref?.(item, rowIndex)
+            if (!href && rowHrefBase) {
+              const resolvedId = (
+                getRowId
+                  ? getRowId(item)
+                  : (item as any)[(idKey as any) ?? "id"]
+              ) as string | number
+              if (resolvedId !== undefined && resolvedId !== null) {
+                href = `${rowHrefBase}/${resolvedId}`
+              }
             }
-          }
-          return href ? (
-            <GuardedLink key={rowIndex} href={href} className="contents">
-              {base}
-            </GuardedLink>
-          ) : (
-            <React.Fragment key={rowIndex}>{base}</React.Fragment>
-          )
-        })}
+            return href ? (
+              <GuardedLink key={rowIndex} href={href} className="contents">
+                {base}
+              </GuardedLink>
+            ) : (
+              <React.Fragment key={rowIndex}>{base}</React.Fragment>
+            )
+          })
+        )}
       </div>
     </div>
   )

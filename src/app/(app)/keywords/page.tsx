@@ -1,21 +1,15 @@
 "use client"
-import { useState } from "react"
 
+import { NewKeywordAction } from "@/components/new-actions/new-keyword"
 import { HeaderConfig } from "@/components/header/header-context"
 import { ProfileAvatar } from "@/components/ui/avatar"
 import { DataList } from "@/components/ui/data-list"
 import DeleteItem from "@/components/ui/delete-item"
-import NewAction from "@/components/ui/new-action"
-import { Input } from "@/components/ui/input"
 
+import { useDeleteKeyword, useKeywords } from "@/queries/keywords"
 import { cn, formatDateYMD } from "@/lib/utils"
 import type { Keyword } from "@/types/objects"
 import { PATHS } from "@/lib/path"
-import {
-  useCreateKeyword,
-  useDeleteKeyword,
-  useKeywords,
-} from "@/queries/keywords"
 
 const sizes = {
   name: "flex-1 min-w-0",
@@ -27,10 +21,8 @@ const sizes = {
 }
 
 export default function KeywordsPage() {
-  const { data: keywords = [] } = useKeywords()
+  const { data: keywords = [], isLoading } = useKeywords()
   const del = useDeleteKeyword()
-  const create = useCreateKeyword()
-  const [error, setError] = useState<string | null>(null)
 
   return (
     <section className="flex flex-col">
@@ -40,37 +32,15 @@ export default function KeywordsPage() {
           actions: [
             {
               key: "new-keyword",
-              element: (
-                <NewAction
-                  name="Keyword"
-                  dialogBodyClassName="py-4"
-                  error={error}
-                  onErrorChange={setError}
-                  onSubmit={async (fd) => {
-                    const name = String(fd.get("name") || "").trim()
-                    if (!name) return
-                    try {
-                      await create.mutateAsync({ name })
-                    } catch (err) {
-                      // Error will be caught and handled by NewAction component
-                      // The optimistic item will be removed by the mutation's onError handler
-                      throw err
-                    }
-                  }}
-                >
-                  <Input
-                    size="creating"
-                    variant="creating"
-                    placeholder="Keyword"
-                    name="name"
-                  />
-                </NewAction>
-              ),
+              element: <NewKeywordAction />,
             },
           ],
         }}
       />
       <DataList
+        isLoading={isLoading}
+        emptyStateName="Keyword"
+        emptyStateAction={<NewKeywordAction />}
         headers={[
           {
             key: "name",

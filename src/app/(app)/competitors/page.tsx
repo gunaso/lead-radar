@@ -4,14 +4,14 @@ import { type ReactElement, useMemo, useState } from "react"
 
 import { Pencil } from "lucide-react"
 
+import { NewCompetitorAction } from "@/components/new-actions/new-competitor"
 import { CompetitorAvatar, ProfileAvatar } from "@/components/ui/avatar"
 import { HeaderConfig } from "@/components/header/header-context"
+import AsyncBareInput from "@/components/ui/input-async-bare"
 import { DataList } from "@/components/ui/data-list"
 import DeleteItem from "@/components/ui/delete-item"
-import NewAction from "@/components/ui/new-action"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import AsyncBareInput from "@/components/ui/input-async-bare"
 import {
   DialogDescription,
   DialogTrigger,
@@ -27,7 +27,6 @@ import type { Competitor } from "@/types/objects"
 import { cn, formatDateYMD } from "@/lib/utils"
 import {
   useCompetitors,
-  useCreateCompetitor,
   useDeleteCompetitor,
   useUpdateCompetitor,
 } from "@/queries/competitors"
@@ -42,13 +41,8 @@ const sizes = {
 }
 
 export default function CompetitorsPage() {
-  const { data: competitors = [] } = useCompetitors()
+  const { data: competitors = [], isLoading } = useCompetitors()
   const del = useDeleteCompetitor()
-  const create = useCreateCompetitor()
-
-  // New competitor form state (inside NewAction)
-  const [error, setError] = useState<string | null>(null)
-  const websiteValidation = useWorkspaceWebsiteValidation()
 
   return (
     <section className="flex flex-col">
@@ -58,63 +52,15 @@ export default function CompetitorsPage() {
           actions: [
             {
               key: "new-competitor",
-              element: (
-                <NewAction
-                  name="Competitor"
-                  dialogBodyClassName="py-4 space-y-2"
-                  error={error}
-                  onErrorChange={setError}
-                  onSubmit={async (fd) => {
-                    const name = String(fd.get("name") || "").trim()
-                    const rawWebsite = String(fd.get("website") || "").trim()
-                    if (!name) return
-                    try {
-                      let website: string | null = rawWebsite || null
-                      if (website) {
-                        const res = await websiteValidation.mutateAsync({
-                          website,
-                        })
-                        if (!res.ok) {
-                          throw new Error(res.message || "Invalid website")
-                        }
-                        if (typeof res.website === "string") {
-                          website = res.website
-                        }
-                      }
-                      await create.mutateAsync({
-                        name,
-                        website,
-                      })
-                    } catch (err) {
-                      throw err
-                    }
-                  }}
-                >
-                  <Input
-                    size="creating"
-                    variant="creating"
-                    placeholder="Competitor name"
-                    name="name"
-                  />
-                  <AsyncBareInput
-                    name="website"
-                    placeholder="e.g. company.com"
-                    validate={async (val, signal) => {
-                      const trimmed = val.trim()
-                      if (!trimmed) return { ok: true }
-                      return websiteValidation.mutateAsync({
-                        website: trimmed,
-                        signal,
-                      })
-                    }}
-                  />
-                </NewAction>
-              ),
+              element: <NewCompetitorAction />,
             },
           ],
         }}
       />
       <DataList
+        isLoading={isLoading}
+        emptyStateName="Competitor"
+        emptyStateAction={<NewCompetitorAction />}
         headers={[
           {
             key: "name",
