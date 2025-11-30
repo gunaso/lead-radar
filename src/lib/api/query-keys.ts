@@ -3,6 +3,7 @@
 export const qk = {
   profile: () => ["profile"] as const,
   keywords: () => ["keywords"] as const,
+  competitors: () => ["competitors"] as const,
   subreddits: () => ["subreddits"] as const,
   workspace: {
     base: () => ["workspace"] as const,
@@ -18,6 +19,7 @@ export const qk = {
 export type QueryKey = ReturnType<
   | typeof qk.profile
   | typeof qk.keywords
+  | typeof qk.competitors
   | typeof qk.subreddits
   | typeof qk.workspace.base
   | typeof qk.workspace.byId

@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react"
 
-import { AlertCircleIcon, Check, Loader2, X } from "lucide-react"
+import { AlertCircleIcon, Check, X } from "lucide-react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input, type InputProps } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 
 import { cn, generateInputId } from "@/lib/utils"
 
@@ -220,7 +221,7 @@ export default function AsyncInput({
             })()}
             <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
               {loading && (
-                <Loader2 className="size-4 animate-spin" strokeWidth={3} />
+                <Spinner className="size-4" />
               )}
               {value && !loading && success && (
                 <Check className="size-4 text-green-600" strokeWidth={3} />
