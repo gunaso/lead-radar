@@ -25,40 +25,42 @@ function FeedComment({
   const searchParams = useSearchParams()
   return (
     <FeedItem item={comment} url={PATHS.COMMENTS} bcCrumbs={bcCrumbs}>
-      <div
-        className={cn(
-          "text-sm mx-4 mb-3 p-2 rounded-md bg-border/30",
-          !expandDetails && "hidden group-hover:block"
-        )}
-      >
-        <div className="flex items-center gap-3 w-full relative">
-          <span className="block font-medium truncate w-[calc(100%-60px)] pr-2 mb-1">
-            {comment.post.title}
+      {(comment.post.summary || comment.post.content) && (
+        <div
+          className={cn(
+            "text-sm mx-4 mb-3 p-2 rounded-md bg-border/30",
+            !expandDetails && "hidden group-hover:block"
+          )}
+        >
+          <div className="flex items-center gap-3 w-full relative">
+            <span className="block font-medium truncate w-[calc(100%-60px)] pr-2 mb-1">
+              {comment.post.title}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const hrefBase = `${PATHS.POSTS}/${comment.post.id}`
+                // Prefer provided bcCrumbs (from parent context), else fall back to any bc in URL
+                const bcFromCrumbs =
+                  bcCrumbs && bcCrumbs.length > 0
+                    ? encodeBreadcrumbParam(bcCrumbs)
+                    : ""
+                const bcParam = bcFromCrumbs || searchParams?.get("bc") || ""
+                const href = bcParam
+                  ? `${hrefBase}?bc=${encodeURIComponent(bcParam)}`
+                  : hrefBase
+                router.push(href)
+              }}
+              className="flex gap-1 items-center text-xs text-muted-foreground shrink-0 hover:scale-103 transition-transform duration-150 absolute right-[-3px] top-[-3px]"
+            >
+              Post <ArrowUpRight className="size-3.5" />
+            </button>
+          </div>
+          <span className="line-clamp-2 text-muted-foreground">
+            {comment.post.summary || comment.post.content}
           </span>
-          <button
-            type="button"
-            onClick={() => {
-              const hrefBase = `${PATHS.POSTS}/${comment.post.id}`
-              // Prefer provided bcCrumbs (from parent context), else fall back to any bc in URL
-              const bcFromCrumbs =
-                bcCrumbs && bcCrumbs.length > 0
-                  ? encodeBreadcrumbParam(bcCrumbs)
-                  : ""
-              const bcParam = bcFromCrumbs || searchParams?.get("bc") || ""
-              const href = bcParam
-                ? `${hrefBase}?bc=${encodeURIComponent(bcParam)}`
-                : hrefBase
-              router.push(href)
-            }}
-            className="flex gap-1 items-center text-xs text-muted-foreground shrink-0 hover:scale-103 transition-transform duration-150 absolute right-[-3px] top-[-3px]"
-          >
-            Post <ArrowUpRight className="size-3.5" />
-          </button>
         </div>
-        <span className="line-clamp-2 text-muted-foreground">
-          {comment.post.summary}
-        </span>
-      </div>
+      )}
     </FeedItem>
   )
 }

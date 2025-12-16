@@ -39,7 +39,7 @@ function FeedItem({
           <ScoreDropdown initialScore={item.score} />
           <StatusDropdown initialStatus={item.status} />
           <span className="truncate min-w-0 text-sm font-medium pr-2 lg:max-w-120 md:max-w-100 sm:max-w-75">
-            {"title" in item ? item.title : item.summary}
+            {"title" in item ? item.title : item.summary || item.content}
           </span>
           <KeywordsRow keywords={item.keywords} />
         </div>

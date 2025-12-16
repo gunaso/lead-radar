@@ -15,6 +15,7 @@ export const qk = {
     },
   },
   posts: (filters: Record<string, any>) => ["posts", filters] as const,
+  comments: (filters: Record<string, any>) => ["comments", filters] as const,
 }
 
 export type QueryKey = ReturnType<
