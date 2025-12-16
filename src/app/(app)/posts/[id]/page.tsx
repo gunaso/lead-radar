@@ -1,5 +1,7 @@
 "use client"
 
+import { Suspense } from "react"
+
 import { DotIcon } from "lucide-react"
 
 import { SideSlotConfig } from "@/components/side-slot/side-slot-context"
@@ -70,7 +72,7 @@ Let your client know that, in case of failure to complete the payment, you'll be
   },
 ]
 
-export default function PostPage() {
+function PostPageContent() {
   const searchParams = useSearchParams()
   const label = post.title.split(" ")
 
@@ -119,6 +121,14 @@ export default function PostPage() {
         </div>
       </div>
     </>
+  )
+}
+
+export default function PostPage() {
+  return (
+    <Suspense>
+      <PostPageContent />
+    </Suspense>
   )
 }
 

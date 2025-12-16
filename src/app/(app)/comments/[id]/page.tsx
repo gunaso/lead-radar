@@ -1,6 +1,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 import { DotIcon } from "lucide-react"
 
@@ -65,7 +66,7 @@ const comment: CommentType = {
   },
 }
 
-export default function CommentPage() {
+function CommentPageContent() {
   const searchParams = useSearchParams()
   const label = comment.summary.split(" ")
   const postTitleParts = comment.post.title.split(" ")
@@ -126,6 +127,14 @@ export default function CommentPage() {
         />
       </div>
     </>
+  )
+}
+
+export default function CommentPage() {
+  return (
+    <Suspense>
+      <CommentPageContent />
+    </Suspense>
   )
 }
 

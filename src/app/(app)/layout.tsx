@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react"
+import { Suspense, type ReactElement, type ReactNode } from "react"
 
 import { SideSlotProvider } from "@/components/side-slot/side-slot-context"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
@@ -17,7 +17,9 @@ export default function AppShellLayout({
         <HeaderProvider>
           <SideSlotProvider>
             <SideSlotLayout>
-              <Header />
+              <Suspense>
+                <Header />
+              </Suspense>
               {children}
             </SideSlotLayout>
           </SideSlotProvider>

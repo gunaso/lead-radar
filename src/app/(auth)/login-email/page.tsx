@@ -1,10 +1,11 @@
 "use client"
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
 import { EmailLoginForm } from "@/components/auth/email-login-form"
 import { useAuthNavigation } from "@/components/auth/auth-container"
 
-export default function LoginEmailPage() {
+function LoginEmailPageContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get("email") || ""
   const { navigateWithAnimation } = useAuthNavigation()
@@ -17,5 +18,13 @@ export default function LoginEmailPage() {
         navigateWithAnimation(`/login${params}`)
       }}
     />
+  )
+}
+
+export default function LoginEmailPage() {
+  return (
+    <Suspense>
+      <LoginEmailPageContent />
+    </Suspense>
   )
 }

@@ -1,5 +1,7 @@
 "use client"
 
+import { Suspense } from "react"
+
 import { HeaderConfig } from "@/components/header/header-context"
 import { GroupedLayout } from "@/components/grouped-layout"
 import { FeedComment } from "@/components/feed-comment"
@@ -161,25 +163,27 @@ const comments = [
 
 export default function CommentsPage() {
   return (
-    <FiltersProvider
-      keywordsOptions={keywordsOptions}
-      subredditsOptions={subredditsOptions}
-    >
-      <section className="flex flex-col">
-        <HeaderConfig
-          config={{
-            title: "Comments",
-          }}
-        />
-        <Filters />
-        <GroupedLayout
-          className="flex flex-col"
-          items={comments as unknown as CommentType[]}
-          renderItem={(comment) => (
-            <FeedComment comment={comment as CommentType} />
-          )}
-        />
-      </section>
-    </FiltersProvider>
+    <Suspense>
+      <FiltersProvider
+        keywordsOptions={keywordsOptions}
+        subredditsOptions={subredditsOptions}
+      >
+        <section className="flex flex-col">
+          <HeaderConfig
+            config={{
+              title: "Comments",
+            }}
+          />
+          <Filters />
+          <GroupedLayout
+            className="flex flex-col"
+            items={comments as unknown as CommentType[]}
+            renderItem={(comment) => (
+              <FeedComment comment={comment as CommentType} />
+            )}
+          />
+        </section>
+      </FiltersProvider>
+    </Suspense>
   )
 }

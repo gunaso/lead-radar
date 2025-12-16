@@ -1,9 +1,9 @@
 import { type NextRequest } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { validateWorkspaceNameFormat } from "@/lib/validations/workspace"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
+import { validateWorkspaceNameFormat } from "@/lib/validations/workspace"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     // Get user's current workspace if authenticated
-    let userWorkspaceId: number | null = null
+    let userWorkspaceId: string | null = null
     if (user) {
       const { data: profile } = await supabase
         .from("profiles")

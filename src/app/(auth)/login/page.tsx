@@ -1,11 +1,11 @@
 "use client"
-import { useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { useState, Suspense } from "react"
 
 import { ProvidersView } from "@/components/auth/providers-view"
 import { useAuthNavigation } from "@/components/auth/auth-container"
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams()
   const initialEmail = searchParams.get("email") || ""
   const [email, setEmail] = useState(initialEmail)
@@ -20,5 +20,13 @@ export default function LoginPage() {
         navigateWithAnimation(`/login-email${params}`)
       }}
     />
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageContent />
+    </Suspense>
   )
 }
