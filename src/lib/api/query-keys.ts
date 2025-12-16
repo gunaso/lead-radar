@@ -14,6 +14,7 @@ export const qk = {
       website: (website: string) => ["workspace", "validate", "website", website] as const,
     },
   },
+  posts: (filters: Record<string, any>) => ["posts", filters] as const,
 }
 
 export type QueryKey = ReturnType<

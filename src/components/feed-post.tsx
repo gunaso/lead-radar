@@ -18,14 +18,16 @@ function Post({
   const [expandDetails] = expandDetailsState
   return (
     <FeedItem item={post} url={PATHS.POSTS} bcCrumbs={bcCrumbs}>
-      <div
-        className={cn(
-          "text-sm mx-4 mb-3 p-2 rounded-md bg-border/30",
-          !expandDetails && "hidden group-hover:block"
-        )}
-      >
-        <span className="line-clamp-2">{post.summary}</span>
-      </div>
+      {post.summary && (
+        <div
+          className={cn(
+            "text-sm mx-4 mb-3 p-2 rounded-md bg-border/30",
+            !expandDetails && "hidden group-hover:block"
+          )}
+        >
+          <span className="line-clamp-2">{post.summary}</span>
+        </div>
+      )}
     </FeedItem>
   )
 }
