@@ -14,6 +14,7 @@ export type PostsFilters = {
   sort?: string
   group?: string
   archive?: string
+  matchType?: "any" | "all"
 }
 
 type GetPostsResponse = {
@@ -35,6 +36,7 @@ export function usePosts(filters: PostsFilters) {
       if (filters.to) params.set("to", filters.to)
       if (filters.sort) params.set("sort", filters.sort)
       if (filters.archive) params.set("archive", filters.archive)
+      if (filters.matchType) params.set("matchType", filters.matchType)
       
       params.set("cursor", String(pageParam))
       params.set("limit", "20")

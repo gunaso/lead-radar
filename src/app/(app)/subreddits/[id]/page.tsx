@@ -1,265 +1,235 @@
 "use client"
 
-import { EntityTabbedFeed } from "@/components/layouts/entity-tabbed-feed"
-import { FeedComment } from "@/components/feed-comment"
-import { Post } from "@/components/feed-post"
+import { useEffect, useRef, useState } from "react"
+import { useParams } from "next/navigation"
+import { useInView } from "framer-motion"
+import { Loader2 } from "lucide-react"
 
-import type { PostType, CommentType } from "@/types/reddit"
+import { HeaderConfig } from "@/components/header/header-context"
+import { GroupedLayout } from "@/components/grouped-layout"
+import { Filters } from "@/components/filters"
+import { Post } from "@/components/feed-post"
+import { FeedComment } from "@/components/feed-comment"
+import { PostsCommentsToggle } from "@/components/ui/posts-comments-toggle"
+
+import { FiltersProvider, useFiltersContext } from "@/hooks/use-filters"
+import { useSubreddits } from "@/queries/subreddits"
+import { useKeywords } from "@/queries/keywords"
+import { usePosts } from "@/queries/posts"
+import { useComments } from "@/queries/comments"
 import { PATHS } from "@/lib/path"
 
-const keywordsOptions = [
-  {
-    value: "keyword1",
-    label: "Keyword 1",
-  },
-  {
-    value: "keyword2",
-    label: "Keyword 2",
-  },
-  {
-    value: "keyword3",
-    label: "Keyword 3",
-  },
-  {
-    value: "keyword4",
-    label: "Keyword 4",
-  },
-  {
-    value: "keyword5",
-    label: "Keyword 5",
-  },
-  {
-    value: "keyword6",
-    label: "Keyword 6",
-  },
-  {
-    value: "keyword7",
-    label: "Keyword 7",
-  },
-  {
-    value: "keyword8",
-    label: "Keyword 8",
-  },
-  {
-    value: "keyword9",
-    label: "Keyword 9",
-  },
-]
+type TabValue = "posts" | "comments"
 
-const subreddit = {
-  id: 1,
-  name: "r/seogrowth",
-  image:
-    "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-  posts: [
-    {
-      id: "1",
-      title: "Mini title",
-      summary:
-        "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "neutral",
-      status: "Engaged",
-      score: "Prime",
-      keywords: ["keyword1", "keyword2"],
-      postedAt: "2025-08-01",
-    },
-    {
-      id: "2",
-      title:
-        "Google has not yet recognized a backlink from Fortune magazine. Help!",
-      summary:
-        "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "positive",
-      status: "Engaging",
-      score: "High",
-      keywords: ["keyword1", "keyword2", "keyword3"],
-      postedAt: "2025-10-01",
-    },
-    {
-      id: "3",
-      title:
-        "Google has not yet recognized a backlink from Fortune magazine. Help! aksjdnask djnaskdj naksjdna kjdnaskdj naskdj naskdjnak jdnaksj n",
-      summary:
-        "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "negative",
-      status: "Ready to Engage",
-      score: "Medium",
-      keywords: [],
-      postedAt: "2024-04-01",
-    },
-    {
-      id: "4",
-      title:
-        "Google has not yet recognized a backlink from Fortune magazine. Help!",
-      summary:
-        "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "neutral",
-      status: "Needs Review",
-      score: "Low",
-      keywords: ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-      postedAt: "2025-01-01",
-    },
-    {
-      id: "5",
-      title:
-        "Google has not yet recognized a backlink from Fortune magazine. Help!",
-      summary:
-        "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "positive",
-      status: "Archived",
-      score: "Low",
-      keywords: ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-      postedAt: "2025-01-01",
-    },
-  ],
-  comments: [
-    {
-      id: "1",
-      title:
-        "Totally normal — GSC can lag. Give it a week or two and re-crawl.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "neutral",
-      status: "Engaged",
-      score: "Prime",
-      keywords: ["keyword1", "keyword2"],
-      postedAt: "2025-08-01",
-      post: {
-        title: "Mini title",
-        summary:
-          "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      },
-    },
-    {
-      id: "2",
-      title: "Request indexing on the source page and check if it’s nofollow.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "positive",
-      status: "Engaging",
-      score: "High",
-      keywords: ["keyword1", "keyword2", "keyword3"],
-      postedAt: "2025-10-01",
-      post: {
-        title:
-          "Google has not yet recognized a backlink from Fortune magazine. Help!",
-        summary:
-          "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      },
-    },
-    {
-      id: "3",
-      title: "Happens a lot. Wait for recrawl; sometimes Bing sees it first.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "negative",
-      status: "Ready to Engage",
-      score: "Medium",
-      keywords: [],
-      postedAt: "2024-04-01",
-      post: {
-        title:
-          "Google has not yet recognized a backlink from Fortune magazine. Help! aksjdnask djnaskdj naksjdna kjdnaskdj naskdj naskdjnak jdnaksj n",
-        summary:
-          "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      },
-    },
-    {
-      id: "4",
-      title:
-        "Also verify the linking page is indexed and not blocked by robots.txt.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "neutral",
-      status: "Needs Review",
-      score: "Low",
-      keywords: ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-      postedAt: "2025-01-01",
-      post: {
-        title:
-          "Google has not yet recognized a backlink from Fortune magazine. Help!",
-        summary:
-          "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      },
-    },
-    {
-      id: "5",
-      title: "If it’s brand-new, patience is key. You’ll likely see it soon.",
-      subreddit: {
-        name: "r/seogrowth",
-        image:
-          "https://styles.redditmedia.com/t5_2wjav/styles/communityIcon_a0kac7rnkdi71.png?width=64&height=64&frame=1&auto=webp&crop=64:64,smart&s=fe456bf923c844418ef638966b1a35ea495aceaa",
-      },
-      sentiment: "positive",
-      status: "Archived",
-      score: "Low",
-      keywords: ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-      postedAt: "2025-01-01",
-      post: {
-        title:
-          "Google has not yet recognized a backlink from Fortune magazine. Help!",
-        summary:
-          "Found an organic backlink from Fortune via Bing Webmaster Tools, but Google Search Console doesn’t list it as a top linking site. Asking why Google might not recognize the link yet and what can be done to help Google track it.",
-      },
-    },
-  ],
+function SubredditPostsContent({ subredditId }: { subredditId: string }) {
+  const {
+    keywordsState: [keywords],
+    sentimentState: [sentiment],
+    scoreState: [score],
+    dateRangeState: [dateRange],
+    sortState: [sort],
+    groupState: [group],
+    archiveState: [archive],
+  } = useFiltersContext()
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    usePosts({
+      keywords,
+      subreddits: [subredditId],
+      sentiment,
+      score,
+      from: dateRange?.from?.toISOString(),
+      to: dateRange?.to?.toISOString(),
+      sort: sort ? `${sort.field}:${sort.direction}` : undefined,
+      group,
+      archive,
+      matchType: "all",
+    })
+
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const isInView = useInView(loadMoreRef)
+
+  useEffect(() => {
+    if (isInView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [isInView, hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  const posts = data?.pages.flatMap((page) => page.data) || []
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="flex h-96 flex-col items-center justify-center gap-2 text-center">
+        <p className="text-lg font-medium text-foreground">No posts found</p>
+        <p className="text-sm text-muted-foreground">
+          There are no posts for this subreddit with the selected filters.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col pb-8">
+      <GroupedLayout
+        className="flex flex-col"
+        items={posts}
+        renderItem={(post) => <Post key={post.id} post={post} />}
+      />
+
+      {hasNextPage && (
+        <div
+          ref={loadMoreRef}
+          className="flex h-24 items-center justify-center"
+        >
+          {isFetchingNextPage && (
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SubredditCommentsContent({ subredditId }: { subredditId: string }) {
+  const {
+    keywordsState: [keywords],
+    sentimentState: [sentiment],
+    scoreState: [score],
+    dateRangeState: [dateRange],
+    sortState: [sort],
+    groupState: [group],
+    archiveState: [archive],
+  } = useFiltersContext()
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useComments({
+      keywords,
+      subreddits: [subredditId],
+      sentiment,
+      score,
+      from: dateRange?.from?.toISOString(),
+      to: dateRange?.to?.toISOString(),
+      sort: sort ? `${sort.field}:${sort.direction}` : undefined,
+      group,
+      archive,
+      matchType: "all",
+    })
+
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  const isInView = useInView(loadMoreRef)
+
+  useEffect(() => {
+    if (isInView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage()
+    }
+  }, [isInView, hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  const comments = data?.pages.flatMap((page) => page.data) || []
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (comments.length === 0) {
+    return (
+      <div className="flex h-96 flex-col items-center justify-center gap-2 text-center">
+        <p className="text-lg font-medium text-foreground">No comments found</p>
+        <p className="text-sm text-muted-foreground">
+          There are no comments for this subreddit with the selected filters.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col pb-8">
+      <GroupedLayout
+        className="flex flex-col"
+        items={comments}
+        renderItem={(comment) => <FeedComment key={comment.id} comment={comment} />}
+      />
+
+      {hasNextPage && (
+        <div
+          ref={loadMoreRef}
+          className="flex h-24 items-center justify-center"
+        >
+          {isFetchingNextPage && (
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SubredditPageContent() {
+  const params = useParams()
+  const id = params.id as string
+  const [tab, setTab] = useState<TabValue>("posts")
+  
+  const { data: subreddits = [] } = useSubreddits()
+  
+  // Find the subreddit name from the list
+  const currentSubreddit = subreddits.find((s) => s.id === id)
+  const subredditName = currentSubreddit?.name || "Subreddit"
+
+  return (
+    <section className="flex flex-col h-full">
+      <HeaderConfig
+        config={{
+          breadcrumbs: [
+            {
+              key: "subreddits",
+              label: "Subreddits",
+              href: PATHS.SUBREDDITS,
+            },
+            {
+              key: id,
+              label: subredditName,
+            },
+          ],
+          afterCrumbs: <PostsCommentsToggle tab={tab} onChange={setTab} />,
+        }}
+      />
+      
+      <Filters disableSubreddits />
+
+      {tab === "posts" ? (
+        <SubredditPostsContent subredditId={id} />
+      ) : (
+        <SubredditCommentsContent subredditId={id} />
+      )}
+    </section>
+  )
 }
 
 export default function SubredditPage() {
-  const bcCrumbs = [
-    { label: "Subreddits", href: PATHS.SUBREDDITS },
-    { label: subreddit.name, href: `${PATHS.SUBREDDITS}/${subreddit.id}` },
-  ]
+  const { data: keywords = [] } = useKeywords()
+
+  const keywordsOptions = keywords.map((k) => ({
+    value: k.id,
+    label: k.name,
+  }))
+
   return (
-    <EntityTabbedFeed<PostType, CommentType>
-      headerBreadcrumb={{ key: subreddit.id.toString(), label: subreddit.name }}
+    <FiltersProvider
       keywordsOptions={keywordsOptions}
       subredditsOptions={[]}
-      posts={(subreddit.posts as unknown as PostType[]).map((p) => ({ ...p }))}
-      comments={subreddit.comments as unknown as CommentType[]}
-      renderPost={(post) => (
-        <Post post={post as PostType} bcCrumbs={bcCrumbs} />
-      )}
-      renderComment={(comment) => (
-        <FeedComment comment={comment as CommentType} bcCrumbs={bcCrumbs} />
-      )}
-    />
+    >
+      <SubredditPageContent />
+    </FiltersProvider>
   )
 }

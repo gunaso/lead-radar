@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
     const toParam = searchParams.get("to")
     const sortParam = searchParams.get("sort")
     const archiveParam = searchParams.get("archive")
+    const matchTypeParam = searchParams.get("matchType") || "any"
 
     // 1. Get workspace's tracked keywords and subreddits
     const { data: wsKeywords } = await supabase
@@ -229,7 +230,14 @@ export async function GET(request: NextRequest) {
           matchesSubreddit = subredditsParam!.includes(subredditId)
         }
 
-        if (!matchesKeyword && !matchesSubreddit) return false
+        if (matchTypeParam === "all") {
+          // Intersection: Must match ALL active filters
+          if (hasKeywordFilter && !matchesKeyword) return false
+          if (hasSubredditFilter && !matchesSubreddit) return false
+        } else {
+          // Union: Must match ANY of the active filters
+          if (!matchesKeyword && !matchesSubreddit) return false
+        }
       }
 
       // Sentiment

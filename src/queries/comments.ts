@@ -14,6 +14,7 @@ export type CommentsFilters = {
   sort?: string
   group?: string
   archive?: string
+  matchType?: "any" | "all"
 }
 
 type GetCommentsResponse = {
@@ -40,6 +41,7 @@ export function useComments(filters: CommentsFilters) {
       if (filters.to) params.set("to", filters.to)
       if (filters.sort) params.set("sort", filters.sort)
       if (filters.archive) params.set("archive", filters.archive)
+      if (filters.matchType) params.set("matchType", filters.matchType)
       
       params.set("cursor", String(pageParam))
       params.set("limit", "20")
