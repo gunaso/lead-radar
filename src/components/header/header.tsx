@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button"
 import {
   BreadcrumbSeparator,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   Breadcrumb,
@@ -53,9 +52,13 @@ export default function Header() {
                         {c.loading ? <LoadingDots label="Loading" /> : c.label}
                       </BreadcrumbPage>
                     ) : c.href ? (
-                      <BreadcrumbLink asChild>
-                        <Link href={c.href}>{c.label}</Link>
-                      </BreadcrumbLink>
+                      <Link
+                        href={c.href}
+                        data-slot="breadcrumb-link"
+                        className="hover:text-foreground transition-colors"
+                      >
+                        {c.label}
+                      </Link>
                     ) : (
                       <span className="text-muted-foreground">{c.label}</span>
                     )}

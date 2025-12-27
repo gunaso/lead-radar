@@ -1,12 +1,14 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import {
+  isValid as isValidDate,
+  formatDistanceToNow,
   differenceInDays,
   format,
-  formatDistanceToNow,
-  isValid as isValidDate,
   type Locale,
 } from "date-fns"
+
+import type { PostType } from "@/types/reddit"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -80,4 +82,23 @@ export function formatDateYMD(dateInput: string | Date): string {
   const date = new Date(dateInput)
   if (!isValidDate(date)) return ""
   return format(date, "yyyy-MM-dd")
+}
+
+export function mapStatus(status: string | null | undefined): PostType["status"] {
+  switch (status) {
+    case "-1": return "Archived"
+    case "0": return "Needs Review"
+    case "1": return "Ready to Engage"
+    case "2": return "Engaging"
+    case "3": return "Engaged"
+    default: return "Needs Review"
+  }
+}
+
+export function mapScore(score: number | null | undefined): PostType["score"] {
+  if (score === null || score === undefined) return "Low"
+  if (score > 90) return "Prime"
+  if (score > 70) return "High"
+  if (score > 40) return "Medium"
+  return "Low"
 }

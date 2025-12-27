@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 
 import { request } from "@/lib/api/client"
 import { qk } from "@/lib/api/query-keys"
@@ -45,5 +45,21 @@ export function usePosts(filters: PostsFilters) {
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+  })
+}
+
+export function usePost(id: string) {
+  return useQuery({
+    queryKey: qk.post(id),
+    queryFn: () => request<any>(`/api/posts/${id}`),
+    enabled: !!id,
+  })
+}
+
+export function usePostAccess(id: string) {
+  return useQuery({
+    queryKey: qk.postAccess(id),
+    queryFn: () => request<{ access: boolean }>(`/api/posts/${id}/access`),
+    enabled: !!id,
   })
 }
