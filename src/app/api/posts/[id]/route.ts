@@ -55,11 +55,36 @@ export async function GET(
       )
     `)
     .eq("id", postId)
-    .eq("workspaces_reddit_posts.workspace", workspaceId)
-    .single()
+    .maybeSingle()
 
-  if (error || !postData) {
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (!postData) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
+  // Handle Post Workspace Data Fallback
+  const workspacePosts = postData.workspaces_reddit_posts as any[]
+  if (!workspacePosts || workspacePosts.length === 0) {
+    ;(postData as any).workspaces_reddit_posts = [{
+      status: "0",
+      score: postData.score
+    }]
+  }
+
+  // Handle Comments Workspace Data Fallback
+  if (postData.reddit_comments && Array.isArray(postData.reddit_comments)) {
+    postData.reddit_comments.forEach((comment: any) => {
+      const workspaceComments = comment.workspaces_reddit_comments as any[]
+      if (!workspaceComments || workspaceComments.length === 0) {
+        comment.workspaces_reddit_comments = [{
+          status: "0",
+          score: comment.score
+        }]
+      }
+    })
   }
 
   return NextResponse.json(postData)
