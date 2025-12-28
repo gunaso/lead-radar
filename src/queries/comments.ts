@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 
 import { request } from "@/lib/api/client"
 import { qk } from "@/lib/api/query-keys"
@@ -50,5 +50,21 @@ export function useComments(filters: CommentsFilters) {
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+  })
+}
+
+export function useComment(id: string) {
+  return useQuery({
+    queryKey: qk.comment(id),
+    queryFn: () => request<any>(`/api/comments/${id}`),
+    enabled: !!id,
+  })
+}
+
+export function useCommentAccess(id: string) {
+  return useQuery({
+    queryKey: qk.commentAccess(id),
+    queryFn: () => request<{ access: boolean }>(`/api/comments/${id}/access`),
+    enabled: !!id,
   })
 }
