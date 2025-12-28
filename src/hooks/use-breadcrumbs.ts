@@ -55,6 +55,11 @@ export function useBreadcrumbs(
     // 3) page-provided crumbs
     if (Array.isArray(pageCrumbs) && pageCrumbs.length > 0) {
       for (const c of pageCrumbs) {
+        // Prevent duplication of the last crumb (e.g. if Root added "Subreddits" and page also adds it)
+        const last = crumbs[crumbs.length - 1]
+        if (last && last.label === c.label && last.href === c.href) {
+          continue
+        }
         crumbs.push(c)
       }
     }

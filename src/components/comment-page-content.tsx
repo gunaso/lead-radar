@@ -91,7 +91,7 @@ export function CommentPageContent({ commentId }: { commentId: string }) {
     subreddit: post.subreddit
   }
 
-  const label = comment.summary.split(" ")
+  const label = (comment.summary || comment.content || "").split(" ")
   const postTitleParts = comment.post.title.split(" ")
   const postLabel = `${postTitleParts.slice(0, 3).join(" ")}${
     postTitleParts.length > 3 ? "..." : ""
