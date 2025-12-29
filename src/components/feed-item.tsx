@@ -1,3 +1,5 @@
+"use client"
+
 import { StatusDropdown } from "@/components/ui/dropdown-status"
 import { ScoreDropdown } from "@/components/ui/dropdown-score"
 import { GuardedLink } from "@/components/ui/guarded-link"
@@ -10,6 +12,8 @@ import { encodeBreadcrumbParam } from "@/lib/breadcrumbs"
 
 import type { PostType, CommentType } from "@/types/reddit"
 
+import { useItemUpdate } from "@/hooks/use-item-update"
+
 function FeedItem({
   url,
   item,
@@ -21,6 +25,10 @@ function FeedItem({
   children: React.ReactNode
   bcCrumbs?: Array<{ label: string; href?: string }>
 }) {
+  const { updateScore, updateStatus } = useItemUpdate()
+  const isPost = "title" in item
+  const type = isPost ? "post" : "comment"
+
   const baseHref = `${url}/${item.id}`
   const href = (() => {
     if (!bcCrumbs || bcCrumbs.length === 0) return baseHref
@@ -28,6 +36,7 @@ function FeedItem({
     const sep = baseHref.includes("?") ? "&" : "?"
     return `${baseHref}${sep}bc=${encodeURIComponent(bc)}`
   })()
+  
   return (
     <GuardedLink
       href={href}
@@ -36,8 +45,22 @@ function FeedItem({
       <div className="flex items-center justify-between h-11 lg:pl-0 pl-6 gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-grow-1">
           <Checkbox className="absolute lg:left-2 left-4 lg:not-data-[state=checked]:not-group-hover:hidden group-hover:block" />
-          <ScoreDropdown initialScore={item.score} />
-          <StatusDropdown initialStatus={item.status} />
+          <div
+            style={{ display: "contents" }}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+          >
+            <ScoreDropdown
+              initialScore={item.score}
+              onScoreChange={(score) => updateScore({ id: item.id, type, score })}
+            />
+            <StatusDropdown
+              initialStatus={item.status}
+              onStatusChange={(status) => updateStatus({ id: item.id, type, status })}
+            />
+          </div>
           <span className="truncate min-w-0 text-sm font-medium pr-2 lg:max-w-120 md:max-w-100 sm:max-w-75">
             {"title" in item ? item.title : item.summary || item.content}
           </span>

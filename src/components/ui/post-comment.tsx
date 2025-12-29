@@ -12,6 +12,8 @@ import { Sentiment } from "@/components/ui/sentiment"
 import type { PostCommentType } from "@/types/reddit"
 import { formatRelativeOrLocaleDate } from "@/lib/utils"
 
+import { useItemUpdate } from "@/hooks/use-item-update"
+
 export function PostComment({
   comment,
   bcParam,
@@ -21,6 +23,8 @@ export function PostComment({
   bcParam: string
   postUrl: string
 }) {
+  const { updateScore, updateStatus } = useItemUpdate()
+
   return (
     <div className="flex flex-col gap-2 bg-card p-2 rounded-sm">
       <div className="flex items-center justify-between">
@@ -45,8 +49,14 @@ export function PostComment({
         redditItemUrl={postUrl}
         extraActions={
           <>
-            <StatusDropdown initialStatus={comment.status} />
-            <ScoreDropdown initialScore={comment.score} />
+            <StatusDropdown 
+              initialStatus={comment.status} 
+              onStatusChange={(status) => updateStatus({ id: comment.id, type: "comment", status })}
+            />
+            <ScoreDropdown 
+              initialScore={comment.score} 
+              onScoreChange={(score) => updateScore({ id: comment.id, type: "comment", score })}
+            />
             <Sentiment sentiment={comment.sentiment} sm />
           </>
         }

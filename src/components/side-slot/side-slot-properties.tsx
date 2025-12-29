@@ -13,9 +13,15 @@ import { Sentiment } from "@/components/ui/sentiment"
 import { Keyword } from "@/components/ui/keywords"
 import { Button } from "@/components/ui/button"
 
+import { useItemUpdate } from "@/hooks/use-item-update"
+
 import type { PostType, CommentType, SubredditType } from "@/types/reddit"
 
 function Properties({ item }: { item: PostType | CommentType }) {
+  const { updateScore, updateStatus } = useItemUpdate()
+  const isPost = "title" in item
+  const type = isPost ? "post" : "comment"
+
   return (
     <div className="px-2">
       <div className="flex items-center justify-end h-10">
@@ -26,8 +32,16 @@ function Properties({ item }: { item: PostType | CommentType }) {
         <SubredditInfo subreddit={item.subreddit} />
 
         <div className="flex flex-col w-full gap-2">
-          <StatusDropdown initialStatus={item.status} showLabelInTrigger />
-          <ScoreDropdown initialScore={item.score} showLabelInTrigger />
+          <StatusDropdown 
+            initialStatus={item.status} 
+            showLabelInTrigger 
+            onStatusChange={(status) => updateStatus({ id: item.id, type, status })}
+          />
+          <ScoreDropdown 
+            initialScore={item.score} 
+            showLabelInTrigger 
+            onScoreChange={(score) => updateScore({ id: item.id, type, score })}
+          />
         </div>
 
         <SectionWithLabel label="Labels">
