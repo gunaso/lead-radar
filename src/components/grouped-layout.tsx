@@ -68,42 +68,13 @@ function GroupedLayout<T extends GroupableItem>({
   renderItem,
   className,
 }: GroupedLayoutProps<T>) {
-  const { groupState, sortState, archiveState } = useFiltersContext()
+  const { groupState, sortState } = useFiltersContext()
   const [group] = groupState
   const [sort] = sortState
-  const [archive] = archiveState
-
-  const now = React.useMemo(() => new Date(), [])
-
-  const filtered = React.useMemo(() => {
-    if (!archive || archive === "all") return items
-
-    const withinWindow = (date: Date): boolean => {
-      if (archive === "past day") {
-        return now.getTime() - date.getTime() <= 24 * 60 * 60 * 1000
-      }
-      if (archive === "past week") {
-        return now.getTime() - date.getTime() <= 7 * 24 * 60 * 60 * 1000
-      }
-      if (archive === "past month") {
-        return now.getTime() - date.getTime() <= 30 * 24 * 60 * 60 * 1000
-      }
-      // "none" excludes archived entirely
-      return false
-    }
-
-    return items.filter((item) => {
-      const status = item.status
-      if (status !== "Archived") return true
-      if (archive === "none") return false
-      const date = getItemDate(item)
-      return withinWindow(date)
-    })
-  }, [items, archive, now])
 
   const sorted = React.useMemo(
-    () => sortItems(filtered, sort),
-    [filtered, sort]
+    () => sortItems(items, sort),
+    [items, sort]
   )
 
   if (group === "none") {

@@ -239,10 +239,29 @@ export async function GET(request: NextRequest) {
 
       // Archive Filter (based on workspace status)
       const isArchived = p.workspace_status === "-1"
-      if (archiveParam === "true") {
-        if (!isArchived) return false
-      } else {
+      
+      if (!archiveParam || archiveParam === "none") {
+        // Show only non-archived items
         if (isArchived) return false
+      } else if (archiveParam === "all") {
+        // Show everything - no filtering by archive status
+        // (no return statement, let item pass through)
+      } else {
+        // Show non-archived + archived within time window
+        if (isArchived) {
+          // Check if archived item is within time window
+          const now = new Date().getTime()
+          const createdTime = new Date(p.created_at || 0).getTime()
+          const diffInMs = now - createdTime
+          
+          let limitMs = 0
+          if (archiveParam === "past day") limitMs = 24 * 60 * 60 * 1000
+          else if (archiveParam === "past week") limitMs = 7 * 24 * 60 * 60 * 1000
+          else if (archiveParam === "past month") limitMs = 30 * 24 * 60 * 60 * 1000
+          
+          if (limitMs > 0 && diffInMs > limitMs) return false
+        }
+        // Non-archived items always pass through
       }
       
       return true

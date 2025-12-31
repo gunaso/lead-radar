@@ -2,8 +2,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
 import { type ScoreType, type StatusType } from "@/types/reddit"
+import { qk } from "@/lib/api/query-keys"
 
-type ItemType = "post" | "comment"
+import {
+  applyOptimisticStatusUpdate,
+  applyOptimisticScoreUpdate,
+  rollbackOptimisticUpdate,
+  type SnapshotContext,
+  type ItemType,
+} from "@/hooks/use-item-update-optimistic"
 
 export function useItemUpdate() {
   const queryClient = useQueryClient()
@@ -30,21 +37,33 @@ export function useItemUpdate() {
       }
       return response.json()
     },
-    onSuccess: (_, variables) => {
+    onMutate: ({ id, type, score }) => applyOptimisticScoreUpdate(queryClient, { id, type, score }),
+    onError: (_, __, context) => {
+      if (context) {
+        rollbackOptimisticUpdate(queryClient, context)
+      }
+      toast.error("Failed to update score")
+    },
+    onSuccess: () => {
       toast.success("Score updated")
-      // Invalidate relevant queries
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] })
       queryClient.invalidateQueries({ queryKey: ["comments"] })
       if (variables.type === "post") {
-          queryClient.invalidateQueries({ queryKey: ["post", variables.id] })
+        queryClient.invalidateQueries({ queryKey: qk.post(variables.id) })
+      } else {
+        queryClient.invalidateQueries({ queryKey: qk.comment(variables.id) })
       }
-    },
-    onError: () => {
-      toast.error("Failed to update score")
     },
   })
 
-  const { mutate: updateStatus } = useMutation({
+  const { mutate: updateStatus } = useMutation<
+    unknown,
+    unknown,
+    { id: string; type: ItemType; status: StatusType },
+    SnapshotContext
+  >({
     mutationFn: async ({
       id,
       type,
@@ -66,16 +85,25 @@ export function useItemUpdate() {
       }
       return response.json()
     },
-    onSuccess: (_, variables) => {
+    onMutate: ({ id, type, status }) =>
+      applyOptimisticStatusUpdate(queryClient, { id, type, status }),
+    onError: (_, __, context) => {
+      if (context) {
+        rollbackOptimisticUpdate(queryClient, context)
+      }
+      toast.error("Failed to update status")
+    },
+    onSuccess: () => {
       toast.success("Status updated")
+    },
+    onSettled: (_, __, variables) => {
       queryClient.invalidateQueries({ queryKey: ["posts"] })
       queryClient.invalidateQueries({ queryKey: ["comments"] })
-       if (variables.type === "post") {
-          queryClient.invalidateQueries({ queryKey: ["post", variables.id] })
+      if (variables.type === "post") {
+        queryClient.invalidateQueries({ queryKey: qk.post(variables.id) })
+      } else {
+        queryClient.invalidateQueries({ queryKey: qk.comment(variables.id) })
       }
-    },
-    onError: () => {
-      toast.error("Failed to update status")
     },
   })
 

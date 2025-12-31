@@ -40,7 +40,7 @@ export default function NavHeader() {
       <SidebarMenu>
         <SidebarMenuItem className="flex items-center justify-between gap-1">
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild id="sidebar-user-menu">
               <SidebarMenuButton asChild className="w-auto p-1">
                 <span className="flex items-center gap-1">
                   <WorkspaceAvatar
