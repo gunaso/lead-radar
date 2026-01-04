@@ -18,6 +18,11 @@ type FormDialogContentProps = {
   description?: React.ReactNode
   children: React.ReactNode
   submitButtonText?: string
+  /**
+   * If your form is rendered inside `children` (common with dialogs),
+   * pass the form element id so the submit button in the footer can submit it.
+   */
+  formId?: string
 }
 
 function FormDialogContent({
@@ -25,6 +30,7 @@ function FormDialogContent({
   description,
   children,
   submitButtonText,
+  formId,
 }: FormDialogContentProps) {
   return (
     <DialogContent closeButtonClassName="right-3 top-3" showCloseButton>
@@ -43,7 +49,9 @@ function FormDialogContent({
             Cancel
           </Button>
         </DialogClose>
-        <Button type="submit">{submitButtonText}</Button>
+        <Button type="submit" form={formId}>
+          {submitButtonText ?? "Submit"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   )

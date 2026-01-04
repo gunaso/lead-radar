@@ -81,6 +81,42 @@ export type Database = {
           },
         ]
       }
+      feedback_tickets: {
+        Row: {
+          category: string
+          created_at: string
+          email: string
+          feedback: string
+          id: string
+          rating: number
+          status: Database["public"]["Enums"]["ticket_status"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          email: string
+          feedback: string
+          id?: string
+          rating?: number
+          status?: Database["public"]["Enums"]["ticket_status"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string
+          feedback?: string
+          id?: string
+          rating?: number
+          status?: Database["public"]["Enums"]["ticket_status"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       keywords: {
         Row: {
           created_at: string
@@ -255,7 +291,6 @@ export type Database = {
           imported_at: string
           processed: boolean
           reddit_user: string | null
-          reply: string | null
           score: number
           sentiment: Database["public"]["Enums"]["sentiment"]
           subreddit: string
@@ -272,7 +307,6 @@ export type Database = {
           imported_at?: string
           processed?: boolean
           reddit_user?: string | null
-          reply?: string | null
           score?: number
           sentiment?: Database["public"]["Enums"]["sentiment"]
           subreddit: string
@@ -289,7 +323,6 @@ export type Database = {
           imported_at?: string
           processed?: boolean
           reddit_user?: string | null
-          reply?: string | null
           score?: number
           sentiment?: Database["public"]["Enums"]["sentiment"]
           subreddit?: string
@@ -439,6 +472,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      support_tickets: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          email: string
+          id: string
+          status: Database["public"]["Enums"]["ticket_status"]
+          steps: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          email: string
+          id?: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          steps?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          email?: string
+          id?: string
+          status?: Database["public"]["Enums"]["ticket_status"]
+          steps?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ticket_rate_limits: {
+        Row: {
+          created_at: string
+          id: string
+          ticket_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ticket_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ticket_type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       workspaces: {
         Row: {
@@ -690,6 +780,7 @@ export type Database = {
     Enums: {
       sentiment: "Positive" | "Negative" | "Neutral"
       status: "-1" | "0" | "1" | "2" | "3"
+      ticket_status: "pending" | "in_progress" | "resolved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -822,6 +913,7 @@ export const Constants = {
     Enums: {
       sentiment: ["Positive", "Negative", "Neutral"],
       status: ["-1", "0", "1", "2", "3"],
+      ticket_status: ["pending", "in_progress", "resolved"],
     },
   },
 } as const

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 type ApiResponse<T = unknown> = {
   ok: boolean
   message?: string
+  details?: unknown
 } & T
 
 /**
@@ -32,6 +33,17 @@ export function handleUnexpectedError(
   context: string
 ): NextResponse<ApiResponse> {
   console.error(`Unexpected error in ${context}:`, error)
+  const isProd = process.env.NODE_ENV === "production"
+
+  if (!isProd) {
+    const message = error instanceof Error ? error.message : "Unexpected server error"
+    const details =
+      error instanceof Error
+        ? { name: error.name, message: error.message, stack: error.stack }
+        : error
+    return NextResponse.json({ ok: false, message, details }, { status: 500 })
+  }
+
   return errorResponse("Unexpected server error", 500)
 }
 

@@ -21,6 +21,14 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Environment Variables
+
+To enable Support + Feedback ticket emails:
+
+- **`RESEND_API_KEY`**: Resend API key
+- **`SUPPORT_EMAIL`**: Destination email address where tickets are sent
+- **`TICKETS_FROM_EMAIL`** (optional): Sender email (defaults to `Mira <onboarding@resend.dev>`)
+
 ## Supabase
 
 **Creting new migrations from last migrations**

@@ -20,27 +20,89 @@ export default function NavSecondary() {
   const [openFeedback, setOpenFeedback] = useState(false)
   const [openSupport, setOpenSupport] = useState(false)
 
-  // Simple client-only submit handlers. Replace with real API later.
+  async function submitTicket({
+    endpoint,
+    formData,
+  }: {
+    endpoint: "/api/tickets/support" | "/api/tickets/feedback"
+    formData: FormData
+  }): Promise<
+    | { ok: true }
+    | { ok: false; message: string; retryAfterSeconds?: number; status?: number }
+  > {
+    const response = await fetch(endpoint, { method: "POST", body: formData })
+    const json = (await response.json()) as
+      | { ok: true }
+      | { ok: false; message?: string; retryAfterSeconds?: number }
+
+    if (!response.ok || !json.ok) {
+      if (response.status === 401) {
+        return { ok: false, message: "Please log in to submit a ticket.", status: 401 }
+      }
+      return {
+        ok: false,
+        message: json && !json.ok ? json.message || "Request failed" : "Request failed",
+        retryAfterSeconds: json && !json.ok ? json.retryAfterSeconds : undefined,
+        status: response.status,
+      }
+    }
+
+    return { ok: true }
+  }
+
   function handleSubmitFeedback(formData: FormData) {
-    const optimisticMsg = "Submitting feedback..."
-    const t = toast.loading(optimisticMsg)
-    // Simulate immediate success UX
-    setTimeout(() => {
-      toast.success(
-        "Thank you! We read every message to help us improve our product.",
-        { id: t }
-      )
-      setOpenFeedback(false)
-    }, 350)
+    const t = toast.loading("Submitting feedback...")
+    void submitTicket({ endpoint: "/api/tickets/feedback", formData })
+      .then((result) => {
+        if (!result.ok) {
+          if (result.retryAfterSeconds) {
+            toast.error(
+              `Too many requests. Please try again in ${Math.ceil(
+                result.retryAfterSeconds / 60
+              )} minutes.`,
+              { id: t }
+            )
+            return
+          }
+          toast.error(result.message, { id: t })
+          return
+        }
+
+        toast.success(
+          "Thank you! We read every message to help us improve our product.",
+          { id: t }
+        )
+        setOpenFeedback(false)
+      })
+      .catch(() => {
+        toast.error("Something went wrong. Please try again.", { id: t })
+      })
   }
 
   function handleSubmitSupport(formData: FormData) {
-    const optimisticMsg = "Sending support request..."
-    const t = toast.loading(optimisticMsg)
-    setTimeout(() => {
-      toast.success("Got it! Our team will get back to you soon.", { id: t })
-      setOpenSupport(false)
-    }, 350)
+    const t = toast.loading("Sending support request...")
+    void submitTicket({ endpoint: "/api/tickets/support", formData })
+      .then((result) => {
+        if (!result.ok) {
+          if (result.retryAfterSeconds) {
+            toast.error(
+              `Too many requests. Please try again in ${Math.ceil(
+                result.retryAfterSeconds / 60
+              )} minutes.`,
+              { id: t }
+            )
+            return
+          }
+          toast.error(result.message, { id: t })
+          return
+        }
+
+        toast.success("Got it! Our team will get back to you soon.", { id: t })
+        setOpenSupport(false)
+      })
+      .catch(() => {
+        toast.error("Something went wrong. Please try again.", { id: t })
+      })
   }
 
   return (

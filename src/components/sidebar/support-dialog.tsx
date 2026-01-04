@@ -1,5 +1,6 @@
 "use client"
 
+import { type FormEvent } from "react"
 import { LifeBuoy } from "lucide-react"
 
 import { DialogTrigger, Dialog } from "@/components/ui/dialog"
@@ -26,8 +27,10 @@ function SupportDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
   pathname: string | null
-  onSubmit: (formData: FormData) => void
+  onSubmit: (formData: FormData) => void | Promise<void>
 }) {
+  const formId = "support-ticket-form"
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -44,10 +47,15 @@ function SupportDialog({
           </span>
         }
         submitButtonText="Send message"
+        formId={formId}
       >
         <form
+          id={formId}
           className="space-y-5"
-          action={(formData: FormData) => onSubmit(formData)}
+          onSubmit={(e: FormEvent<HTMLFormElement>) => {
+            e.preventDefault()
+            void onSubmit(new FormData(e.currentTarget))
+          }}
         >
           {/* Page context */}
           <input type="hidden" name="context_path" value={pathname || ""} />
