@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createRLSClient } from "@/lib/supabase/server"
 
 export async function GET(
   request: Request,
@@ -18,7 +18,8 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
+  const rlsClient = await createRLSClient()
+  const { data: profile } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", user.id)
@@ -32,7 +33,7 @@ export async function GET(
 
   // Parallel checks
   // 1. Comment is tracked by keywords in this workspace
-  const keywordCheck = supabase
+  const keywordCheck = rlsClient
     .from("reddit_comments_keywords")
     .select(
       "keyword, keywords!inner(id, workspaces_keywords!inner(workspace))"
@@ -45,7 +46,7 @@ export async function GET(
   // 2. Comment matches a tracked subreddit in this workspace (via its Post)
   // We need to check if the comment's post is in a tracked subreddit.
   // Complex join: comment -> post -> subreddit -> workspace_subreddits
-  const subredditCheck = supabase
+  const subredditCheck = rlsClient
       .from("reddit_comments")
       .select(`
         post!inner (
@@ -63,7 +64,7 @@ export async function GET(
 
   // 3. Comment is manually tracked/interacted with in this workspace?
   // Check workspaces_reddit_comments
-  const trackingCheck = supabase
+  const trackingCheck = rlsClient
       .from("workspaces_reddit_comments")
       .select("workspace")
       .eq("comment", commentId)

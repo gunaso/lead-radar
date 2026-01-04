@@ -2,11 +2,11 @@ import { type NextRequest } from "next/server"
 
 import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 import { CommentType } from "@/types/reddit"
 
-async function getWorkspaceId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<string | null> {
-  const { data: profile } = await supabase
+async function getWorkspaceId(rlsClient: Awaited<ReturnType<typeof createRLSClient>>, userId: string): Promise<string | null> {
+  const { data: profile } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", userId)
@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) {
       return successResponse({ data: [], nextCursor: undefined })
     }
@@ -41,12 +41,12 @@ export async function GET(request: NextRequest) {
     const matchTypeParam = searchParams.get("matchType") || "any"
 
     // 1. Get workspace's tracked keywords and subreddits
-    const { data: wsKeywords } = await supabase
+    const { data: wsKeywords } = await rlsClient
       .from("workspaces_keywords")
       .select("keyword")
       .eq("workspace", workspaceId)
 
-    const { data: wsSubreddits } = await supabase
+    const { data: wsSubreddits } = await rlsClient
       .from("workspaces_subreddits")
       .select("subreddit")
       .eq("workspace", workspaceId)
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
       // But standard way often involved matching IDs.
       // Let's try fetching Post IDs first for cleanliness and less risk of join syntax issues.
       
-      const { data: subredditPosts } = await supabase
+      const { data: subredditPosts } = await rlsClient
         .from("reddit_posts")
         .select("id")
         .in("subreddit", subredditIds)
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
 
       if (postIds.length > 0) {
         // Optimization: Apply date filter here if exists, to reduce data transfer
-        let query = supabase.from("reddit_comments").select(`
+        let query = rlsClient.from("reddit_comments").select(`
             id,
             content,
             summary,
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     // B. Fetch comment IDs that match keywords
     let commentIdsFromKeywords: string[] = []
     if (keywordIds.length > 0) {
-      const { data: keywordComments } = await supabase
+      const { data: keywordComments } = await rlsClient
         .from("reddit_comments_keywords")
         .select("comment")
         .in("keyword", keywordIds)
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
     // C. Fetch comments from keywords
     let commentsFromKeywords: any[] = []
     if (commentIdsFromKeywords.length > 0) {
-      let query = supabase.from("reddit_comments").select(`
+      let query = rlsClient.from("reddit_comments").select(`
           id,
           content,
           summary,
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
 
     // 3. Fetch workspace overrides
     const commentIds = allComments.map(c => c.id)
-    const { data: workspaceOverrides } = await supabase
+    const { data: workspaceOverrides } = await rlsClient
       .from("workspaces_reddit_comments")
       .select("comment, score, status")
       .eq("workspace", workspaceId)
@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
     const overridesMap = new Map(workspaceOverrides?.map(w => [w.comment, w]) || [])
 
     // 4. Fetch keywords for all comments
-    const { data: commentKeywords } = await supabase
+    const { data: commentKeywords } = await rlsClient
       .from("reddit_comments_keywords")
       .select("comment, keyword")
       .in("comment", commentIds)
@@ -342,7 +342,7 @@ export async function GET(request: NextRequest) {
 
     const keywordNameMap = new Map<string, string>()
     if (allKeywordIds.length > 0) {
-      const { data: keywordsData } = await supabase
+      const { data: keywordsData } = await rlsClient
         .from("keywords")
         .select("id, name")
         .in("id", allKeywordIds)

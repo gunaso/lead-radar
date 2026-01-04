@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createRLSClient } from "@/lib/supabase/server"
 
 export async function GET(
   request: Request,
@@ -18,7 +18,8 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
+  const rlsClient = await createRLSClient()
+  const { data: profile } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", user.id)
@@ -32,7 +33,7 @@ export async function GET(
 
   // Parallel checks
   const [keywordCheck, subredditCheck, commentCheck] = await Promise.all([
-    supabase
+    rlsClient
       .from("reddit_posts_keywords")
       .select(
         "keyword, keywords!inner(id, workspaces_keywords!inner(workspace))"
@@ -42,7 +43,7 @@ export async function GET(
       .limit(1)
       .maybeSingle(),
 
-    supabase
+    rlsClient
       .from("reddit_posts")
       .select(
         "subreddit, subreddits!inner(id, workspaces_subreddits!inner(workspace))"
@@ -52,7 +53,7 @@ export async function GET(
       .limit(1)
       .maybeSingle(),
 
-    supabase
+    rlsClient
       .from("reddit_comments")
       .select("id, workspaces_reddit_comments!inner(workspace)")
       .eq("post", postId)

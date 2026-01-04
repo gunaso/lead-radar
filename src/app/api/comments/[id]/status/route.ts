@@ -2,11 +2,11 @@ import { type NextRequest } from "next/server"
 
 import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 import { type StatusType } from "@/types/reddit"
 
-async function getWorkspaceId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<string | null> {
-  const { data: profile } = await supabase
+async function getWorkspaceId(rlsClient: Awaited<ReturnType<typeof createRLSClient>>, userId: string): Promise<string | null> {
+  const { data: profile } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", userId)
@@ -38,13 +38,13 @@ export async function POST(
       return errorResponse("Valid status is required", 400)
     }
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) {
       return errorResponse("User has no workspace", 400)
     }
 
-    const { data: existingEntry } = await supabase
+    const { data: existingEntry } = await rlsClient
       .from("workspaces_reddit_comments")
       .select("id")
       .eq("workspace", workspaceId)
@@ -54,7 +54,7 @@ export async function POST(
     const statusValue = statusMap[status]
 
     if (existingEntry) {
-      const { error } = await supabase
+      const { error } = await rlsClient
         .from("workspaces_reddit_comments")
         .update({ status: statusValue })
         .eq("id", existingEntry.id)
@@ -62,7 +62,7 @@ export async function POST(
       if (error) throw error
     } else {
       // Fetch original comment score
-      const { data: originalComment, error: commentError } = await supabase
+      const { data: originalComment, error: commentError } = await rlsClient
         .from("reddit_comments")
         .select("score")
         .eq("id", id)
@@ -72,7 +72,7 @@ export async function POST(
         return errorResponse("Comment not found", 404)
       }
 
-      const { error } = await supabase
+      const { error } = await rlsClient
         .from("workspaces_reddit_comments")
         .insert({
           workspace: workspaceId,

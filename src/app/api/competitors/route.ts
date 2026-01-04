@@ -6,7 +6,7 @@ import {
   successResponse,
   handleUnexpectedError,
 } from "@/lib/api/responses"
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 
 type CompetitorResponse = {
   id: string
@@ -20,10 +20,10 @@ type CompetitorResponse = {
 }
 
 async function getWorkspaceId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  rlsClient: Awaited<ReturnType<typeof createRLSClient>>,
   userId: string
 ): Promise<string | null> {
-  const { data: profile } = await supabase
+  const { data: profile } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", userId)
@@ -36,15 +36,15 @@ export async function GET(_request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) {
       return successResponse<{ competitors: CompetitorResponse[] }>({
         competitors: [],
       })
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await rlsClient
       .from("competitors")
       .select("id, name, website, created_at, created_by")
       .eq("workspace", workspaceId)
@@ -63,7 +63,7 @@ export async function GET(_request: NextRequest) {
     )
     const ownersById = new Map<string, { name: string; image: string | null }>()
     if (createdByIds.length > 0) {
-      const { data: owners } = await supabase
+      const { data: owners } = await rlsClient
         .from("profiles")
         .select("user_id, name")
         .in("user_id", createdByIds)
@@ -98,8 +98,8 @@ export async function POST(request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) return errorResponse("Workspace not found", 404)
 
     const body = await request.json().catch(() => ({}))
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     const rawWebsite = String((body?.website ?? "") as string).trim()
     if (!rawName) return errorResponse("Name is required", 400)
 
-    const { data, error } = await supabase
+    const { data, error } = await rlsClient
       .from("competitors")
       .insert({
         workspace: workspaceId,
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     const owner =
       (
-        await supabase
+        await rlsClient
           .from("profiles")
           .select("name")
           .eq("user_id", authResult.userId)
@@ -148,8 +148,8 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) return errorResponse("Workspace not found", 404)
 
     const body = await request.json().catch(() => ({}))
@@ -169,7 +169,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     if (typeof name === "string") updates.name = name
     if (typeof website !== "undefined") updates.website = website
 
-    const { data, error } = await supabase
+    const { data, error } = await rlsClient
       .from("competitors")
       .update(updates)
       .eq("id", id)
@@ -183,7 +183,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     const owner =
       (
-        await supabase
+        await rlsClient
           .from("profiles")
           .select("name")
           .eq("user_id", (data as any).created_by as string)
@@ -207,15 +207,15 @@ export async function DELETE(request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) return errorResponse("Workspace not found", 404)
 
     const body = await request.json().catch(() => ({}))
     const id = String((body?.id ?? "") as string).trim()
     if (!id) return errorResponse("Competitor id is required", 400)
 
-    const { error } = await supabase
+    const { error } = await rlsClient
       .from("competitors")
       .delete()
       .eq("id", id)

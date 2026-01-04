@@ -2,7 +2,7 @@ import { type NextRequest } from "next/server"
 
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
 import { authenticateRequest } from "@/lib/api/auth"
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 import type { TablesInsert } from "@/lib/db.types"
 
 type SubredditResponse = {
@@ -18,8 +18,8 @@ type SubredditResponse = {
   createdAt: string
 }
 
-async function getWorkspaceId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<string | null> {
-  const { data: profile, error } = await supabase
+async function getWorkspaceId(rlsClient: Awaited<ReturnType<typeof createRLSClient>>, userId: string): Promise<string | null> {
+  const { data: profile, error } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", userId)
@@ -36,14 +36,14 @@ export async function GET(_request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) {
       return successResponse<{ subreddits: SubredditResponse[] }>({ subreddits: [] })
     }
 
     // Fetch subreddit links for this workspace, including subreddit entity
-    const { data: links, error: linksError } = await supabase
+    const { data: links, error: linksError } = await rlsClient
       .from("workspaces_subreddits")
       .select("created_at, created_by, subreddit:subreddit ( id, name, image )")
       .eq("workspace", workspaceId)
@@ -61,7 +61,7 @@ export async function GET(_request: NextRequest) {
     // Load owner names (no avatar field available in profiles schema)
     const ownersById = new Map<string, { name: string; image: string | null }>()
     if (createdByIds.length > 0) {
-      const { data: owners } = await supabase
+      const { data: owners } = await rlsClient
         .from("profiles")
         .select("user_id, name")
         .in("user_id", createdByIds)
@@ -73,8 +73,8 @@ export async function GET(_request: NextRequest) {
 
     // Collect workspace-scoped post and comment IDs to compute counts
     const [{ data: wsPosts }, { data: wsComments }] = await Promise.all([
-      supabase.from("workspaces_reddit_posts").select("post").eq("workspace", workspaceId),
-      supabase.from("workspaces_reddit_comments").select("comment").eq("workspace", workspaceId),
+      rlsClient.from("workspaces_reddit_posts").select("post").eq("workspace", workspaceId),
+      rlsClient.from("workspaces_reddit_comments").select("comment").eq("workspace", workspaceId),
     ])
     const workspacePostIds = (wsPosts || [])
       .map((r: { post?: string }) => r.post)
@@ -86,7 +86,7 @@ export async function GET(_request: NextRequest) {
     // Map post -> subreddit for posts scoped to the workspace
     const postIdToSubredditId = new Map<string, string>()
     if (workspacePostIds.length > 0) {
-      const { data: postRows } = await supabase
+      const { data: postRows } = await rlsClient
         .from("reddit_posts")
         .select("id, subreddit")
         .in("id", workspacePostIds)
@@ -101,7 +101,7 @@ export async function GET(_request: NextRequest) {
     const commentIdToPostId = new Map<string, string>()
     let commentPostIds: string[] = []
     if (workspaceCommentIds.length > 0) {
-      const { data: commentRows } = await supabase
+      const { data: commentRows } = await rlsClient
         .from("reddit_comments")
         .select("id, post")
         .in("id", workspaceCommentIds)
@@ -117,7 +117,7 @@ export async function GET(_request: NextRequest) {
     // Fetch any missing posts (from comments) to resolve subreddit mapping
     const missingPostIds = commentPostIds.filter((pid) => !postIdToSubredditId.has(pid))
     if (missingPostIds.length > 0) {
-      const { data: extraPosts } = await supabase
+      const { data: extraPosts } = await rlsClient
         .from("reddit_posts")
         .select("id, subreddit")
         .in("id", missingPostIds)
@@ -172,8 +172,8 @@ export async function POST(request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) return errorResponse("Workspace not found", 404)
 
     const body = await request.json().catch(() => ({}))
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     const canonical = rawName.replace(/^r\//i, "")
 
     // Find existing subreddit (case-insensitive)
-    const { data: existing } = await supabase
+    const { data: existing } = await rlsClient
       .from("subreddits")
       .select("id, name, image")
       .ilike("name", canonical)
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
         }
       }
       if (Object.keys(updatePayload).length > 0) {
-        await supabase.from("subreddits").update(updatePayload).eq("id", subredditId)
+        await rlsClient.from("subreddits").update(updatePayload).eq("id", subredditId)
       }
     } else {
       // Create new subreddit row (best-effort metadata)
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
           subredditImage = sanitized
         }
       }
-      const { data: newRow, error } = await supabase
+      const { data: newRow, error } = await rlsClient
         .from("subreddits")
         .insert(insertPayload)
         .select("id")
@@ -235,14 +235,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Link to workspace (ignore if already linked)
-    const { data: existingLink } = await supabase
+    const { data: existingLink } = await rlsClient
       .from("workspaces_subreddits")
       .select("id")
       .eq("workspace", workspaceId)
       .eq("subreddit", subredditId)
       .maybeSingle<{ id: string }>()
     if (!existingLink?.id) {
-      const { error: linkError } = await supabase.from("workspaces_subreddits").insert({
+      const { error: linkError } = await rlsClient.from("workspaces_subreddits").insert({
         workspace: workspaceId,
         subreddit: subredditId,
         created_by: authResult.userId,
@@ -270,15 +270,15 @@ export async function DELETE(request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) return errorResponse("Workspace not found", 404)
 
     const body = await request.json().catch(() => ({}))
     const subredditId = String((body?.id ?? "") as string).trim()
     if (!subredditId) return errorResponse("Subreddit id is required", 400)
 
-    const { error: delError } = await supabase
+    const { error: delError } = await rlsClient
       .from("workspaces_subreddits")
       .delete()
       .eq("workspace", workspaceId)

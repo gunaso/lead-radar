@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createRLSClient } from "@/lib/supabase/server"
 
 export async function GET(
   request: Request,
@@ -18,7 +18,8 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
+  const rlsClient = await createRLSClient()
+  const { data: profile } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", user.id)
@@ -30,7 +31,7 @@ export async function GET(
     return NextResponse.json({ error: "No workspace" }, { status: 403 })
   }
 
-  const { data: commentData, error } = await supabase
+  const { data: commentData, error } = await rlsClient
     .from("reddit_comments")
     .select(`
       *,

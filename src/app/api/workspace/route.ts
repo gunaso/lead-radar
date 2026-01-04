@@ -4,7 +4,7 @@ import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api
 import { createWorkspaceSchema, updateWorkspaceSchema } from "@/lib/validations/workspace"
 import { normalizeWebsiteUrl } from "@/lib/api/url-utils"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 import { authenticateRequest } from "@/lib/api/auth"
 import { 
   linkCompetitorsToWorkspace,
@@ -77,11 +77,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
 
-    const supabase = await createClient()
-    const admin = createAdminClient()
+    const rlsClient = await createRLSClient()
 
     // Check if user already has a workspace
-    const { data: profile } = await supabase
+    const { data: profile } = await rlsClient
       .from("profiles" as const)
       .select("workspace")
       .eq("user_id", authResult.userId)
@@ -93,7 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (existingWorkspaceId) {
       // Fetch current website to detect changes
-      const { data: currentWs } = await supabase
+      const { data: currentWs } = await rlsClient
         .from("workspaces" as const)
         .select("website")
         .eq("id", existingWorkspaceId)
@@ -118,7 +117,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
 
       // User already has a workspace - update it instead of creating a new one
-      const { data: updatedWorkspace, error: updateError } = await supabase
+      const { data: updatedWorkspace, error: updateError } = await rlsClient
         .from("workspaces" as const)
         .update<Database['public']['Tables']['workspaces']['Update']>(updates)
         .eq("id", existingWorkspaceId)
@@ -133,7 +132,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       workspace = updatedWorkspace
     } else {
       // User doesn't have a workspace - create a new one
-      const { data: newWorkspace, error: workspaceError } = await supabase
+      const { data: newWorkspace, error: workspaceError } = await rlsClient
         .from("workspaces" as const)
         .insert<Database['public']['Tables']['workspaces']['Insert']>({
           owner: authResult.userId,
@@ -153,7 +152,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       workspace = newWorkspace
 
       // Link workspace to user profile
-      const { error: profileError } = await supabase
+      const { error: profileError } = await rlsClient
         .from("profiles" as const)
         .update<Database['public']['Tables']['profiles']['Update']>({
           workspace: workspace.id,
@@ -209,11 +208,11 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       return errorResponse("Workspace ID is required", 400)
     }
 
-    const supabase = await createClient()
+    const rlsClient = await createRLSClient()
     const admin = createAdminClient()
 
     // Verify workspace belongs to user
-    const { data: workspace, error: fetchError } = await supabase
+    const { data: workspace, error: fetchError } = await rlsClient
       .from("workspaces" as const)
       .select("id, owner, website")
       .eq("id", workspaceId)
@@ -245,7 +244,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       if (source !== undefined) updates.source = source ?? null
       if (goal !== undefined) updates.goal = goal ?? null
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await rlsClient
         .from("workspaces" as const)
         .update<Database['public']['Tables']['workspaces']['Update']>(updates)
         .eq("id", workspaceId)
@@ -257,7 +256,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
     // Only update each entity type if the corresponding payload was provided
     if (Array.isArray(keywords)) {
-      await linkEntitiesToWorkspace('keywords', workspaceId, keywords, authResult.userId, supabase, admin)
+      await linkEntitiesToWorkspace('keywords', workspaceId, keywords, authResult.userId, rlsClient, admin)
     }
 
     if (Array.isArray(subreddits)) {
@@ -266,17 +265,17 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
         subreddits,
         (subredditsDetails || []) as SubredditDetailsInput[],
         authResult.userId,
-        supabase
+        rlsClient
       )
     }
 
     if (Array.isArray(competitors)) {
-      await linkCompetitorsToWorkspace(workspaceId, competitors, authResult.userId, supabase)
+      await linkCompetitorsToWorkspace(workspaceId, competitors, authResult.userId, rlsClient)
     }
 
     // Mark onboarding as complete if requested
     if (onboardingComplete === true) {
-      const { error: profileError } = await supabase
+      const { error: profileError } = await rlsClient
         .from("profiles" as const)
         .update<Database['public']['Tables']['profiles']['Update']>({ onboarding: -1, onboarded: true })
         .eq("user_id", authResult.userId)

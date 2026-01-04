@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
 import { updateProfileSchema } from "@/lib/validations/profile"
@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch user profile with onboarding status
-    const supabase = await createClient()
-    const { data: profile, error: profileError } = await supabase
+    const rlsClient = await createRLSClient()
+    const { data: profile, error: profileError } = await rlsClient
       .from("profiles")
       .select("onboarding, onboarded, workspace, name, role")
       .eq("user_id", authResult.userId)
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     // Fetch workspace data if it exists
     let workspaceData = null
     if (profile.workspace) {
-      const { data: workspace } = await supabase
+      const { data: workspace } = await rlsClient
         .from("workspaces")
         .select("id, name, company, website, employees, keywords_suggested, source, goal")
         .eq("id", profile.workspace)
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       // Fetch competitors linked to this workspace
       let linkedCompetitors: Array<{ name: string; website?: string | null }> = []
       try {
-        const { data: linkRows } = await supabase
+        const { data: linkRows } = await rlsClient
           .from("workspaces_keywords")
           .select("keyword")
           .eq("workspace", profile.workspace)
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
           .filter((id: unknown): id is string => typeof id === "string")
 
         if (keywordIds.length > 0) {
-          const { data: keywordRows } = await supabase
+          const { data: keywordRows } = await rlsClient
             .from("keywords")
             .select("name")
             .in("id", keywordIds)
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       }
 
       try {
-        const { data: subLinks } = await supabase
+        const { data: subLinks } = await rlsClient
           .from("workspaces_subreddits")
           .select("subreddit")
           .eq("workspace", profile.workspace)
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
           .filter((id: unknown): id is string => typeof id === "string")
 
         if (subredditIds.length > 0) {
-          const { data: subRows } = await supabase
+          const { data: subRows } = await rlsClient
             .from("subreddits")
             .select("name, title, description, description_reddit, imported_at")
             .in("id", subredditIds)
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
 
       // Load competitors
       try {
-        const { data: competitorsRows } = await supabase
+        const { data: competitorsRows } = await rlsClient
           .from("competitors")
           .select("name, website")
           .eq("workspace", profile.workspace)
@@ -156,8 +156,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update profile
-    const supabase = await createClient()
-    const { error: updateError } = await supabase
+    const rlsClient = await createRLSClient()
+    const { error: updateError } = await rlsClient
       .from("profiles")
       .update(updateData)
       .eq("user_id", authResult.userId)

@@ -4,7 +4,7 @@ const MOBILE_BREAKPOINT = 768
 const LG_BREAKPOINT = 1024
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = React.useState<boolean>(false)
 
   React.useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
@@ -16,11 +16,11 @@ export function useIsMobile() {
     return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  return !!isMobile
+  return isMobile
 }
 
 export function useIsBellowLg() {
-  const [isBelowLg, setisBellowLg] = React.useState<boolean | undefined>(undefined)
+  const [isBelowLg, setisBellowLg] = React.useState<boolean>(false)
 
   React.useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${LG_BREAKPOINT - 1}px)`)
@@ -32,11 +32,11 @@ export function useIsBellowLg() {
     return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  return !!isBelowLg
+  return isBelowLg
 }
 
 export function useIsBellowMd() {
-  const [isBellowMd, setIsBellowMd] = React.useState<boolean | undefined>(undefined)
+  const [isBellowMd, setIsBellowMd] = React.useState<boolean>(false)
 
   React.useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
@@ -48,5 +48,5 @@ export function useIsBellowMd() {
     return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  return !!isBellowMd
+  return isBellowMd
 }

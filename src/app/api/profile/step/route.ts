@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
 import { profileStepSchema } from "@/lib/validations/profile"
@@ -20,8 +20,8 @@ export async function PATCH(request: NextRequest) {
     const { step } = parsed.data
 
     // Update profile's onboarding step
-    const supabase = await createClient()
-    const { error: updateError } = await supabase
+    const rlsClient = await createRLSClient()
+    const { error: updateError } = await rlsClient
       .from("profiles")
       .update({ onboarding: step })
       .eq("user_id", authResult.userId)

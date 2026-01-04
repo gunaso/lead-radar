@@ -4,7 +4,7 @@ import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
 import { scrape } from "@/lib/firecrawl"
 import { sendMessage } from "@/lib/openai"
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 
 type ScrapePayload = {
   workspaceId: string
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     // Store scraped data and AI analysis in workspace if valid
     if (aiAnalysis?.valid) {
       try {
-        const supabase = await createClient()
+        const rlsClient = await createRLSClient()
         
         const updateData: {
           website_md: string
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         if (aiAnalysis.keywords && aiAnalysis.keywords.length > 0)
           updateData.keywords_suggested = aiAnalysis.keywords
 
-        const { error: updateError } = await supabase
+        const { error: updateError } = await rlsClient
           .from("workspaces")
           .update(updateData)
           .eq("id", workspaceId)

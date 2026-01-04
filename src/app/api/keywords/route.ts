@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 import { authenticateRequest } from "@/lib/api/auth"
 import { errorResponse, successResponse, handleUnexpectedError } from "@/lib/api/responses"
-import { createClient } from "@/lib/supabase/server"
+import { createRLSClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import {
   findOrCreateKeywordId,
@@ -22,8 +22,8 @@ type KeywordResponse = {
   createdAt: string
 }
 
-async function getWorkspaceId(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<string | null> {
-  const { data: profile } = await supabase
+async function getWorkspaceId(rlsClient: Awaited<ReturnType<typeof createRLSClient>>, userId: string): Promise<string | null> {
+  const { data: profile } = await rlsClient
     .from("profiles")
     .select("workspace")
     .eq("user_id", userId)
@@ -36,14 +36,14 @@ export async function GET(_request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const rlsClient = await createRLSClient()
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) {
       return successResponse<{ keywords: KeywordResponse[] }>({ keywords: [] })
     }
 
     // Fetch keyword links for this workspace, including keyword entity
-    const { data: links, error: linksError } = await supabase
+    const { data: links, error: linksError } = await rlsClient
       .from("workspaces_keywords")
       .select("created_at, created_by, keyword:keyword ( id, name )")
       .eq("workspace", workspaceId)
@@ -61,7 +61,7 @@ export async function GET(_request: NextRequest) {
     // Load owner names (no avatar field available in profiles schema)
     const ownersById = new Map<string, { name: string; image: string | null }>()
     if (createdByIds.length > 0) {
-      const { data: owners } = await supabase
+      const { data: owners } = await rlsClient
         .from("profiles")
         .select("user_id, name")
         .in("user_id", createdByIds)
@@ -73,8 +73,8 @@ export async function GET(_request: NextRequest) {
 
     // Collect workspace-scoped post and comment IDs to compute counts
     const [{ data: wsPosts }, { data: wsComments }] = await Promise.all([
-      supabase.from("workspaces_reddit_posts").select("post").eq("workspace", workspaceId),
-      supabase.from("workspaces_reddit_comments").select("comment").eq("workspace", workspaceId),
+      rlsClient.from("workspaces_reddit_posts").select("post").eq("workspace", workspaceId),
+      rlsClient.from("workspaces_reddit_comments").select("comment").eq("workspace", workspaceId),
     ])
     const workspacePostIds = (wsPosts || [])
       .map((r: { post?: string }) => r.post)
@@ -95,7 +95,7 @@ export async function GET(_request: NextRequest) {
       keywordIds.map(async (kid) => {
         // Posts count
         if (workspacePostIds.length > 0) {
-          const { count: pCount } = await supabase
+          const { count: pCount } = await rlsClient
             .from("reddit_posts_keywords")
             .select("id", { count: "exact", head: true })
             .eq("keyword", kid)
@@ -106,7 +106,7 @@ export async function GET(_request: NextRequest) {
         }
         // Comments count
         if (workspaceCommentIds.length > 0) {
-          const { count: cCount } = await supabase
+          const { count: cCount } = await rlsClient
             .from("reddit_comments_keywords")
             .select("id", { count: "exact", head: true })
             .eq("keyword", kid)
@@ -148,20 +148,20 @@ export async function POST(request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
+    const rlsClient = await createRLSClient()
     const admin = createAdminClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) return errorResponse("Workspace not found", 404)
 
     const body = await request.json().catch(() => ({}))
     const rawName = String((body?.name ?? "") as string).trim()
     if (!rawName) return errorResponse("Name is required", 400)
 
-    // Find or create keyword using admin (RLS-safe)
+    // Find or create keyword using admin (global operation)
     const keywordId = await findOrCreateKeywordId(admin, rawName)
 
     // Link to workspace (idempotent-ish: ignore duplicate error by checking existing)
-    const { data: existingLink } = await supabase
+    const { data: existingLink } = await rlsClient
       .from("workspaces_keywords")
       .select("id")
       .eq("workspace", workspaceId)
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle<{ id: string }>()
 
     if (!existingLink?.id) {
-      const { error: linkError } = await supabase.from("workspaces_keywords").insert({
+      const { error: linkError } = await rlsClient.from("workspaces_keywords").insert({
         workspace: workspaceId,
         keyword: keywordId,
         created_by: authResult.userId,
@@ -201,16 +201,16 @@ export async function DELETE(request: NextRequest) {
     const authResult = await authenticateRequest()
     if (!authResult.success) return authResult.response
 
-    const supabase = await createClient()
+    const rlsClient = await createRLSClient()
     const admin = createAdminClient()
-    const workspaceId = await getWorkspaceId(supabase, authResult.userId)
+    const workspaceId = await getWorkspaceId(rlsClient, authResult.userId)
     if (!workspaceId) return errorResponse("Workspace not found", 404)
 
     const body = await request.json().catch(() => ({}))
     const keywordId = String((body?.id ?? "") as string).trim()
     if (!keywordId) return errorResponse("Keyword id is required", 400)
 
-    const { error: delError } = await supabase
+    const { error: delError } = await rlsClient
       .from("workspaces_keywords")
       .delete()
       .eq("workspace", workspaceId)
@@ -220,7 +220,7 @@ export async function DELETE(request: NextRequest) {
       return errorResponse("Failed to remove keyword", 500)
     }
 
-    // Use admin to check cross-workspace usage and update process flag
+    // Use admin to check cross-workspace usage and update process flag (global operation)
     await markKeywordProcessFalseIfUnlinked(admin, keywordId)
 
     return successResponse()
